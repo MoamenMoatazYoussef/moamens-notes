@@ -2,7 +2,7 @@ Java notes:
 ===========
 Tips:
 -----
-- Anything between //// and //// is code.
+- Anything between ```and ```is code.
 - This note is not from a single source, it's compiled from tutorialspoint, w3schools, and other stuff.
 ------------------------------------------------------------------------------------------------------------------
 Basics:
@@ -32,13 +32,13 @@ A java SE program consists of Objects, Classes, Methods, Instance variables.
 - Because of that, the method must be public.
 - Also, we don't have to make an instance of the class containing it to use it i.e. it has to be static.
 - So, the main function, the entry point in Java, looks like this:
-//// Java
+```Java
 public class IAmIronMan {
     public static void main(String args[]) {
         //write your code here
     }
 }
-//// ENDCODE
+```ENDCODE
 
 - The file containing the code should be named exactly after the public class name (If we don't have public classes in a file, its name can be whatever).
 
@@ -50,7 +50,7 @@ Java has:
 - Enums, also obviously.
 
 Here's a simple java code:
-//// Java
+```Java
 class Avenger {
     enum AvengerName { IronMan, Cap, Thor, Hulk, BlackWidow};
     AvengerName name;
@@ -65,7 +65,7 @@ public class Assemble {
         System.out.println("I am " + ironMan.name);
     }
 }
-//// ENDCODE
+```ENDCODE
 
 - Java supports Inheritance: creating classes (Child classes, subclasses) that extend other classes (Parent classes, superclasses).
 - Java supports Interfaces: an interface is like a contract between objects on how to communicate, they are very important in inheritance.
@@ -79,7 +79,7 @@ So, we'll look at the syntax and any details:
 - Check out chaining constructors.
 - Which lets us set some constructors as private.
 
-//// Java
+```Java
 public class LargeStep {
     //  <<<<<< Constructors >>>>>
     int members;
@@ -125,13 +125,13 @@ public class LargeStep {
 //  <<<<<< Declaration >>>>>
 
 
-//// ENDCODE
+```ENDCODE
 
 Initializer blocks:
 -------------------
 IF we have some code we want to share across all constructors, we use initializer blocks:
 
-//// Java
+```Java
 public class LargeStep {
     //  <<<<<< Constructors >>>>>
     int members;
@@ -177,7 +177,7 @@ public class LargeStep {
         muchLive.start3omq();
     }
 }
-//// ENDCODE
+```ENDCODE
 
 Order of initialization:
 ------------------------
@@ -257,7 +257,7 @@ Arrays:
 -------
 Arrays are fixed-size.
 
-//// Java
+```Java
 int[] a;
 //or 
 int b[];
@@ -272,10 +272,10 @@ int[] d = new int[10];
 //this statement does two things:
     //1) creates the array.
     //2) assigns a reference to it, that reference is d.
-//// ENDCODE
+```ENDCODE
 
 Arrays can be passed to methods and returned from methods:
-//// Java
+```Java
 public static void printArray(int[] a) {
     for(int element: a) {
         System.out.println(e + ", ");
@@ -289,7 +289,7 @@ public static int[] reverse(int[] arr) {
         }
         return result;
     }
-//// ENDCODE
+```ENDCODE
 
 Additionals:
 ------------
@@ -307,7 +307,7 @@ Methods:
 - Overloading is supported.
 - public static void main(String args[]): the args[] are command-line args you pass.
 - Variable number of args:
-    //// Java
+    ```Java
     public static double getMax(double... numbers) { //hey that looks like JS
         if(numbers.length == 0) {
             System.out.println("7a?");
@@ -322,16 +322,16 @@ Methods:
         
         return result;
     }
-    //// ENDCODE
+    ```ENDCODE
 
 - finalize(): basically a destructor.
-    //// Java 
+    ```Java 
     public clas IHaveBeenTerminated {
         protected void finalize() {
             tellMyWifeILoveHer();
         }
     }
-    //// ENDCODE
+    ```ENDCODE
 
 this:
 -----
@@ -353,7 +353,7 @@ Some awesome functionality supported by Java:
     - Standard Output: System.out
     - Standard Error: System.err
 
-//// Java
+```Java
 import java.io.*;
 public class LookAtThisPhotograph {
     public static void main(String args[]) throws IOException {
@@ -372,7 +372,7 @@ public class LookAtThisPhotograph {
         }
     }
 }
-//// ENDCODE
+```ENDCODE
 
 You can also manage directories in Java e.g. creating, listing, etc.
 
@@ -390,33 +390,33 @@ Handling exceptions:
 --------------------
 try catch finally, we know that, each catch gets a Type of the exception i.e. its datatype.
 But you can do this:
-//// Java
+```Java
 catch(IOException | FileNotFoundException e) {
     logger.log(e);
     throw e;
 }
-//// ENDCODE
+```ENDCODE
 
 If a method has code that can raise an exception and DOESN'T handle it, it should throw it to the caller, that is indicated in its signature.
 A method can throw many exceptions
-//// Java
+```Java
 public void doThis(int a, int b) throws IOException, FileNotFoundException {
     if(a > b)
         throw new IOException();
     else
         throw new FileNotFoundException();
 }
-//// ENDCODE
+```ENDCODE
 
 try-with-resources: When we use streams, resources, IO, etc. we need to close them in the finally block.
 Or use try-with-resources so that it closes automatically.
-//// Java
+```Java
 try(FileReader fr = new FileReader(filepath)) {
     // stuff
 } catch() {
     // catch
 }
-//// ENDCODE
+```ENDCODE
 
 Any class that uses try-with-resources should implement AutoCloseable interface and close() method.
 Resources declared in the brackets of a try block are final.
@@ -426,14 +426,14 @@ User-defined exceptions: if you like to add errors to your code because you're a
         - One that accepts a string.
         - Another that accepts a string and the original exception.
 Also your new error class must be a child of Throwable, which will happen when you extend Exception:
-//// Java
+```Java
 class MyError extends Exception {
     public MyError() {
         System.err.println("Am I evil?");
         System.err.println("Yes I am!");
     }
 }
-//// ENDCODE
+```ENDCODE
 
 Nested classes:
 ---------------
@@ -443,7 +443,7 @@ Types:
 - Inner classes: these are a security mechanism in java, inner classes can be made private and access other private members of the outer class.
     Types of inner classes:
     - Inner:
-    //// Java
+    ```Java
     class JohnCena {
         private String finisher = "Attitude Adjustment";
 
@@ -470,10 +470,10 @@ Types:
             jc.MyTimeIsNow();
         }
     }
-    //// ENDCODE
+    ```ENDCODE
 
     - Method-local: classes declared WITHIN a method, their scope is just like any local variable.
-    //// Java
+    ```Java
     class JohnCena {
         private String finisher = "Attitude Adjustment";
 
@@ -509,10 +509,10 @@ Types:
             jc.MyTimeIsNow();
         }
     }
-    //// ENDCODE
+    ```ENDCODE
 
     - Anonymous: inner class declared without a name, we declare and instantiate them at the same time, used to override methods of a class or interface, very similar to IIFEs of JS:
-    //// Java
+    ```Java
     class JohnCena {
         private String finisher = "Attitude Adjustment";
 
@@ -559,10 +559,10 @@ Types:
             miz.finisher();
         }
     }
-    //// ENDCODE
+    ```ENDCODE
 
 If a method takes an object of an interface, abstract class, concrete class, then we can implement the interface, extend the abstreact class, and pass the object to the method i.e. pass an anonymous inner class as argument to a method that accepts instance of interface or abstract or concrete.
-//// Java
+```Java
     class JohnCena {
         private String name = "John..Ceeenaaaaa";
         private String finisher = "Attitude Adjustment";
@@ -619,7 +619,7 @@ If a method takes an object of an interface, abstract class, concrete class, the
             });
         }
     }
-//// ENDCODE
+```ENDCODE
 
 Static nested classes:
 an inner static class, like any static member:
@@ -632,7 +632,7 @@ Java SE OOP Concepts:
 ----------------------
 Inheritance:
 ------------
-//// Java
+```Java
 public class Main {
     class Wrestler {
         private String finisher;
@@ -666,7 +666,7 @@ public class Main {
         johnCena.goForWin(); 
     } 
 }
-//// ENDCODE
+```ENDCODE
 
 A superclass variable can refer to a subclass object but can only access superclass members.
 
@@ -694,7 +694,7 @@ Polymorphism:
 Java supports function overriding in inheritance.
 
 But, if we create a subclass and refer to it with a superclass reference, we can only use overridden methods by that subclass:
-//// Java
+```Java
     class Samurai {
         public void strike() {
             System.out.println("sword strike");
@@ -723,7 +723,7 @@ public class Main {
         //afrosDad.playDirty will give an error
     } 
 }
-//// ENDCODE
+```ENDCODE
 
 Rules of overriding:
 - same args.
@@ -741,7 +741,7 @@ To invoke the overridden method from the subclass, use 'super.method()'.
 Using this in polymorphism:
 ---------------------------
 We can use superclass references to refer to subclass instances.
-//// Java
+```Java
 public interface Champ {}
 public class JohnCena {}
 public class DoctorOfThuganomics extends JohnCena implements Champ {}
@@ -750,7 +750,7 @@ Champ champ = new Champ();
 DoctorOfThuganomics doctor = champ;
 JohnCena jc = champ;
 Object o = champ;
-//// ENDCODE
+```ENDCODE
 
 All of them refer to the same Champ object in the heap, but each can access different methods and stuff.
 
@@ -770,7 +770,7 @@ It's like a class but only unimplemented methods i.e. behaviors of an object.
 They are like contracts, classes implement them i.e. classes conform to the contract defined by the interfaces.
 
 For example, if we want a class to be put into an array and for that array to be able to be sorted by Arrays.sort, we must make that class implement Comparable interface, and compareTo method.
-//// Java
+```Java
 class Pokemon implements Comparable {
     private int powerlevel = 0;
 
@@ -797,7 +797,7 @@ public class Main {
         Arrays.sort(myPokemonSet); //We can do that :o
     }
 }
-//// ENDCODE
+```ENDCODE
 That's how we take advantage of the efficient Arrays.sort.
 Same for classes we want forEach to operate on them, we need to implement Iterable.
 (But usually, we implement a separate class for iterator, for example:
@@ -816,7 +816,7 @@ class PokemonIterator implements Iterator<Pokemon> {
         return p;
     }
 }
-//// ENDCODE
+```ENDCODE
 )
 Of course, you can implement both interfaces to give the ability for the class to be sorted and iterated over.
 This is the power of implementing multiple interfaces and for interfaces to extend multiple other interfaces.
@@ -837,11 +837,11 @@ Props:
 
 Generic Interfaces:
 - Same concept as generics.
-//// Java
+```Java
 public interface Comparable<T> {
     int compareTo(T o);
 }
-//// ENDCODE
+```ENDCODE
 In this case, we don't have to stick to a certain type when overriding the method, we don't have to explicitly cast the parameter.
 
 Tagging interfaces: interfaces with no body.
@@ -957,19 +957,19 @@ Generics:
 - Methods and classes that accept any type of data and apply the same algorithm on them.
 
 Generic Methods:
-//// Java
+```Java
 public static <E> void printArray(E[] arr) {
         for(E elem: arr) {
             System.out.print(elem + " ");
         }
         System.out.println();
     }
-//// ENDOCDE
+```ENDOCDE
 
 Bounded type parameters:
 - Restrict the kinds of data types allowed in some generics e.g. allowing only Numbers e.g. integer, float, etc. but not Boolean.
 
-//// Java
+```Java
 public static <T extends Comparable<T>> T getMax(T... x) {
     if(x.length == 0) {
         return;
@@ -984,12 +984,12 @@ public static <T extends Comparable<T>> T getMax(T... x) {
 
     return result;
 }
-//// ENDCODE
+```ENDCODE
 
 Generic Classes:
 ----------------
 These are used for example in collections that are generic e.g. ArrayList, HashMap, etc.
-//// Java
+```Java
 class Box<T> {
     private T t;
 
@@ -999,7 +999,7 @@ class Box<T> {
 
     //etc.
 }
-//// ENDCODE
+```ENDCODE
 
 Serialization:
 --------------
@@ -1089,7 +1089,7 @@ How to use threads (Method 1):
     - Step 3: Now you can call start() which executes run().
 
 Example:
-//// Java
+```Java
 class FirstThread implements Runnable {
     private Thread t;
     private String name;
@@ -1109,7 +1109,7 @@ class FirstThread implements Runnable {
         }
     }
 }
-//// ENDCODE
+```ENDCODE
 
 How to use threads (Method 2):
 - Extend the Thread class:
@@ -1117,7 +1117,7 @@ How to use threads (Method 2):
     - Step 2: call start();
 
 Example:
-//// Java
+```Java
 class NewThread extends Thread {
     private Thread t;
     private String name;
@@ -1134,7 +1134,7 @@ class NewThread extends Thread {
         //same code as above
     }
 }
-//// ENDCODE
+```ENDCODE
 
 Thread class has normal methods and static methods.
 Invoking a static method makes it perform on the currently running Thread.
@@ -1157,7 +1157,7 @@ Lifecycle of an applet:
 - stop: when the user moves off the page.
 - destroy: when the browser is shut down.
 
-//// Java
+```Java
 import java.applet.*;
 import java.awt.*; //to get Graphics object
 
@@ -1166,14 +1166,14 @@ public class HelloWorldApplet extends Applet {
         g.drawString("Hello World", 25, 50);
     }
 }
-//// ENDCODE
+```ENDCODE
 
 Applet class has methods to get applet parameters, network location of the HTML file or applet class directory, print status messages, fetch images and audio, play audio, resize the applet, among other stuff.
 
 Also, it has an interface for the user so that they can request info, initialize, start, stop, and destroy the applet.
 
 Embedding in HTML:
-//// HTML Java
+```HTML Java
 <html>
    <title>The Hello, World Applet</title>
    <hr>
@@ -1183,7 +1183,7 @@ Embedding in HTML:
    </applet>
    <hr>
 </html>
-//// ENDCODE
+```ENDCODE
 
 Capabilities:
 - You can get and specify params of applets.
@@ -1197,7 +1197,7 @@ Javadoc: a tool in JDK to generate documentation in HTML format.
 It's written in its own tags.
 We can specify HTML tags.
 Example:
-//// Java
+```Java
 /**
 * <h1>Hello, World!</h1>
 * The HelloWorld program implements an application that
@@ -1215,7 +1215,7 @@ public c
 
 //source code here
 
-//// ENDCODE
+```ENDCODE
 
 Done with Java SE ^_^
 ------------------------------------------------------------------------------------------------------------------
@@ -1235,7 +1235,7 @@ Props:
 
 They are very similar to arrow functions in JS.
 Example:
-//// Java
+```Java
 public class Main {
     interface MathOperation {
       int operation(int a, int b);
@@ -1257,7 +1257,7 @@ public class Main {
         System.out.println(operate(3, 2, div));
     } 
 }
-//// ENDCODE
+```ENDCODE
 
 - Lambda expressions are usually used for implementing functional interfaces i.e. interfaces with one method.
 - They eliminate the need of anonymous classes.
@@ -1268,7 +1268,7 @@ Scope of lambda expressions:
 Method References:
 ------------------
 - Referring methods by name, this can be used for all methods: static, instance methods, or even constructors.
-//// Java
+```Java
 import java.util.*;
 
 public class Main {
@@ -1283,19 +1283,19 @@ public class Main {
         num.forEach(System.out::println);
     } 
 }
-//// ENDCODE
+```ENDCODE
 
 
 Iterator:
 ---------
-//// Java
+```Java
 ArrayList list = new ArrayList();
 Iterator it = list.iterator();
 while(it.hasNext()) {
 	Object element = it.next();
 	//do stuff with that
 }
-//// ENDCODE
+```ENDCODE
 
 Static initializer:
 -------------------
@@ -1303,7 +1303,7 @@ A block to initialize static stuff.
 Executed when the class is loaded.
 You can use them to create instances, and exception handling during initialization of a class.
 You can use them to read from files the necessary data for processing of any instance.
-//// Java
+```Java
 static Scanner input = new Scanner(System.in);
 static boolean flag = true;
 static int B = input.nextInt();
@@ -1320,13 +1320,13 @@ static{
     }
 }
 
-//// ENDCODE
+```ENDCODE
 
 Is java pass by value or by reference?
 --------------------------------------
 - Primitive types: by value.
 - Things that are constructed using the 'new' keyword: by reference, because the variables are actually references:
-//// Java
+```Java
 class Pokemon {
     private String name;
 
@@ -1344,7 +1344,7 @@ public class Main {
         Pokemon p2 = new Pokemon('totodile');
     }
 }
-//// ENDCODE
+```ENDCODE
 
 p1 and p2 don't hold the values of class Pokemon.
 They hold REFERENCES to the created objects.
@@ -1375,7 +1375,7 @@ Pokemon p2 = new Pokemon('totodile');
     f1 == f2 => false.
     f1.equals(f2) => false. //equals is a method from Object class.
 - But we can override the method 'equals'
-//// Java
+```Java
 class Pokemon {
     ...
 
@@ -1385,7 +1385,7 @@ class Pokemon {
         return (this.name == o.name);
     }
 }
-//// ENDCODE
+```ENDCODE
 
 StringBuilder:
 --------------
@@ -1394,7 +1394,7 @@ Stringbuilder probides a mutable string buffer.
     For best performance, the size of the buffer may be predefined. (It will grow if we exceed it, but that's inefficient)
 
 Example:
-//// Java
+```Java
 String location = "Nasr City";
 String method = "plane";
 int pos = 6;
@@ -1409,7 +1409,7 @@ System.out.println(sb.length()); //length of the current string
 
 String message = sb.toString();
 System.out.println(message); //I flow by plane to Nasr City"
-//// ENDCODE
+```ENDCODE
 
 Primitive Wrapper Classes:
 --------------------------
@@ -1487,8 +1487,8 @@ Static:
 Static methods can only access static fields.
 
 Static import:
-//// Java
+```Java
 import static com.pluralsight.travel.className.staticMemberName;
 
 //now we can directly use the static member either value or method.
-//// ENDCODE
+```ENDCODE

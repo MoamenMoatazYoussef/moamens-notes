@@ -4,7 +4,7 @@
 
 ## Streams:
 
-### Basucs
+### Basics
 
 They are an ordered sequence of data, they are common io modules.
 They are unidirectional i.e. we READ from, or we WRITE to, a single a stream.
@@ -450,3 +450,13 @@ Tutorial in regex:
 https://docs.oracle.com/javase/tutorial/essential/regex/
 
 ## Collections
+We know arrays (If you're now a noob at programming, that is).
+Arrays are good for simple cases, but they have some limits:
+- They are statically sized.
+- They rely on explicit position management, we manage POSITIONS, not specific values.
+
+Collections in Java have some advantages:
+- Iterable, literally implementing Iterable interface.
+- They provide type safety.
+- They dynamically size.
+- Some of them support ordering, prevent duplicates, manage data as name-value pairs, etc.

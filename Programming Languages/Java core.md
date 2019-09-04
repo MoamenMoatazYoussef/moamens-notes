@@ -809,3 +809,223 @@ map.put("1", "b");
 
 ---
 
+## Controlling App Execution and Environment
+In this module we'll look at how we can control our app state and the environment in which the app runs.
+This is some *serious* stuff, huh xD
+
+### Command-Line Arguments
+The bane of every developer's existence, although they are really easy.
+We use them to pass startup info like:
+- What to run.
+- IO files & urls.
+- Behavior options i.e. command switches.
+
+Of course, these are passed in an array of strings to the main function, the famous String args[].
+Each argument is a separate element, separated by the OS's whitespace, quoting is used for arguments WITH spaces in their names.
+
+For example:
+``` Java
+package com.jwhh.cmdline;
+
+public class Main {
+    public static void main(String[] args) {
+        if(args.length < 1) {
+            System.out.print("No arguments passed");
+        } else {
+            for(String a: args) {
+                System.out.println(a);
+            }
+        }
+    }
+}
+```
+
+This is how we run it, passing some arguments:
+``` sh
+$ java com.jwhh.cmdline.Main Hello There World
+```
+IDEs allow setting command line arguments in a way, so search for how to do it in a certain IDE like eclipse, IntelliJ, NetBeans, etc.
+
+### Dealing with Persistent Key/Value Pairs
+Persistent data is data that is NOT destroyed when the program exits, they're saved on the physical storage e.g. cookies, local storage, etc.
+In java we can manage persistent data through storing it as key/value pairs, we need to:
+- Set & retrieve values.
+- Store and load it.
+- Provide default values if not set.
+
+Our hero this time is the Properties class.
+- Inherits from HashTable class.
+- Keys and values are strings.
+
+Methods of Properties class:
+- setProperty: sets or creates key with a new value.
+- getProperty: gets value of key or null/default value if not found.
+``` Java
+Properties props = new Properties();
+props.setProperty("Name", "Moamen");
+String name1 = props.getProperty("Name");
+String name2 = props.getProperty("nextName", "defaultValue"); // We pass a default value to return if key isn't found
+```
+
+#### So how do you make this Properties object persistent?
+They can be persisted using Streams.
+They can be persisted in two formats:
+- Simple text.
+    - Using streams.
+    - .properties extension.
+    - ONE key/value pair per line.
+        - Separated by = or :
+        - Any whitespace around = or : is ignored.
+        - Any OTHER whitespace becomes a separator.
+        - The backslash' escapes whitespace.
+        - Comments start with # or !.
+        - Blank lines are ignored.
+- XML.
+    - Using streams.
+    - .xml extension.
+    - ONE key/value pair per XML element.
+        - Element is named entry.
+        - Key is stored as key attribute.
+        - Value is stored as value of the element itself.
+        - Comments are stored as Comment elements.
+
+##### Simple text
+``` Java
+Properties props = new Properties();
+props.setProperty("Name", "Moamen");
+props.setProperty("Nickname", "Mr. Awesome");
+
+// Storing properties
+try(Writer writer = Files.newBufferedWriter(Paths.get("moamen.properties"))) {
+    props.store(writer, "My Comment"); 
+    // props.store is the method we'll use
+    // we pass any comments we want as the second argument.
+    // the file will be created, 
+    // first line will be the comment, second line is date
+    // then keys and values are displayed
+}
+
+// Loading properties
+Properties props2 = new Properties();
+try(Reader reader = Files.newBufferedReader(Paths.get("moamen.properties"))) {
+    props2.load(reader);
+}
+
+String val1 = props2.getProperty("Nickname");
+System.out.println(val1); // Output: Mr. awesome
+```
+If there are spaces in the value in the text file (other than the ones around = or :) (Hey that looks like a smily face), they might cause problems.
+
+##### XML
+``` Java
+Properties props = new Properties();
+props.setProperty("Name", "Moamen");
+props.setProperty("Nickname", "Mr. Awesome");
+
+// Saving properties
+try(Writer writer = Files.newBufferedWriter(Paths.get("moamen.xml"))) {
+    props.storeToXML(writer, "My Comment"); 
+    // The XML file will have first the version and DOCTYPE
+    // then the top element <properties>
+    // then our comment in <comment>
+    //  <entry key="Name">Moamen</entry>
+    // etc.
+}
+
+// Loading properties
+Properties props2 = new Properties();
+try(Reader reader = Files.newBufferedReader(Paths.get("moamen.xml"))) {
+    props2.loadFromXML(reader);
+}
+
+String val1 = props2.getProperty("Nickname");
+System.out.println(val1); // Output: Mr. awesome
+```
+
+#### Default Values
+We pass default Properties to the constructor of Properties.
+These are searched if key is not found.
+Default values passed in the constructor *take precedence* over default values passed in getProperty.
+``` Java
+Properties defaults = new Properties();
+defaults.setProperty("Name", "Moamen");
+
+Properties props = new Properties(defaults);
+String p1 = props.getProperty("Name"); //Output: Moamen
+
+props.setProperty("Name", "Moamen Moataz");
+String p2 = props.getProperty("Name"); //Output: Moamen Moataz
+```
+
+Defaults are usually decided on when starting the development, so:
+- Create the default property file as part of the PACKAGE of your app.
+- Create .properties file at dev time.
+- Build process will include it in the package.
+- So now we can load it using getResourceAsStream method for example (Which is a part of something called Java Resource System).
+- Any class can access properties now.
+
+## Class Loading
+This topic has frustrated me so many times because of the freaking classpath, so pay attention so as not to pass through the pain that I've been through :'D
+
+Most apps don't stand alone, they rely on other classes in other packages.
+JDK packages are located automatically.
+But what about other packages?
+
+We solve this by:
+- First of all, each IDE loads packages at dev time on its own.
+- Default, java searches the CURRENT directory:
+    - All classes must be in .class files.
+    - And must be under package directories that match their packages.
+        e.g. if a class is in package .com.pluralsight.training, then it must be in directory ./com/pluralsight/training.
+- Or, we can specify a specific location or locations for Java to search for classes in.
+    - These are searched in the order they appear in.
+    - Once we do that, the current directory is excluded UNLESS we put it into the list.
+
+How to specify these paths? Two ways:
+1. By an environment variable, called CLASSPATH.
+    - When we set it, it becomes a DEFAULT PATH, which means, if a Java app doesn't specify some paths for itself, it will use the current value of CLASSPATH to search for classes.
+    - That's why, we should use this with caution, some programs may depend on its value, so changing it might lead to problems, even adding paths to it may lead to name collisions and stuff.
+Search for how to set an environment variable according to your OS, but generally:
+``` sh
+#Windows
+$ set CLASSPATH="path/you/want"
+```
+
+Class Path Structure: 
+- Windows: path1 ; path2 ; path 3 ...
+    - Separated by ;
+- Unix: path1 : path2 : path3 ...
+    - Separated by :
+- .class files: Path to folder containing package root.
+- .jar file: path to the file, inluding its name
+
+2. Passing the classpath for the java app when running:
+``` sh
+#Windows
+$ java -cp \path1;\path2 com.pluralsight.training.Main
+
+#Unix
+$ java -cp /path1:/path2 com.pluralsight.training.Main
+```
+
+Search for how to do this for .jar files, and using the -jar command line option.
+
+### Execution Environment Information
+Apps often need info like:
+- User info.
+- System info.
+- Java config info.
+- App specific info.
+
+To do this:
+- System Properties.
+    - Info that Java provides about the environment:
+    - Accessed by System.getProperty.
+    - Info include: User info, Java installation info, OS config info.
+- Environment Variables.
+    - OS provides these variables.
+    - They provide config info.
+    - Are mostly automatically set by OS.
+    - But can provide app-specific variables.
+    - Accessed by System.getenv(): you'll get a Map object containing environment variables.
+    - Or System.getend(name): get only the value of the environment variable whose name you pass as argument.

@@ -1,8 +1,6 @@
-# Java Core:
+# Java Core
 
----
-
-## Streams:
+## Streams
 
 ### Basics
 
@@ -58,7 +56,7 @@ while((length = input.read(byteBuff)) >= 0) { //notice that read(byte[] buff) re
 ```
 Same thing for characters.
 
-Writing:
+Writing
 --------
 ### OutputStream
 This is the class we use to write bytes.
@@ -1348,3 +1346,87 @@ And the join() loop will make the main thread wait for all the other threads.
 That, is awesome ^_^
 
 ### Thread Management Details in Java
+The Thread class is awesome, but...
+If you're not a seasoned threading programmer, it's really easy to misuse threads.
+Plus, we really don't want to get into all of these details anyway.
+
+Out comes, Java, our hero, providing abstractions.
+Thread Pools: these are a queue of tasks, Each task in that queue will be assigned to its own thread from a pool of threads.
+- ExecutorService interface:
+    - Models thread pool behavior.
+    - We can submit tasks into the pool.
+    - Request and wait for pool shutdown.
+- Executors class:
+    - It has methods for creating thread pools.
+    - The pools can be dynamically sized.
+    - We can schedule tasks for later.
+
+Let's look at the code we used before.
+This code is NOT scalable, if we have 1000 files, and we start 1000 threads, the overhead of managing them and coordinating disk access will be nightmarish, it will make the CPU die probably.
+So, we can use that to try thread pools:
+``` Java
+public class Main {
+    public static void main(String[] args) {
+        String[] inFiles  = // a list of filenames
+        String[] outFiles = // a list of filenames
+
+        ExecutorService es = new Executors.newFixedThreadPool(3); // We pass a max number of threads value
+
+        for(int i = 0 ; i < inFiles.length ; i++) {
+            Adder adder = new Adder(inFiles[i], outFiles[i]);
+            es.submit(adder); 
+            // the es will take care of assigning adder to a queue, 
+            // then to a thread (if available i.e. not more than 3 threads),
+            // then run the thread
+        }
+
+        try {
+            es.shutdown(); // We're requesting the shutdown of the pool
+            es.awaitTermination(60, TimeUnit.SECONDS);
+        } catch(Exception e) {
+            // handle exception
+        }
+    }
+}
+```
+### Creating Closer Relationship Between Thread Tasks
+We want the threads to interact with each other, pass results to each other.
+To do that, we use types:
+- Callable interface.
+    - Very similar to Runnable, but it CAN return results AND THROW exceptions.
+    - Only member is the call() method.
+- Future interface:
+    - Represents the RESULT returned from a thread.
+    - it's returned by ExecutorService.submit.
+    - It has get() method that:
+        - Blocks until the thread finishes.
+        - Return the result by the Callable.
+        - Throw exception by the Callable.
+
+In our Adder class, in method doAdd, instead of writing the result to a file, we'll RETURN IT.
+First, instead of writing, we'll return.
+Then, we'll remove outFile from the class.
+Then, we'll
+Then, we'll implement Callable.
+``` Java
+class Adder implements Callable {
+    private String inFile;
+
+    public Adder(String inFile) {
+        // assign 
+    }
+
+    public int doAdd() throws IOException {
+        int total = 0;
+        String line = null;
+        try(BufferedReader reader = Files.newBufferedReader(Paths.get(inFile))) {
+            while((line = reader.readLine()) != null) {
+                total += Integer.parseInt(inLine);
+            }
+        }
+
+        return total;
+    }
+}
+
+```

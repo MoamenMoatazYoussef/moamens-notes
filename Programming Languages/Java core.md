@@ -1,5 +1,10 @@
 # Java Core
 
+## Table of Contents  
+[Headers](#headers)  
+[Emphasis](#emphasis)  
+
+
 ## Streams
 
 ### Basics
@@ -11,12 +16,12 @@ Types:
 - Byte streams: these are binary data.
 - Text streams: these are unicode characters.
 
-### Reader Class
+#### Reader Class
 This is the class we use to read bytes
 - int read(): returns the value of bytethat was read, written as int.
 - int read(byte[] buff): returns the number of bytes that were read in the buffer.
 
-### InputStream Class
+#### InputStream Class
 This is the class we use to read characters.
 - int read(): returns the value of character that was read, written as int.
 - int read(char[] buff): returns the number of characters that were read in the buffer.
@@ -56,14 +61,14 @@ while((length = input.read(byteBuff)) >= 0) { //notice that read(byte[] buff) re
 ```
 Same thing for characters.
 
-Writing
---------
-### OutputStream
+### Writing
+
+#### OutputStream
 This is the class we use to write bytes.
 - void write(int b): writes the byte 'b' to a source.
 - void write(byte[] buff): writes list of bytes to a source.
 
-### Writer
+###@ Writer
 This is the class we use to write characters.
 - void write(char ch): writes the byte 'c' to a source.
 - void write(char[] buff): writes list of characters to a source.
@@ -473,7 +478,7 @@ https://docs.oracle.com/javase/8/docs/api/Java/util/Formatter.html
 
 ---
 
-## Regular Expressions in Java
+### Regular Expressions in Java
 
 We won't cover the whole topic of Regular Expressions (regex) here, because it's a big theoretical concept.
 We'll look at methods that support using regex to match strings.
@@ -1390,7 +1395,10 @@ public class Main {
 }
 ```
 ### Creating Closer Relationship Between Thread Tasks
-We want the threads to interact with each other, pass results to each other.
+A lot of times we want the threads to interact with each other, pass results to each other, and throw exceptions to each other.
+For example, we want a side thread to return the result to the main thread.
+And if it raises an exception, that exception is received by the main thread.
+
 To do that, we use types:
 - Callable interface.
     - Very similar to Runnable, but it CAN return results AND THROW exceptions.
@@ -1404,19 +1412,20 @@ To do that, we use types:
         - Throw exception by the Callable.
 
 In our Adder class, in method doAdd, instead of writing the result to a file, we'll RETURN IT.
-First, instead of writing, we'll return.
-Then, we'll remove outFile from the class.
-Then, we'll
-Then, we'll implement Callable.
+1. instead of writing, we'll return the Total value.
+2. we'll remove outFile from the class.
+3. we'll change the return type of doAdd to int.
+4. we'll implement Callable.
+5. replace run() with call().
 ``` Java
-class Adder implements Callable {
-    private String inFile;
+class Adder implements Callable { // Step 4 here
+    private String inFile; // Step 2 here
 
     public Adder(String inFile) {
         // assign 
     }
 
-    public int doAdd() throws IOException {
+    public int doAdd() throws IOException { // Step 3 here
         int total = 0;
         String line = null;
         try(BufferedReader reader = Files.newBufferedReader(Paths.get(inFile))) {
@@ -1425,8 +1434,214 @@ class Adder implements Callable {
             }
         }
 
-        return total;
+        return total; // Step 1 here
+    
+    }
+
+    public Integer call() throws IOException { // Step 5 here
+        return doAdd();
+    }
+}
+```
+
+Now, our Adder class runs in a separate thread, and return the results back including any exceptions it might throw.
+Now, let's look at the Main code:
+1. Get rid of the outFiles.
+2. Make an array of Future to retrieve the results of the background threads.
+3. Make that array receive the values returned from the background threads.
+4. Use Future's method get() to get the values.
+``` Java
+public class Main {
+    public static void main(String[] args) {
+        String[] inFiles  = // a list of filenames
+        // Step 1 here
+
+        ExecutorService es = new Executors.newFixedThreadPool(3);
+
+        Future<Integer>[] results = new Future[inFiles.length]; // Step 2 here
+
+        for(int i = 0 ; i < inFiles.length ; i++) {
+            Adder adder = new Adder(inFiles[i], outFiles[i]);
+
+            results[i] = es.submit(adder); // Step 3 here
+        }
+
+        for(Future<Integer> result: results) {
+            try {
+                int value = result.get(); // This get() blocks until the return value is available i.e. the thread has finished
+                System.
+            } catch(ExecutionException e) { // Notice that the exception is not an IOException, so we need to get that
+                Throwable adderEx = e.getCause(); // This method returns the exception that happened in the background thread
+                // handle adderEx
+            } catch(Exception e) {
+                // handle other exceptions
+            }
+        }
+
+        try {
+            es.shutdown(); 
+            es.awaitTermination(60, TimeUnit.SECONDS);
+        } catch(Exception e) {
+            // handle exception
+        }
+    }
+}
+```
+
+### Concurrency
+If threads share common resources:
+- If they are reading them only, there's no problem here.
+- If they write into those common resources, that could lead to problems:
+    - Some threads may receive wrong results.
+    - Crashes can happen.
+
+Let's look at this:
+``` Java
+class BankAccount {
+    private int balance;
+
+    public BankAccount(int balance) {
+        this.balance = balance;
+    }
+
+    public int getBalance() {
+        return this.balance;
+    }
+
+    public void deposit(int amount) {
+        balance += amount;
+    }
+
+}
+
+public class Worker implements Runnable {
+    private BankAccount account;
+
+    public Worker(BankAccount account) {
+        this.account = account;
+    }
+
+    public void run() {
+        for(int i = 0 ; i < 10 ; i++) {
+            int startBalance = account.getBalance();
+            account.deposit(10);
+            int endBalance = account.getBalance();
+        }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService es = Executors.newFixedThreadPool(5);
+        BankAccount account = new BankAccount(100);
+
+        for(int i = 0 ; i < 5 ; i++) {
+            Worker worker = new Worker(account);
+            es.submit(worker);
+        } 
+        // Shutdown es and wait
+    }
+}
+```
+If each thread adds 10 dollars 10 times, we would end with 600, or 580, or 590, something random.
+You know why?
+Because a thread can be writing a value of 110 for example, AT THE SAME TIME THAT another thread is reading the balance 100
+So, now the second thread will add to 100,
+but if a new thread reads and adds, it will add to 110,
+the second thread may try to write 110, while the third thread is trying to write 120.
+
+Note: Use the logging system to check that out, make each thread log the starting and ending balance and its number.
+
+#### What's happening?
+balance += account;
+This instruction is actually many instructions:
+1. Read current balance value.
+2. Perform the arithmetic operation.
+3. Write back the value to memory.
+
+This is known as a *Non-atomic operation* i.e. an operation that has many steps, and these steps don't happen at one time.
+So, it's possible that changes happen from thread 2 while thread 1 is IN THE MIDDLE OF executing these steps.
+e.g.
+The value is 110, Thread 3 reads it, adds 10, then writes back, but
+while it's writing back, thread 4 has already read the value (110) and is performing step 2 which is adding.
+So now, Thread 3 will write back 120 and instead of Thread 4 reading the new value 120, adding to it, then writing 130, 
+Thread 4 actually HAS already read the old value 110 BEFORE thread 3 writes back 120, so now Thread 4 will write back 120 again!
+
+This is known as a *Race condition*.
+So, We need to Coordinate the accessing of this particular value, this *shared resource*.
+
+### How to Solve Race Condition
+Java gives us ways to solve this:
+1. Synchronized Methods: coordinate thread access to methods,
+    - This is done by adding 'synchronized' modifier.
+    - A class can have as many sync methods as it needs.
+    - Actually, this is managed at the CLASS instance level, not the object instance level.
+    i.e. if a thread accesses a sync method in a class, no other thread can call ANY OTHER SYNC METHOD in that same class.
+
+    - When to use this?
+        1. To prevent modification by multiple threads. (i.e. race condition)
+        2. Reading values that are being modified by another thread.
+
+    - Cons?
+        1. Has SIGNIFICANT overhead.
+        2. ONLY use in multithreaded scenarios.
+
+    - Constructors are NEVER synchronized, constructors create instances, and an instance should ALWAYS be created on ONE thread.
+
+Let's go back to our example, we'll make the method deposit() synchronized:
+``` Java
+class BankAccount {
+    ...
+
+    public synchronized int getBalance() {  
+        return this.balance;
+    }
+    // Why this sync? so that if a thread calls getBalance(), no other thread can call getBalance OR deposit.
+
+    public synchronized void deposit(int amount) {
+        balance += amount;
     }
 }
 
+// If we stop here, and run the code, we'll always get 600 as the result, ALWAYS 600, no 590, no 580, no random stuff,
+// we'll ALWAYS get 600.
+// So that means now the methods are synchronized, they access methods one at a time.
+
+public class Worker implements Runnable {
+    private BankAccount account;
+
+    public Worker(BankAccount account) {
+        this.account = account;
+    }
+
+    public void run() {
+        for(int i = 0 ; i < 10 ; i++) {
+            int startBalance = account.getBalance();
+            account.deposit(10);
+            int endBalance = account.getBalance();
+        }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService es = Executors.newFixedThreadPool(5);
+        BankAccount account = new BankAccount(100);
+
+        for(int i = 0 ; i < 5 ; i++) {
+            Worker worker = new Worker(account);
+            es.submit(worker);
+        } 
+        // Shutdown es and wait
+    }
+}
 ```
+
+How does sync work?
+- Before a thread calls a method or value, it makes a CHECK to see if that thing is LOCKED.
+- If it's NOT LOCKED, the thread goes in and ACQUIRES the lock.
+    - After it finishes, it RELEASES the lock.
+- If it's LOCKED, it blocks until the lock is RELEASED.
+
+### How to Protect Code That Runs On Multiple Method Calls (Manual Synchronization)
+Not only sync methods have locks, ALL JAVA OBJECTS HAVE LOCKS!
+That means, we can manually acquire and release locks :o
+
+We do this using a Synchronized statement block.
+This is useful because ANY code that has a reference to an object can use the Synchronized statement block to lock that object.

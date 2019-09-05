@@ -1,10 +1,5 @@
 # Java Core
 
-## Table of Contents  
-[Headers](#headers)  
-[Emphasis](#emphasis)  
-
-
 ## Streams
 
 ### Basics
@@ -781,7 +776,7 @@ tree2.add(new MyClass("3", "a"));
 
 tree2.forEach(m -> System.out.println(m));
 ```
-So we can really specify how things are sorited, which is a really useful thing.
+So we can really specify how things are sorted, which is a really useful thing.
 
 ### Map Collections
 Key/value pairs.

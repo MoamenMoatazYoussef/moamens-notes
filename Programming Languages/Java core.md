@@ -1037,3 +1037,322 @@ To do this:
     - But can provide app-specific variables.
     - Accessed by System.getenv(): you'll get a Map object containing environment variables.
     - Or System.getend(name): get only the value of the environment variable whose name you pass as argument.
+
+---
+
+## Capturing App Activity with the Log System
+
+Why do we need a log system at all?
+- To capture app activity.
+- To capture unusual circumstances and errors.
+- Track usage info.
+- Debugging.
+
+The required level of detail in terms of logging can vary:
+- A newly deployed app, or an app experiencing errors, may require a LOT of logging details.
+- An app that is mature and stable needs little details.
+
+java.util.logging Package gives us a lot of these features.
+
+The log system is centrally managed:
+- Only one logging instance per app.
+- It manages log system config.
+- And manages the objects that do the actual logging.
+
+LogManager class:
+- One global instance.
+- LogManager.getLogManager() returns a reference to that instance.
+
+Logger class:
+- Provides logging methods.
+- We get access to a Logger using LogManager class by getLogger().
+- Each instance is named.
+- A global logger instance is available.
+- And is accessed by a Logger class static field called GLOBAL_LOGGER_NAME
+``` Java
+public class Main {
+    public static void main(String[] args) {
+        LogManager lm = LogManager.getLogManager(); // lm now has reference to log manager global instance
+        Logger logger = lm.getLogger(Logger.GLOBAL_LOGGER_NAME);
+        logger.log(Level.INFO, "My logger message"); // each logger entry has a LEVEL, we'll see that later. 
+        logger.log(Level.INFO, "My second logger message");
+    }
+}
+```
+Because in order to access a logger we need to perform the first two statement over and over,
+in practice we do something different:
+``` Java
+public class Main {
+    // we make the logger STATIC
+    static Logger logger = LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME);
+
+    public static void main(String[] args) {
+        // now we can use the logger in any method inside the class
+    }
+}
+```
+
+### Logging Levels
+Logging level control how deep do we go into details.
+Also, each logger has a Capture Level, we set it using setLevel.
+The logger will IGNORE any level argument passed that's LESS than its own capture level.
+
+Each level has a numeric value:
+- 7 basic log levels.
+- 2 special levels for a logger.
+- We can define custom levels, but that's generally avoided.
+
+Logging levels:
+(Format: LEVELNAME: level_value, level_meaning).
+- SEVERE: 1000, serious failure.
+- WARNING: 900, potential problem.
+- INFO: 800, general info. (That's what we passed when we passed Level.INFO in the logger.log() function)
+- CONFIG: 700, config info.
+- FINE: 500, general dev info.
+- FINER: 400, detailed dev info.
+- FINEST: 300, specialized dev info.
+
+- ALL: Integer.MIN_VALUE, Logger capture EVERYTHING
+- OFF: Integer.MAX_VALUE, Logger doesn't capture anything.
+
+Logging methods:
+- log(): we saw that.
+- level conveninece levels: we actually have methods that identify the level for us and we only pass the message
+    e.g. severe(), warning(), fine(), etc.
+- Precise log method:
+    We specify the class name and method we want to log.
+    logp(Level.SEVERE, "com.pluralsight.training.Main", "myMethod", "Oh my goodness!");
+- Precise convenience methods:
+    These log predefined messages: (Their level is FINER)
+    So, we need to set the level so that it contains the FINER level (because it's not included by default)
+    .entering("com.pluralsight.training.Main", "myMethod");
+    .exiting("com.pluralsight.training.Main", "myMethod");
+
+Check out *Parametrized log methods*.
+
+### Log System in More Details
+The log system has different components.
+Each component handles a specific tasks.
+
+There are mainly 3 core components:
+- Logger: accepts out method calls.
+- Handler: responsible for publishing logging info, a Logger can have many Handlers.
+- Formatter: formats log info for publication e.g. text, XML, etc., each Handler has 1 Formatter.
+
+    +-----------+       +-----------+   +-----------+
+----+   Logger  |----+--+  Handler  +---+ Formatter +----> Outside world
+    +-----------+    |  +-----------+   +-----------+
+                     |
+                     |  +-----------+   +-----------+
+                     +--+  Handler  +---+ Formatter +----> Outside world
+                        +-----------+   +-----------+
+
+Each logger has a setLevel.
+Handlers also have setLevels, they can be more restrictive than the logger.
+
+How to create/add log components:
+- Create a logger: Logger.getLogger() static method.
+- Adding a Handler: Logger.addHandler().
+- Adding a formatter: Handler.setFormatteR(). (Because a handler gets ONE formatter).
+
+``` Java
+public class Main {
+    static Logger logger = Logger.getLogger("com.pluralsight");
+    public static void main(String[] args) {
+        Handler h = new ConsoleHandler();
+        Formatter f = new SimpleFormatter();
+
+        h.setFormatter(f);
+        logger.addHandler(h);
+    }
+}
+```
+
+### Built-in Handlers
+We can add our custom handlers, but that's usually not necessary.
+Built-in handler:
+- ConsoleHandler: writes to System.err
+- StreamHandler: writes to an output stream.
+- SocketHandler: writes to a network socket.
+- FileHandler: writes to one or more files.
+    This handler can write to ONE file, or many rotating files.
+    This means:
+    - We can specify the max size of a file in bytes.
+    - We can specify the max number of files.
+    - We can reuse oldest files.
+
+Check out how to use FileHandler with many files.
+
+### Built-in Formatters
+Formatter class is the parent class for both:
+- XMLFormatter.
+- SimpleFormatter. 
+    - Formats content as simple text.
+    - Format is customizable using the formatting notation we covered earlier.
+
+To be seen:
+1. *Built-in Formatters*
+2. *Log Configuration File*
+3. *Making the most our of the Log system*
+
+## Multithreading In Java
+A process is an instance of a program or app.
+It has resources like Memory, RAM, etc.
+It has at least ONE thread.
+
+What's a thread?
+- A sequence of program instructions.
+- It's that thing that actually executes a program's code.
+- It uses resources to do that.
+At any moment of time while the program is running, its thread is interacting with a certain resource.
+
+Of course, a program can have many threads, not just one i.e. many threads executing your code.
+That is fine as long as at any point of time, no two or more threads use the same resource, this is called Concurrency.
+
+Why would we do that?
+- Threads often wait for non-cpu tasks e.g. interacting with storage, networks, etc.
+- Many PCs now have multiple CPU cores.
+- Threads help us use the CPU more efficiently.
+- We can reduce the wall-clock execution time (Although it takes MORE CPU cycles, but that's because many threads are working).
+
+### How to Make our Java Programs Multithreaded
+
+Let's begin with a class Adder, it takes a file as input, adds all values written in it, and writes the result in another file.
+``` Java
+class Adder {
+    private String inFile, outFile;
+
+    public Adder(String inFile, String outFile) {
+        // assign 
+    }
+
+    public void doAdd() throws IOException {
+        int total = 0;
+        String line = null;
+        try(BufferedReader reader = Files.newBufferedReader(Paths.get(inFile))) {
+            while((line = reader.readLine()) != null) {
+                total += Integer.parseInt(inLine);
+            }
+        }
+
+        try(BufferedWriter writer = Files.newBufferedWriter(Paths.get(outFile))) {
+            writer.write(total);
+        }
+
+        // Since we use files and stuff, opening the files, reading from them, writing to them, interacting with disks, etc.
+        // all of these are processes that don't use CPU at least as much as the rest i.e. our thread is waiting. 
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        String[] inFiles  = // a list of filenames
+        String[] outFiles = // a list of filenames
+
+        try {
+            for(int i = 0 ; i < inFiles.length ; i++) {
+                Adder adder = new Adder(inFiles[i], outFiles[i]);
+                adder.doAdd();
+            }
+        } catch(IOException e) {
+            // handle the IOException
+        }
+    }
+}
+```
+
+Now, this is a single-thread app, it will doAdd for file1, then doAdd for file2, all the way till the end, then it will do cleanup work.
+
+Now, we want to fire a NEW THREAD for every file, so that they're all executing concurrently, we'll take much less time.
+
+### Threading In Java
+Jave Threads:
+- They are very similar to OS threads.
+- Each thread has a task, when it finishes, it terminates.
+- Exceptions are tied to each thread.
+- Any coordination between them is handled by us.
+
+We usually use two things: Runnable interface, Thread class.
+1. Runnable interface:
+    - It represents a task to be run on a thread.
+    - It has only run() method.
+
+2. Thread class:
+    - Represents a thread of execution.
+    - It starts executing WHEN WE CALL THE start() method.
+
+Now, let's convert our example to multithreaded.
+First, let's implement the Runnable interface by class Adder:
+``` Java
+class Adder implements Runnable {
+    private String inFile, outFile;
+
+    public Adder(String inFile, String outFile) {
+        // assign 
+    }
+
+    public void doAdd() throws IOException {
+        // do stuff that we specified last time
+    }
+
+    public void run() {
+        try { // because each THREAD sees its own exceptions
+            doAdd();
+        } catch(IOException e) {
+            // handle exception
+        }
+    }
+}
+```
+
+Now let's modify the main function:
+``` Java
+public class Main {
+    public static void main(String[] args) {
+        String[] inFiles  = // a list of filenames
+        String[] outFiles = // a list of filenames
+
+        for(int i = 0 ; i < inFiles.length ; i++) {
+            Adder adder = new Adder(inFiles[i], outFiles[i]);
+            Thread thread = new Thread(adder); // The constructor expects a type that implements Runnable.
+            thread.start(); //Now the thread will run the run() method inside the type that was passed to it.
+        }
+    }
+}
+```
+
+This code will take care of running each loop iteration in a thread, but..
+Once all the threads are starting, the main thread now has nothing to do, 
+it MAY terminate even BEFORE the created threads finish.
+Once the main thread terminates, the entire process gets cleaned up.
+
+So, we need to make sure the background work is done.
+i.e. the main thread WAITS for all the other threads to finish.
+
+To do this:
+``` Java
+public class Main {
+    public static void main(String[] args) {
+        String[] inFiles  = // a list of filenames
+        String[] outFiles = // a list of filenames
+
+        Thread[] threads = new Thread(inFiles.length); // We declared the threads OUTSIDE the loop
+
+        for(int i = 0 ; i < inFiles.length ; i++) {
+            Adder adder = new Adder(inFiles[i], outFiles[i]);
+            threads[i] = new Thread(adder);
+            threads[i].start();
+        }
+
+        for(Thread thread: threads) {
+            thread.join(); // this method will make the calling thread BLOCK until the background thread finishes.
+        }
+    }
+}
+```
+Now, we have a reference for all the threads outside the for loop i.e. we can store these references.
+And the join() loop will make the main thread wait for all the other threads.
+
+That, is awesome ^_^
+
+### Thread Management Details in Java

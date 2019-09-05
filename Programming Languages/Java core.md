@@ -1037,3 +1037,160 @@ To do this:
     - But can provide app-specific variables.
     - Accessed by System.getenv(): you'll get a Map object containing environment variables.
     - Or System.getend(name): get only the value of the environment variable whose name you pass as argument.
+
+---
+
+## Capturing App Activity with the Log System
+
+Why do we need a log system at all?
+- To capture app activity.
+- To capture unusual circumstances and errors.
+- Track usage info.
+- Debugging.
+
+The required level of detail in terms of logging can vary:
+- A newly deployed app, or an app experiencing errors, may require a LOT of logging details.
+- An app that is mature and stable needs little details.
+
+java.util.logging Package gives us a lot of these features.
+
+The log system is centrally managed:
+- Only one logging instance per app.
+- It manages log system config.
+- And manages the objects that do the actual logging.
+
+LogManager class:
+- One global instance.
+- LogManager.getLogManager() returns a reference to that instance.
+
+Logger class:
+- Provides logging methods.
+- We get access to a Logger using LogManager class by getLogger().
+- Each instance is named.
+- A global logger instance is available.
+- And is accessed by a Logger class static field called GLOBAL_LOGGER_NAME
+``` Java
+public class Main {
+    public static void main(String[] args) {
+        LogManager lm = LogManager.getLogManager(); // lm now has reference to log manager global instance
+        Logger logger = lm.getLogger(Logger.GLOBAL_LOGGER_NAME);
+        logger.log(Level.INFO, "My logger message"); // each logger entry has a LEVEL, we'll see that later. 
+        logger.log(Level.INFO, "My second logger message");
+    }
+}
+```
+Because in order to access a logger we need to perform the first two statement over and over,
+in practice we do something different:
+``` Java
+public class Main {
+    // we make the logger STATIC
+    static Logger logger = LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME);
+
+    public static void main(String[] args) {
+        // now we can use the logger in any method inside the class
+    }
+}
+```
+
+### Logging Levels
+Logging level control how deep do we go into details.
+Also, each logger has a Capture Level, we set it using setLevel.
+The logger will IGNORE any level argument passed that's LESS than its own capture level.
+
+Each level has a numeric value:
+- 7 basic log levels.
+- 2 special levels for a logger.
+- We can define custom levels, but that's generally avoided.
+
+Logging levels:
+(Format: LEVELNAME: level_value, level_meaning).
+- SEVERE: 1000, serious failure.
+- WARNING: 900, potential problem.
+- INFO: 800, general info. (That's what we passed when we passed Level.INFO in the logger.log() function)
+- CONFIG: 700, config info.
+- FINE: 500, general dev info.
+- FINER: 400, detailed dev info.
+- FINEST: 300, specialized dev info.
+
+- ALL: Integer.MIN_VALUE, Logger capture EVERYTHING
+- OFF: Integer.MAX_VALUE, Logger doesn't capture anything.
+
+Logging methods:
+- log(): we saw that.
+- level conveninece levels: we actually have methods that identify the level for us and we only pass the message
+    e.g. severe(), warning(), fine(), etc.
+- Precise log method:
+    We specify the class name and method we want to log.
+    logp(Level.SEVERE, "com.pluralsight.training.Main", "myMethod", "Oh my goodness!");
+- Precise convenience methods:
+    These log predefined messages: (Their level is FINER)
+    So, we need to set the level so that it contains the FINER level (because it's not included by default)
+    .entering("com.pluralsight.training.Main", "myMethod");
+    .exiting("com.pluralsight.training.Main", "myMethod");
+
+Check out *Parametrized log methods*.
+
+### Log System in More Details
+The log system has different components.
+Each component handles a specific tasks.
+
+There are mainly 3 core components:
+- Logger: accepts out method calls.
+- Handler: responsible for publishing logging info, a Logger can have many Handlers.
+- Formatter: formats log info for publication e.g. text, XML, etc., each Handler has 1 Formatter.
+
+    +-----------+       +-----------+   +-----------+
+----+   Logger  |----+--+  Handler  +---+ Formatter +----> Outside world
+    +-----------+    |  +-----------+   +-----------+
+                     |
+                     |  +-----------+   +-----------+
+                     +--+  Handler  +---+ Formatter +----> Outside world
+                        +-----------+   +-----------+
+
+Each logger has a setLevel.
+Handlers also have setLevels, they can be more restrictive than the logger.
+
+How to create/add log components:
+- Create a logger: Logger.getLogger() static method.
+- Adding a Handler: Logger.addHandler().
+- Adding a formatter: Handler.setFormatteR(). (Because a handler gets ONE formatter).
+
+``` Java
+public class Main {
+    static Logger logger = Logger.getLogger("com.pluralsight");
+    public static void main(String[] args) {
+        Handler h = new ConsoleHandler();
+        Formatter f = new SimpleFormatter();
+
+        h.setFormatter(f);
+        logger.addHandler(h);
+    }
+}
+```
+
+### Built-in Handlers
+We can add our custom handlers, but that's usually not necessary.
+Built-in handler:
+- ConsoleHandler: writes to System.err
+- StreamHandler: writes to an output stream.
+- SocketHandler: writes to a network socket.
+- FileHandler: writes to one or more files.
+    This handler can write to ONE file, or many rotating files.
+    This means:
+    - We can specify the max size of a file in bytes.
+    - We can specify the max number of files.
+    - We can reuse oldest files.
+
+Check out how to use FileHandler with many files.
+
+### Built-in Formatters
+Formatter class is the parent class for both:
+- XMLFormatter.
+- SimpleFormatter. 
+    - Formats content as simple text.
+    - Format is customizable using the formatting notation we covered earlier.
+
+### Log Config File
+
+
+### How to make the most out of the Logging System

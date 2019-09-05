@@ -1139,14 +1139,6 @@ There are mainly 3 core components:
 - Handler: responsible for publishing logging info, a Logger can have many Handlers.
 - Formatter: formats log info for publication e.g. text, XML, etc., each Handler has 1 Formatter.
 
-    +-----------+       +-----------+   +-----------+
-----+   Logger  |----+--+  Handler  +---+ Formatter +----> Outside world
-    +-----------+    |  +-----------+   +-----------+
-                     |
-                     |  +-----------+   +-----------+
-                     +--+  Handler  +---+ Formatter +----> Outside world
-                        +-----------+   +-----------+
-
 Each logger has a setLevel.
 Handlers also have setLevels, they can be more restrictive than the logger.
 

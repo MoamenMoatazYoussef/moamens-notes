@@ -13,6 +13,90 @@ Types:
 - Byte streams: these are binary data.
 - Text streams: these are unicode characters.
 
+### Reader Class
+This is the class we use to read bytes
+- int read(): returns the value of bytethat was read, written as int.
+- int read(byte[] buff): returns the number of bytes that were read in the buffer.
+
+### InputStream Class
+This is the class we use to read characters.
+- int read(): returns the value of character that was read, written as int.
+- int read(char[] buff): returns the number of characters that were read in the buffer.
+
+Method we use with both classes:
+
+How to read one byte:
+``` Java
+InputStream input = // create input stream.
+int intVal;
+while((intVal = input.read()) >= 0) { //as long as the value is 0 or greater, we got a valid byte.
+    byte byteVal = (byte) intVal;
+    //do something with byteVal
+}
+``` 
+
+How to read one character:
+``` Java
+Reader reader = // create input stream.
+int intVal;
+while((intVal = reader.read()) >= 0) { //as long as the value is 0 or greater, we got a valid byte.
+    char charVal = (char) intVal;
+    //do something with charVal
+}
+``` 
+
+How to read an array of bytes:
+``` Java
+InputStream input = // create input stream
+int length;
+byte[] byteBuff = new byte[10];
+while((length = input.read(byteBuff)) >= 0) { //notice that read(byte[] buff) returns the LENGTH of the bytes in the buffer, not the actual byte like the normal read()
+    for(int i = 0 ; i < length ; i++) { //we can't assume the buffer is full, so we loop to the length only
+        byte byteVal = (byte) byteBuff[i];
+    }
+}
+```
+Same thing for characters.
+
+Writing:
+--------
+### OutputStream
+This is the class we use to write bytes.
+- void write(int b): writes the byte 'b' to a source.
+- void write(byte[] buff): writes list of bytes to a source.
+
+### Writer
+This is the class we use to write characters.
+- void write(char ch): writes the byte 'c' to a source.
+- void write(char[] buff): writes list of characters to a source.
+- void write(String str): writes string to a source.
+
+How to write bytes:
+``` Java
+OutputStream output = //create output stream
+byte byteVal = 100;
+output.write(byteVal);
+
+//for many bytes
+byte[] buff = {0, 63, 127};
+output.write(buff)l
+```
+
+How to write characters or a string:
+``` Java
+Writer writer = //create writer
+char c = 'a';
+writer.write(c);
+
+//many character
+char[] cbuff = {'a', 'w', 's'};
+writer.write(cbuff);
+
+//strings
+String s = "Slim Shady";
+writer.write(s);
+```
+
 ### Error handling in streams
 
 Errors happen, and streams throw exceptions.
@@ -53,7 +137,7 @@ interface Closeable extends AutoCloseable {
 }
 ```
 
-So, a type implementing the AutoCloseable interface, supports a stable structure in java called Try-with-resources.
+So, a type implementing the AutoCloseable interface, supports a stable structure in Java called Try-with-resources.
 
 It's a way to automate the process of closing a stream or any resource.
 It handles the close method.
@@ -123,7 +207,7 @@ This helps us focus only on overriding the methods.
 
 ### File Streams & Buffered Streams
 
-The java.io packages have streams for files:
+The Java.io packages have streams for files:
 
 - FileReader.
 - FileWriter.
@@ -185,10 +269,10 @@ void readData() throws IOException {
 }
 ```
 
-#### java.nio Classes For File Streams
+#### Java.nio Classes For File Streams
 
-Since java.io file stream classes are deprecated, there are new ones in the java.nio package.
-These provide many benefits over java.io:
+Since Java.io file stream classes are deprecated, there are new ones in the Java.nio package.
+These provide many benefits over Java.io:
 
 - Better exception reporting.
 - They deal with large files more efficiently.
@@ -206,7 +290,7 @@ Path p2 = Paths.get("path", "to", "file.txt");
 // Both p1 and p2 point to the same file.
 ```
 
-The java.nio package provide Files and Paths classes which provide a lot of methods to simplify streams:
+The Java.nio package provide Files and Paths classes which provide a lot of methods to simplify streams:
 They contain factory methods that handle the creation of FileReaders, writers, etc.
 Here's an example of using java.nio Files and Paths classes instead of BufferedReader and FileReader
 
@@ -387,7 +471,7 @@ void doWrite(int a, b, c) throws IOException {
 ```
 
 Check the Java Formatter documentation:
-https://docs.oracle.com/javase/8/docs/api/java/util/Formatter.html
+https://docs.oracle.com/javase/8/docs/api/Java/util/Formatter.html
 
 ---
 
@@ -444,10 +528,12 @@ while(matcher.find()) {
 ```
 
 Check the Pattern and Matcher classes documentation.
-https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html
+https://docs.oracle.com/javase/8/docs/api/Java/util/regex/Pattern.html
 
 Tutorial in regex:
 https://docs.oracle.com/javase/tutorial/essential/regex/
+
+---
 
 ## Collections
 We know arrays (If you're now a noob at programming, that is).
@@ -460,3 +546,494 @@ Collections in Java have some advantages:
 - They provide type safety.
 - They dynamically size.
 - Some of them support ordering, prevent duplicates, manage data as name-value pairs, etc.
+
+Collections use generics, which are specified during collection creation.
+For example:
+``` Java
+ArrayList<String> list = new ArrayList<>(); // We can remove the type from the <> after the new keyword.
+list.add("Slim");
+list.add("Shady");
+
+for(String o: list) {
+    System.out.println(o); // since we use generics and we specified that it's a string, the object o is returned AS a string.
+}
+
+// also, we can't add something that isn't a string
+int a = 4;
+list.add(a); // Will give an error
+```
+
+### Collection Interface
+Collections implement the Collection interface (Except the Map collection).
+Collection interface extends Iterable (which is why we can use the for each loop).
+Common methods in the Collection interface:
+- size()
+- clear()
+- isEmpty()
+- add()
+- addAll(): add all members from another collection
+``` Java
+ArrayList<String> list1 = new ArrayList<>();
+LinkedList<String> list2 = new LinkedList<>();
+
+list1.add("Aperture science");
+list1.add("Black Mesa");
+
+list2.add(list1); // No problem, the members from list1 will be added to list2.
+```
+
+Many of the Collection interface methods rely on equality test, such ass:
+- contains()
+- containsAll(): does it contain all elements in another collection?
+- remove()
+- removeAll(): removes all elements contained in another collection.
+- retainAll(): removes all elements not contained in another collection.
+
+Let's look at removing a member:
+``` Java
+public class MyClass {
+    String label, value;
+
+    public MyClass(String label, String value) {
+        this.label = label;
+        this.value = value;
+    }
+
+    public boolean equals(Object o) {
+        MyClass other = (MyClass) o;
+        return value.equalsIgnoreCase(other.value); // only if value fields are equal, both objects are declared equal.
+    }
+}
+``` 
+
+Now, let's create a collection of MyClass:
+``` Java
+ArrayList<MyClass> list = new ArrayList<>();
+MyClass v1 = new MyClass("v1", "a");
+MyClass v2 = new MyClass("v2", "a");
+MyClass v3 = new MyClass("v3", "a");
+
+list.add(v1);
+list.add(v2);
+list.add(v3);
+
+list.remove(v3);
+// what will happen here is that
+// 1. an equality test will be performed on each element until one returns true.
+// 2. the first element that returns true is removed.
+```
+
+### Collection features added in Java 8
+Java 8 allowed us to pass lambda expressions as arguments (i.e. pass code).
+Collection methods that accept lambda expressions:
+- forEach: perform the lambda expression on each member.
+- removeIf: perform the lambda expression (which should be of return type boolean) on each member and removes it if it returns true. 
+``` Java
+ArrayList<MyClass> list = new ArrayList<>();
+MyClass v1 = new MyClass("v1", "a");
+MyClass v2 = new MyClass("v2", "b");
+MyClass v3 = new MyClass("v3", "a");
+
+list.add(v1);
+list.add(v2);
+list.add(v3);
+
+// instead of for loop to print
+// we can just do this:
+list.forEach(m -> System.out.println(m.getLabel())); 
+list.removeIf(m -> m.getValue().equals('a'));
+
+// They are very very similar to arrow functions in JS.
+```
+
+### Converting between Collections and Arrays
+From Collection to Array:
+- toArray(): returns array of objects.
+- toArray(T[] array): returns array of type T.
+
+``` Java
+``` Java
+ArrayList<MyClass> list = new ArrayList<>();
+MyClass v1 = new MyClass("v1", "a");
+MyClass v2 = new MyClass("v2", "b");
+MyClass v3 = new MyClass("v3", "a");
+
+list.add(v1);
+list.add(v2);
+list.add(v3);
+
+Object[] objArray = list.toArray();
+
+MyClass[] typedArray1 = list.toArray(new MyClass[0]); 
+// if we pass an empty array of a certain type, 
+// the method will return a new array of that type
+
+MyClass[] typedArray2 = list.toArray(new MyClass[3]);
+// if we pass an array of a size sufficient for the elements in the collection, 
+// the method will return a REFERENCE to the array I passed in. 
+```
+
+From Array to Collection: 
+- Arrays.asList()
+
+``` Java
+MyClass[] a = {
+    new MyClass("v1", "a"),
+    new MyClass("v2", "a"),
+    new MyClass("v3", "a")
+
+};
+
+Collection<MyClass> list = Arrays.asList(a);
+```
+
+### Common Collection Types in Java
+#### Common collection interfaces:
+- Colllection: basic collection operations
+- List: maintains an order.
+- Queue: an order with a specific 'head' element.
+- Set: no duplicate values.
+- SortedSet: no duplicates AND members are sorted.
+
+#### Common collection classes:
+- ArrayList: 
+    - Implements List.
+    - Efficient for random access.
+    - Inefficent for random insert.
+- LinkedList:
+    - Implements List and Queue, is implemented as a doubly linked list.
+    - Efficient for random insert.
+    - Inefficent for random access.
+- HashSet:
+    - Implements Set, is implemented as Hash table.
+    - Efficient general purpose usage.
+- TreeSet:
+    - Implements SortedSet, is implemented as balanced binary tree.
+    - Efficient in ordered access.
+    - Inefficient in getting modified and searched than a HashSet.
+    
+#### How these Collections are Sorted
+Sorting is specified in two ways:
+- Implement the Comparable interface:
+    - The Type specifies its own sorting behavior.
+    - Therefore, the implementation of Comparable should be consistent with the implementation of the method 'equals'.
+- Implement the Comparator interface:
+    - Implemented by a certain Type that performs the sort (separate from the type of the collection that's getting sorted).
+    - Specifies sort behavior of another type.
+
+Let's start with a simple class:
+``` Java
+public class MyClass {
+    String label, value;
+    public String toString() { return label + "|" + value; }
+    public boolean equals(Object o) {
+        MyClass other = (MyClass) o;
+        return value.equalsIgnoreCase(other.value)l
+    }
+}
+```
+
+How to implement Comparable:
+``` Java
+public class MyClass implements Comparable{
+    String label, value;
+    public String toString() { return label + "|" + value; }
+    public boolean equals(Object o) {
+        MyClass other = (MyClass) o;
+        return value.equalsIgnoreCase(other.value)l
+    }
+
+    public int compareTo(MyClass other) {
+        return value.compareToIgnoreCase(other.value); // Notice that we used 'value', the variable that's used in 'equals()'
+    }
+}
+```
+
+How to implement Comparator:
+``` Java
+public class MyComparator implements Comparator<MyClass> {
+    public int compare(MyClass x, MyClass y) {
+        return x.getLabel().compareToIgnoreCase(y.getLabel()); 
+        // Notice that we didn't have to use 'value' here
+        // because we are using an external class to sort them
+    }
+}
+```
+
+
+How to sort a collection of MyClass using both methods:
+``` Java
+// First method
+TreeSet<MyClass> tree1 = new TreeSet<>();
+tree1.add(new MyClass("2", "c"));
+tree1.add(new MyClass("1", "b"));
+tree1.add(new MyClass("3", "a"));
+
+tree1.forEach(m -> System.out.println(m));
+
+TreeSet<MyClass> tree2 = new TreeSet<>(new MyComparator()); // Notice we passed a new MyComparator object to be used
+tree2.add(new MyClass("2", "c"));
+tree2.add(new MyClass("1", "b"));
+tree2.add(new MyClass("3", "a"));
+
+tree2.forEach(m -> System.out.println(m));
+```
+So we can really specify how things are sorited, which is a really useful thing.
+
+### Map Collections
+Key/value pairs.
+
+Map Interfaces:
+- Map: basic map operations.
+- SortedMap: sorted by keys.
+
+Map Class:
+- HashMap: efficient general purpose map.
+- TreeMap: self-balancing tree, supports Comparable and Comparator interfaces for sorting.
+
+Map methods:
+- put(): add key and value.
+- putIfAbsent(): put() if key isn't present or value is null.
+- get(): return value of key, or null.
+- getOrDefault(): get(), but instead of null it returns a specified default value.
+- values(): returns a collection of all values.
+- keySet(): returns a set of all keys (set because keys are unique).
+- forEach()
+- replaceAll()
+
+SortedMap methods:
+- firstKey()
+- lastkey()
+- headMap(): returns a MAP of all entries whose keys are less than (exclusive) a specified key.
+- tailMap(): same but all keys are GREATER than OR EQUAL (inclusive) to a specified key.
+- subMap(): returns a map of all entries whose keys are greater than or equal to (inclusive) a key, and less than (exclusive) another key i.e. it returns part of the original map in the key range that we specify, with the bottom range included.
+
+``` Java
+Map<String, String> map = new HashMap<>();
+map.put("2", "c");
+map.put("3", "a");
+map.put("1", "b");
+```
+
+---
+
+## Controlling App Execution and Environment
+In this module we'll look at how we can control our app state and the environment in which the app runs.
+This is some *serious* stuff, huh xD
+
+### Command-Line Arguments
+The bane of every developer's existence, although they are really easy.
+We use them to pass startup info like:
+- What to run.
+- IO files & urls.
+- Behavior options i.e. command switches.
+
+Of course, these are passed in an array of strings to the main function, the famous String args[].
+Each argument is a separate element, separated by the OS's whitespace, quoting is used for arguments WITH spaces in their names.
+
+For example:
+``` Java
+package com.jwhh.cmdline;
+
+public class Main {
+    public static void main(String[] args) {
+        if(args.length < 1) {
+            System.out.print("No arguments passed");
+        } else {
+            for(String a: args) {
+                System.out.println(a);
+            }
+        }
+    }
+}
+```
+
+This is how we run it, passing some arguments:
+``` sh
+$ java com.jwhh.cmdline.Main Hello There World
+```
+IDEs allow setting command line arguments in a way, so search for how to do it in a certain IDE like eclipse, IntelliJ, NetBeans, etc.
+
+### Dealing with Persistent Key/Value Pairs
+Persistent data is data that is NOT destroyed when the program exits, they're saved on the physical storage e.g. cookies, local storage, etc.
+In java we can manage persistent data through storing it as key/value pairs, we need to:
+- Set & retrieve values.
+- Store and load it.
+- Provide default values if not set.
+
+Our hero this time is the Properties class.
+- Inherits from HashTable class.
+- Keys and values are strings.
+
+Methods of Properties class:
+- setProperty: sets or creates key with a new value.
+- getProperty: gets value of key or null/default value if not found.
+``` Java
+Properties props = new Properties();
+props.setProperty("Name", "Moamen");
+String name1 = props.getProperty("Name");
+String name2 = props.getProperty("nextName", "defaultValue"); // We pass a default value to return if key isn't found
+```
+
+#### So how do you make this Properties object persistent?
+They can be persisted using Streams.
+They can be persisted in two formats:
+- Simple text.
+    - Using streams.
+    - .properties extension.
+    - ONE key/value pair per line.
+        - Separated by = or :
+        - Any whitespace around = or : is ignored.
+        - Any OTHER whitespace becomes a separator.
+        - The backslash' escapes whitespace.
+        - Comments start with # or !.
+        - Blank lines are ignored.
+- XML.
+    - Using streams.
+    - .xml extension.
+    - ONE key/value pair per XML element.
+        - Element is named entry.
+        - Key is stored as key attribute.
+        - Value is stored as value of the element itself.
+        - Comments are stored as Comment elements.
+
+##### Simple text
+``` Java
+Properties props = new Properties();
+props.setProperty("Name", "Moamen");
+props.setProperty("Nickname", "Mr. Awesome");
+
+// Storing properties
+try(Writer writer = Files.newBufferedWriter(Paths.get("moamen.properties"))) {
+    props.store(writer, "My Comment"); 
+    // props.store is the method we'll use
+    // we pass any comments we want as the second argument.
+    // the file will be created, 
+    // first line will be the comment, second line is date
+    // then keys and values are displayed
+}
+
+// Loading properties
+Properties props2 = new Properties();
+try(Reader reader = Files.newBufferedReader(Paths.get("moamen.properties"))) {
+    props2.load(reader);
+}
+
+String val1 = props2.getProperty("Nickname");
+System.out.println(val1); // Output: Mr. awesome
+```
+If there are spaces in the value in the text file (other than the ones around = or :) (Hey that looks like a smily face), they might cause problems.
+
+##### XML
+``` Java
+Properties props = new Properties();
+props.setProperty("Name", "Moamen");
+props.setProperty("Nickname", "Mr. Awesome");
+
+// Saving properties
+try(Writer writer = Files.newBufferedWriter(Paths.get("moamen.xml"))) {
+    props.storeToXML(writer, "My Comment"); 
+    // The XML file will have first the version and DOCTYPE
+    // then the top element <properties>
+    // then our comment in <comment>
+    //  <entry key="Name">Moamen</entry>
+    // etc.
+}
+
+// Loading properties
+Properties props2 = new Properties();
+try(Reader reader = Files.newBufferedReader(Paths.get("moamen.xml"))) {
+    props2.loadFromXML(reader);
+}
+
+String val1 = props2.getProperty("Nickname");
+System.out.println(val1); // Output: Mr. awesome
+```
+
+#### Default Values
+We pass default Properties to the constructor of Properties.
+These are searched if key is not found.
+Default values passed in the constructor *take precedence* over default values passed in getProperty.
+``` Java
+Properties defaults = new Properties();
+defaults.setProperty("Name", "Moamen");
+
+Properties props = new Properties(defaults);
+String p1 = props.getProperty("Name"); //Output: Moamen
+
+props.setProperty("Name", "Moamen Moataz");
+String p2 = props.getProperty("Name"); //Output: Moamen Moataz
+```
+
+Defaults are usually decided on when starting the development, so:
+- Create the default property file as part of the PACKAGE of your app.
+- Create .properties file at dev time.
+- Build process will include it in the package.
+- So now we can load it using getResourceAsStream method for example (Which is a part of something called Java Resource System).
+- Any class can access properties now.
+
+## Class Loading
+This topic has frustrated me so many times because of the freaking classpath, so pay attention so as not to pass through the pain that I've been through :'D
+
+Most apps don't stand alone, they rely on other classes in other packages.
+JDK packages are located automatically.
+But what about other packages?
+
+We solve this by:
+- First of all, each IDE loads packages at dev time on its own.
+- Default, java searches the CURRENT directory:
+    - All classes must be in .class files.
+    - And must be under package directories that match their packages.
+        e.g. if a class is in package .com.pluralsight.training, then it must be in directory ./com/pluralsight/training.
+- Or, we can specify a specific location or locations for Java to search for classes in.
+    - These are searched in the order they appear in.
+    - Once we do that, the current directory is excluded UNLESS we put it into the list.
+
+How to specify these paths? Two ways:
+1. By an environment variable, called CLASSPATH.
+    - When we set it, it becomes a DEFAULT PATH, which means, if a Java app doesn't specify some paths for itself, it will use the current value of CLASSPATH to search for classes.
+    - That's why, we should use this with caution, some programs may depend on its value, so changing it might lead to problems, even adding paths to it may lead to name collisions and stuff.
+Search for how to set an environment variable according to your OS, but generally:
+``` sh
+#Windows
+$ set CLASSPATH="path/you/want"
+```
+
+Class Path Structure: 
+- Windows: path1 ; path2 ; path 3 ...
+    - Separated by ;
+- Unix: path1 : path2 : path3 ...
+    - Separated by :
+- .class files: Path to folder containing package root.
+- .jar file: path to the file, inluding its name
+
+2. Passing the classpath for the java app when running:
+``` sh
+#Windows
+$ java -cp \path1;\path2 com.pluralsight.training.Main
+
+#Unix
+$ java -cp /path1:/path2 com.pluralsight.training.Main
+```
+
+Search for how to do this for .jar files, and using the -jar command line option.
+
+### Execution Environment Information
+Apps often need info like:
+- User info.
+- System info.
+- Java config info.
+- App specific info.
+
+To do this:
+- System Properties.
+    - Info that Java provides about the environment:
+    - Accessed by System.getProperty.
+    - Info include: User info, Java installation info, OS config info.
+- Environment Variables.
+    - OS provides these variables.
+    - They provide config info.
+    - Are mostly automatically set by OS.
+    - But can provide app-specific variables.
+    - Accessed by System.getenv(): you'll get a Map object containing environment variables.
+    - Or System.getend(name): get only the value of the environment variable whose name you pass as argument.

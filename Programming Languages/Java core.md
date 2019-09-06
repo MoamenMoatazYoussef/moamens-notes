@@ -1640,3 +1640,901 @@ That means, we can manually acquire and release locks :o
 
 We do this using a Synchronized statement block.
 This is useful because ANY code that has a reference to an object can use the Synchronized statement block to lock that object.
+
+
+---
+
+---
+
+---
+
+## Type info and Reflections
+Reflections are things that let us:
+- Examine types at runtime.
+- Dynamically execute and access members of types.
+
+Why?
+- Apps don't always control the types used.
+    - This is common for advanced app designs.
+    - Also common if you're developing a framework or a tool.
+- That's because your code may need to interact with different types.
+- Also, you may need to deal with legacy databases and stuff, you don't know what to expect.
+- So you can't just write type-specific source code.
+- So, sometimes we need to DYNAMICALLY LOAD types.
+
+We can fully examine objects at runtime, we can determine an object's:
+- Type and base type.
+- Which interfaces it implements.
+- Members.
+
+We can also use reflections on a type to:
+- Construct instances of a type.
+- Access its fields.
+- Call its methods.
+
+This helps us make apps that are Configurable, the specific tasks are externally control.
+This follows the design principle: inversion of control.
+It means that an app provides some fundamental behavior, then external developers can add their specialized behavior through classes.
+
+### Types as Types
+Types are the foundations of any app solution, we use them to:
+- Model business objects e.g. class Car, etc.
+- Model technical issues e.g. Runnable, Thread, all that.
+
+When we make an object instance, we create an instance of the object's class.
+When we create a class, it's actually an object instance of another class called '*Class*'.
+
+For every type we have in our app, there's an instance of *Class* that describe it.
+
+Let's look at some code:
+``` Java
+public class BankAccount {
+    private final String id;
+    private int balance = 0;
+
+    public BankAccount(String id) {...}
+    public Bankaccount(String id, int balance) {...}
+
+    public String getId() {...}
+    public synchronized int getBalance() {...}
+    public synchronized void deposit(int amount) {...}
+}
+
+// There is an instance of *Class* class, it models the type BankAccount we just wrote,
+// this *Class* instance has members, like:
+// 1. simpleName: BankAccount
+// 2. fields: a collection that has all the fields, methods, and constructors, 
+//      it has an entry for id, an entry for balance, an entry for each constructor and each method
+```
+This *Class* instance is actually accessible at run-time.
+So, we have a model to work with our bank account class.
+Every time we create a BankAccount instance, the *Class* instance that represents Bankaccount is 
+used as a MOLD for the memory allowed for an instance of BankAccount.
+
+The relationship between the *Class* instance and the Type(BankAccount) instance is not just limited to creation of instances.
+Each Type instance has a reference to the *Class* instance that describe it.
+
+So, we can create 1000 instances of the Type, and they all reference ONE INSTANCE of *Class*, the one that describes the Type.
+
+This means, we can refer to any object without knowing what type that object actually is, because we can get to the *Class* instance that describes it, and USE that *Class* instance to construct other instances of that object.
+
+### How to access a type's *Class* instance
+If we have an instance of a given type, we can use getClass() method to get the *Class* instance that describes it.
+If we have only the type's NAME as a string, we can use Class.forName() static method and pass the type's name as long as it's a fully qualified name (i.e. with packages and all that).
+We can also use typename.class on the type's name, like String.class for example.
+``` Java
+void showName(Class<?> theClass) { // Notice we have a generic type '?'
+    System.out.println(theClass.getSimpleName());
+}
+
+// The function accepts a *Class* reference, that describes a given type e.g. BankAccount
+// So here we should pass the *Class* instance that describes BankAccount.
+// But the parameter has a generic <?>, it can specialize the type it operating against.
+// In many cases we don't know the type that's going to be passed, that's why we put the generic argument.
+
+void doWorkCase1(Object o) {
+    Class<?> c = obj.getClass();
+    showName(c);
+}
+
+// This function above can accept any type, then get its *Class* instance, then passes that to the showName function.
+// It accepts an object reference, which is the first case that we described.
+
+void doWorkCase2(String fqn) { // fqn as in Fully Qualified Name, something like "com.pluralsight.tutorial.BankAccount"
+    Class<?> c = Class.forName(fqn);
+    showName(c);
+}
+```
+Both ways to access the *Class* instance return the same reference to the same *Class* instance, the same description of the type BankAccount.
+
+### How to access a Type's info
+Once we access the *Class* instance that describes a Type, we can know:
+- Its superclass, if it has one.
+- Interfaces,
+- Modifiers,
+- Members,
+We've got a lot of power now :'D
+``` Java
+public final class HighVolumeAccount extends BankAccount implements Runnable {
+    // constructors
+    public int[] readDailyDeposits() {...} 
+    public String run() {
+        for(int depositAmt: readDailyDeposits()) {
+            deposit(depositAmt);
+        }
+    }
+}
+
+void classInfo(Object obj) {
+    Class<?> c = obj.getClass();
+    System.out.println(c.getSimpleName());      
+    Class<?> superclass = c.getSuperclass();    // a reference to the *Class* instance that describes its superclass
+                                                // we can do that again to the superclass,
+                                                // we can walk all the way up the hierarchy and get the info of all that
+    Class<?>[] interfaces = c.getInterfaces();  // same thing, we get *Class* instances that describe all interfaces
+                                                // implemented by that class
+    for(Class<?> interface: interfaces) {
+        System.out.println(interface.getSimpleName());
+    }
+} 
+```
+We can also use the method getModifiers(), this returns ONE integer value, why?
+Each modifier is represented by a simple bit inside that integer, so, we need to interrogate that integer to know the modifiers, we can use Modifier class to interpret that integer.
+
+For example:
+``` Java
+void typeModifiers(Object obj) {
+    Class<?> c = obj.getClass();
+    int modifiers = c.getModifiers();
+
+    // if((modifiers & Modifier.FINAL) > 0) {...} // this is a bitwise comparison 
+    if(Modifier.isFinal(modifiers)) { //this is much easier
+        ...
+    }
+
+    if(Modifier.isPrivate(modifiers)) {
+        ...
+    }
+
+    // Other methods are isProtected, isPublic, etc.
+}
+```
+
+### How to access a Type's members
+We can access a Type's DECLARED members, all of them, public, private, protected, etc. using:
+- getDeclaredFields()
+- getDeclaredMethods()
+- getDeclaredConstructors()
+
+We can access a Type's Declared AND inherited members, ONLY THE PUBLIC ONES.
+- getFields()
+- getMembers()
+- getConstructors()
+There's something, Constructors are NOT inherited, so getConstructors just shows the public declared constructors of the Type.
+``` Java
+// Using the class BankAccount
+
+void fieldInfo(Object o) {
+    Class<?> c = o.getClass();
+    
+    Field[] fields = c.getFields();
+    for(Field f: fields) {
+        System.out.println(f);
+    }
+
+
+    Field[] declaredFields = c.getDeclaredFields();
+    for(Field f: declaredFields) {
+        System.out.println(f);
+    }
+}
+
+
+void methodInfo(Object o) {
+    Class<?> c = o.getClass();
+    
+    Method[] methods = c.getMethods();
+    for(Method m: methods) {
+        System.out.println(m);
+    } 
+
+    Method[] declaredMethods = c.getDeclaredMethods();
+    for(Method m: declaredMethods) {
+        System.out.println(m);
+    }
+}
+
+```
+Using getFields and getMembers will get all declared and inherited methods, all the way up the hierarchy to Object class.
+What if we don't want that, what if we want to exclude the inherited ones or some methods from a specific class?
+``` Java
+void methodInfo(Object o) {
+    Class<?> c = o.getClass();
+    
+    Method[] methods = c.getMethods();
+    for(Method m: methods) {
+        if(m.getDeclaringClass() != Object.class) { // Here
+            System.out.println(m);
+        }
+    } 
+
+    Method[] declaredMethods = c.getDeclaredMethods();
+    for(Method m: declaredMethods) {
+        System.out.println(m);
+    }
+}
+```
+Also, we can access specific members by passing the member signature (name of field, or name of methods plus parameters, or parameter types of constructor) to the functions we used i.e. getFields, getMethods, etc.
+
+Also, we can get the modifiers of members by using getModifier() with a certain member, then use Modifiers class to know what the modifiers of that member are.
+
+### Interacting with Object Instances
+So far we've accessed nearly everything about a Type.
+But what about actually USING this info?
+
+We can use reflection to perform Actions, we can invoke Members.
+If we have a BankAccount object and a BankAccount reference pointing to it, we can invoke the Type's methods.
+If we have a BankAccount object and an OBJECT reference pointing to it, we CAN NOT invoke the Type's methods that are not inherited from Object (methods declared inside BankAccount e.g. getId() or deposit()).
+That's because the reference lacks the information about these methods.
+
+Now, we can call getClass on the object and get the info we got in the last section.
+So, we can get the *Class* instance, 
+then get the info for getId(),
+then apply it to the Object reference,
+then use the Object reference now to call getId(), and the call would work :o
+
+``` Java
+public static void main(String[] args) {
+    BankAccount acct1 = new BankAccount("1");
+    callGetId(acct1);
+}
+
+void callGetId(Object obj) {
+    try {
+        Class<?> c = obj.getClass();
+        Method m = c.getMethod("getId");    // Now we have the info for getId
+        Object result = m.invoke(obj);      // We invoked the method on the object reference of BankAccount acct1
+    } catch(Exception e) {
+        ...
+    }
+}
+
+void callDeposit(Object obj, int amount) {
+    try {
+        Class<?> c = obj.getClass();
+        Method m = c.getMethod("deposit", int.class);   
+        // deposit() has one parameter, an int, so we pass int.class, the type description of 'int'
+        
+        Object result = m.invoke(obj, amount); // We pass any arguments after the object reference
+    } catch(Exception e) {
+        ...
+    }
+}
+```
+
+While Reflection gives us runtime access to types and their members, it IS SLOWER Than compile-time access and usage.
+
+### Creating instances of objects with Reflection
+Since we can access a Type's constructors, we can invoke them and create new instances of a type.
+If we're going to use the default constructor, we can use another method, newInstance(), which is a method of the class *Class*.
+
+Why would we want that?
+If we want to built a Work Dispatch system that:
+- Executes worker classes against targets.
+- Can use ANY WORKER in classpath.
+- We just get passed the type NAMES.
+- The method to start work has two args:
+    - the worker type NAME, received as a string, and
+    - the target of work, received as an object ref.
+- Worker type requirements:
+    - Should have a constructor that accepts target type.
+    - A doWork method that takes no arguments.
+
+``` Java
+// We'll use BankAccount and HighVolumeAccount
+// We'll create a single worker, accountWorker
+class AccountWorker implements Runnable {
+    BankAccount ba;
+    HighVolumeAccount hva;
+    public AccountWorker(BankAccount ba) {...}
+    public AccountWorker(HighVolumeAccount hva) {...}
+
+    public void doWork() {
+        Thread t = new Thread(hva != null ? hva : this);
+        t.start();
+    }
+
+    public void run() {
+        int amt = // read tx amount
+        ba.deposit(amt);
+    }
+}
+
+// So how to use Reflection to get all that working?
+
+void startWork(String workerTypeName, Object workerTarget) {
+    try {
+        Class<?> workerType = Class.forName(workerTypeName);
+        Class<?> targetType = workerTarget.getClass();
+
+        Constructor c = workerType.getConstructor(targerType);
+        Object worker = c.newInstance(workerTarget);
+
+        Method doWork = workerType.getMethod("doWork");
+        doWork.invoke(worker); 
+    } catch(Exception e) {
+        ...
+    }
+}
+
+public static void main(String[] args) {
+    BankAccount acct1 = new BankAccount();
+    startWork("com.pluralsight.tutorial.AccountWorker", acct1);
+}
+```
+
+That's it, we can extend the app to include more workers and worker types.
+
+#### Another way to create instances in reflection
+Let's say we'll change the worker requirements:
+- It should have a no-arg constructor.
+- Implements TaskWorker.
+``` Java
+public interface TaskWorker {
+    void setTarget(Object target);
+    void doWork();
+}
+```
+
+Let's see how our code will change:
+``` Java
+// We'll use BankAccount and HighVolumeAccount
+class AccountWorker implements Runnable, TaskWorker {
+    BankAccount ba;
+    
+    public AccountWorker() {...}
+    public AccountWorker(BankAccount ba) {...}
+
+    public void setTarget (Object target) {
+        if(BankAccount.class.isInstance(target)) // if the target passed is an instance of BankAccount
+        {
+            ba = (BankAccount) target;
+        } else {
+            throw new IllegalArgumentException(...); // A good practice to raise exceptions
+        }
+    }
+
+    public void doWork() {
+        Thread t = new Thread(
+            HighVolumeAccount.class.isInstance(ba) ? (HighVolumeAccount) ba : this // Notice the use of isInstance here
+        );  
+
+        // In theory we could just pass ANY BankAccount child that uses Runnable
+
+        t.start();
+    }
+
+    public void run() {
+        int amt = // read tx amount
+        ba.deposit(amt);
+    }
+}
+
+// So how to use Reflection to get all that working?
+
+void startWork(String workerTypeName, Object workerTarget) {
+    try {
+        Class<?> workerType = Class.forName(workerTypeName);
+        TaskWorker worker = (TaskWorker) c.newInstance();   // Notice the difference here
+
+        worker.setTarget(workerTarget);
+        Worker.doWork(); 
+
+        // Notice that when we casted the new instance to TaskWorker, we were able to just call its methods.
+        // without invoke or getMethod, like normally.
+        // that is a good practice too, just use reflection where you need it.
+
+    } catch(Exception e) {
+        ...
+    }
+}
+
+public static void main(String[] args) {
+    BankAccount acct1 = new BankAccount();
+    startWork("com.pluralsight.tutorial.AccountWorker", acct1);
+}
+```
+
+---
+
+## Adding Type Metadata with Annotations
+
+Why metadata and annotations?
+As developers, when we create programs, usually they don't stand alone:
+- They're hosted in an execution environment,
+- that runs on some OS,
+- and incorporate frameworks,
+- or maybe running on a web environment,
+- and our own assumptions.
+
+When other developers work on the same code, they might have a hard time understanding our intent and context of each function, class, etc.
+
+The type system, interfaces, modifiers, etc. all that helps clear this out, but not entirely.
+For example, there is no difference in writing a function that is declared and writing a function that overrides another.
+
+We might write comments or use documentation, and these are good but not enough.
+We need a structured solution so that not only other developers but other TOOLS can understand and operate on the code correctly.
+
+### Annotation
+They are special Types that act as metadata.
+They're applied to a specific target, but they don't change a target's behavior.
+But they are interpreted by tools so that they understand the context and intent of our target.
+We write an annotation just above the target.
+
+Example:
+``` Java
+class BankAccount {
+    ...
+    @Override // That's an annotation
+    public String toString() {
+        return String.format(getId() + ": " + getBalance());
+    }
+}
+```
+The compiler finds this annotation, then looks for the signature of the target in all superclasses,
+if it finds one, that's great, if not, it generates an error.
+So if we write toStrong instead of toString, without annotations we would know when we're finished and testing.
+With annotations, we'll know at compile time.
+
+Annotations are used by a lot of environment:
+- Java EE.
+- XML Processing tools like JAXP.
+- etc.
+
+Some annotations:
+- Override.
+- Deprecated: means that the target is old and not preferred to be used
+- SuppressWarnings: the target generates warnings, but you know that's the case and you want to get rid of the warnings.
+
+Let's look at an example:
+``` Java
+class Doer {
+    @Deprecated
+    void doItThisWay() {...}
+    void doItThisNewWay() {...}
+}
+
+// @SuppressWarnings("deprecation"): Don't do that
+class MyWorker {
+    @SuppressWarnings("deprecation")
+    void doSomeWork() {
+        Doer d = new Doer();
+        d.doItThisWay();
+    }
+
+    @SuppressWarnings("deprecation")
+    void doDoubleWork() {
+        Doer d1 = new Doer();
+        Doer d2 = new Doer();
+        d1.doItThisWay();
+        d2.doItThisWay();
+    }
+}
+```
+
+The developers of Doer write @Deprecated,
+This generates warnings for anyone who uses the deprecated targets, notifying them that they should migrate to the new method.
+
+Until the developers of MyWorker change the code and test it, they might use a @SuppressWarnings("deprecation") annotation to remove the warnings generated by the @Deprecated annotation.
+This is dangerous to use on the class as it may supress other warnings.
+So it's best used close to where the warnings come out, like on the specific functions.
+
+### Custom Annotations
+Annotations are a special type of interface:
+- They can't be explicitly implemented.
+- All annotations extend an interface: Annotation.
+- But they don't feel like interfaces.
+
+We can create custom annotations i.e. we can build solutions that operate based on custom metadata.
+For example, remember this was used at the end of Reflections module:
+``` Java
+class AccountWorker implements Runnable, TaskWorker {
+    BankAccount ba;
+    
+    public AccountWorker() {...}
+    public AccountWorker(BankAccount ba) {...}
+
+    public void setTarget (Object target) {
+        if(BankAccount.class.isInstance(target))
+        {
+            ba = (BankAccount) target;
+        } else {
+            throw new IllegalArgumentException(...); 
+        }
+    }
+
+    public void doWork() {
+        Thread t = new Thread(
+            HighVolumeAccount.class.isInstance(ba) ? (HighVolumeAccount) ba : this
+        );  
+
+        t.start();
+    }
+
+    public void run() {
+        int amt = // read tx amount
+        ba.deposit(amt);
+    }
+}
+
+void startWork(String workerTypeName, Object workerTarget) {
+    try {
+        Class<?> workerType = Class.forName(workerTypeName);
+        TaskWorker worker = (TaskWorker) c.newInstance();
+
+        worker.setTarget(workerTarget);
+        Worker.doWork(); 
+
+    } catch(Exception e) {
+        ...
+    }
+}
+
+public static void main(String[] args) {
+    BankAccount acct1 = new BankAccount();
+    startWork("com.pluralsight.tutorial.AccountWorker", acct1);
+}
+```
+Now, we want to extend that system:
+- Workers create their own threads.
+- Can be run on an app's thread pool instead of their own threads.
+- We'll use custom annotations to indicate whether they want their own threads, or the app's thread poo.
+
+How to declare an annotation:
+``` java
+public @interface WorkHandler {
+    // Annotations can have content, called Elements.
+    // Elements associate values within annotations.
+    // They are declared as methods:
+    boolean useThreadPool();
+}
+```
+
+Alright, how can we use this annotation?
+
+``` Java
+@WorkHandler(useThreadPool = false) //See here?
+class AccountWorker implements Runnable, TaskWorker {
+    ...
+}
+```
+But we need to access the annotation's value so that we know if the worker wants their own thread or the app's thread pool.
+How do we get info about annotations?
+- We use Reflection:
+    - target.getAnnotation():
+        - We can pass type info of the annotation we're interested in. 
+        - returns an annotation's interface.
+        - or null if the target isn't using annotation.
+
+In our example, in the method startWork:
+``` Java
+// First, in the dispatch program we're using, we'll declare a thread pool:
+ExecutorService pool = Executors.newFixedThreadPool(5);
+// Now, back to our method
+
+void startWork(String workerTypeName, Object workerTarget) throws Exception {
+    Class<?> workerType = Class.forName(workerTypeName);
+    TaskWorker worker = (TaskWorker) c.newInstance();
+
+    worker.setTarget(workerTarget);
+
+    WorkHandler we = workerType.getAnnotation(WorkHandler.class);
+
+    if(wh == null) {
+        // Throw exception
+    }
+
+    if(wh.useThreadPool()) {
+        // We'll submit an anonymous class of type Runnable to the program,
+        // implement run(), then put worker.doWork() inside that.
+        pool.submit(new Runnable() {
+            public void run() {
+                worker.doWork();
+            }
+        })
+    } else {
+        // Normal case, worker creates its own thread.
+        Worker.doWork(); 
+    }
+}
+```
+See the exception that will be thrown if wh == null?
+Actually, the exception in our case will be thrown, because the annotation is NOT available at runtime right now.
+
+To solve this, we put an annotation Retention just before our annotation declaration.
+Then pass it a RetentionPolicy value:
+- SOURCE: make the annotation only available in the source file i.e. the annotation is discarded by the compiler, it never makes it into the class file.
+- CLASS: compiled into class file, but discarded by runtime. (This is the default value)
+- RUNTIME: now the annotation is loaded into the runtime, now it is accessible with reflection.
+
+``` Java
+@Retention(RetentionPolicy.RUNTIME)
+public @interface WorkHandler {
+    boolean useThreadPool();
+}
+```
+Now, the code in startWork method, will now work properly.
+
+Now, the problem is, some people may misuse our annotation because:
+- Annotations can be applied on anything: classes, methods, constructors, fields, and even local variables.
+- We've done nothing to SPECIFY what our annotation can be applied to.
+
+We solve this at the declaration of course.
+We do that using another annotation, a Target annotation, which accepts ElementType, which has a long list of values we can use.
+We also can use an array notation to specify multiple ElementType values, not just one.
+``` Java
+@Target(ElementType.TYPE) //applies on Types only
+@Retention(RetentionPolicy.RUNTIME)
+public @interface WorkHandler {
+    boolean useThreadPool();
+}
+```
+Now, if someone misuses the annotation, the compiler will raise an error.
+
+Note: the order of annotations applied on a target or an annotation declaration doesn't matter.
+
+### A Closer Look At Elements
+We can setup elements to simplify setting.
+- Handling common cases.
+- Default values for elements.
+
+Let's say we want most workhandlers to use the thread pool in our example, so we give our element a default value
+``` Java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface WorkHandler {
+    boolean useThreadPool() default true;
+    // See how we used default keyword
+}
+```
+
+Sometimes we can assign an element a values without using the element's name, for that to happen:
+- The annottion should have one element,
+- whose name is 'value'
+
+Look at this:
+``` Java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface WorkHandler {
+    boolean value() default true;
+}
+
+// Now we can use the annotation like this
+@WorkHandler(false)
+```
+
+Elements are actually very restricted, there's only a very specific subset of Types that can be used as elements:
+- Any primitive type.
+- String.
+- Enum.
+- Annotation type.
+- Class<?>: i.e. elements can store type information.
+- Array whose type is any of the above.
+
+## Serialization
+We can persist objects i.e. take an object from runtime and store it as a byte stream.
+We can know all the members of that object by reflection.
+
+Serialization contains two things:
+- Serializing: converting an object to a byte stream.
+    Actually, when Java serializes an object, it serializes it AND all objects that are referenced by that object (Object graph).
+- Deserializing: restoring an object and object graph from a byte stream.
+
+Serializable Interface:
+- implemented by any type that will be serialized.
+- it has NO METHODS, it's a Marker interface (an interface to indicate something)
+
+ObjectOutputStream: serializes object-graph to a stream.
+ObjectInputStream: deserializes stream into object-graph.
+
+### Being Serializable
+We need to implement Serializable.
+For a type to be serializable, all its members should be serializable:
+- Primitives are serializable by default.
+- Others must implement Serializable themselves.
+
+Let's use the BankAccount example:
+``` Java
+public class BankAccount {
+    private final String id;
+    private int balance = 0;
+
+    // constructors
+
+    // other methods
+}
+```
+
+To make this serializable, make the members serializable:
+- int balance is serializable.
+- id: is a string, it's not a primitive, it's an object.
+    i.e. values inside id are stored not inside BankAccount's memory, it's stored in a SEPARATE memory location, and id references it.
+    This means that the BankAccount object is a very simple object-graph: an object that points to other objects.
+
+    So, we need to make String serializable here.
+    From the documentation we discover that String implements Serializable itself.
+
+How to serialize an object
+1. get a reference of the object to be serialized, and a destination and filename.
+2. greate an ObjectOutputStream object with the path that is given.
+3. using the ObjectOutputStream object, call the method writeObject and pass the object reference into it.
+
+How to deserialize a stream:
+1. create a reference of the same type as the object to be deserialized, pointing to null.
+2. create an ObjectInputStream object, pass the stream file's path.
+3. use the ObjectInputStream object, call the method readObject, it will return a reference to an object, receive it into the reference you created earlier.
+4. cast that reference into the type you expect.
+4. return the casted reference you just deserialized.
+
+That's it ^_^
+
+Let's use an example:
+``` Java
+// This is our driver code:
+
+BankAccount acct = new BankAccount("1234", 500);
+acct.deposit(250);
+saveAccount(acct, "account.dat");
+
+// Serializing
+void saveAccount(BankAccount ba, String filename) {
+    try(ObjectOutputStream objectStream = new ObjectOutputStream(Files.newOutputStream(Paths.get(filename))) {
+        objectStream.writeObject(ba);
+    } catch(IOException e) {
+        // handle exception
+    }
+}
+
+// Deserializing
+BankAccount loadAccount(String filename) {
+    BankAccount ba = null;
+    try(ObjectInputStream objectStream = new ObjectInputStream(Files.newInputStream(Paths.get(filename)))) {
+        ba = (BankAccount) objectStream.readObject();
+    } catch(IOException e) {
+        // handle exception
+    } catch(ClassNotFoundException) {
+        // Why?
+        // because you can try to deserialize an object whose type is NOT in your class path.
+        // in which case, this exception is thrown.
+    }
+    return ba;
+}
+```
+
+### How changes to class definition affects serialization
+Let's try to change BankAccount class:
+``` Java
+public class BankAccount {
+    private final String id;
+    private int balance = 0;
+    private char lastTxType;
+    private int lastTxAmount;
+
+    // constructors
+
+    public synchronized void deposit(int amount) {
+        balance += amount;
+        lastTxType = 'd';
+        lastTxAmount = amount;
+    }
+
+    public synchronized void withdraw(int amount) {
+        balance -= amount;
+        lastTxType = 'w';
+        lastTxAmount = amount;
+    }
+}
+```
+
+If we try to deserialize the older object now (a BankAccount object but before the modifications we made), an InvalidClassException will be thrown.
+
+How did Java know that?
+- It calculates a Serial Version Unique Identifier: a hash value that identifies the structure of the class.
+- This serial version unique identifier is included in the serializing process.
+- When we tried to deserialize, Java calculates the serial version unique identifier of the Type definition in our app, and compare it with the one stored with the object stream.
+- If they don't match up, an InvalidClassException is thrown, which means that both are not compatible anymore.
+
+That serial version is calculated using:
+- Full type name.
+- Implemented interfaces.
+- Members.
+The type content determines compatibility.
+
+How do we solve this?
+We can SPECIFY our serial version as part of our type definition.
+i.e. we as developers get to determine the compatibility.
+
+To do that, we need to:
+- Add a field, a static final private long value called serialVersionUID
+    private static final long serialVersionUID
+- When we create the type, we calculate the initial value of the serial version. 
+    We do that using serialver utility,
+- Then, we maintain this value, that's how we maintain compatibility.
+
+The serialver utility:
+- Performs the same calculation that Java does.
+- Is found in JDK bin folder.
+- A lot of IDEs provide a plug-in.
+
+Using it:
+- It uses the CLASS FILE to determine the serial version. So it will search in the classpath.
+- Can pass class name to the command line.
+
+Example:
+``` Java
+package com.pluralsight.tutorial;
+
+public class BankAccount implements Serializable {
+    // all the stuff here
+}
+```
+
+Using serialver:
+``` sh
+$ serialver com.pluralsight.tutorial.BankAccount
+# or we can use the -show option to use a very simple GUI
+$ serialver -show
+```
+
+Adding the value to our type:
+``` Java
+package com.pluralsight.tutorial;
+
+// This is the old version
+public class BankAccount implements Serializable {
+    private static final long serialVersionUID = //write the value you get from serialver here.
+
+    private final String id;
+    private int balance = 0;
+
+    // constructors
+
+    // methods
+}
+```
+
+Now, when we serialize this, Java will use Reflection to grab the value of that serialVersionUID field and write that into the stream, instead of calculating it again.
+
+So, are they compatible now?
+``` Java
+// This is the new version
+public class BankAccount {
+    private static final long serialVersionUID = //write the value you get from serialver here.
+
+    private final String id;
+    private int balance = 0;
+    private char lastTxType;
+    private int lastTxAmount;
+
+    // constructors
+
+    public synchronized void deposit(int amount) {
+        balance += amount;
+        lastTxType = 'd';
+        lastTxAmount = amount;
+    }
+
+    public synchronized void withdraw(int amount) {
+        balance -= amount;
+        lastTxType = 'w';
+        lastTxAmount = amount;
+    }
+}
+```
+
+Now, serialization before modification, then deserialization after modification, will work ;)
+
+But, well, we may need to do more work to make them logically compatible, so what do we do?
+
+### 

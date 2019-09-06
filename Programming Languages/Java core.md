@@ -1640,3 +1640,281 @@ That means, we can manually acquire and release locks :o
 
 We do this using a Synchronized statement block.
 This is useful because ANY code that has a reference to an object can use the Synchronized statement block to lock that object.
+
+
+---
+
+---
+
+---
+
+## Type info and Reflections
+Reflections are things that let us:
+- Examine types at runtime.
+- Dynamically execute and access members of types.
+
+Why?
+- Apps don't always control the types used.
+    - This is common for advanced app designs.
+    - Also common if you're developing a framework or a tool.
+- That's because your code may need to interact with different types.
+- Also, you may need to deal with legacy databases and stuff, you don't know what to expect.
+- So you can't just write type-specific source code.
+- So, sometimes we need to DYNAMICALLY LOAD types.
+
+We can fully examine objects at runtime, we can determine an object's:
+- Type and base type.
+- Which interfaces it implements.
+- Members.
+
+We can also use reflections on a type to:
+- Construct instances of a type.
+- Access its fields.
+- Call its methods.
+
+This helps us make apps that are Configurable, the specific tasks are externally control.
+This follows the design principle: inversion of control.
+It means that an app provides some fundamental behavior, then external developers can add their specialized behavior through classes.
+
+### Types as Types
+Types are the foundations of any app solution, we use them to:
+- Model business objects e.g. class Car, etc.
+- Model technical issues e.g. Runnable, Thread, all that.
+
+When we make an object instance, we create an instance of the object's class.
+When we create a class, it's actually an object instance of another class called '*Class*'.
+
+For every type we have in our app, there's an instance of *Class* that describe it.
+
+Let's look at some code:
+``` Java
+public class BankAccount {
+    private final String id;
+    private int balance = 0;
+
+    public BankAccount(String id) {...}
+    public Bankaccount(String id, int balance) {...}
+
+    public String getId() {...}
+    public synchronized int getBalance() {...}
+    public synchronized void deposit(int amount) {...}
+}
+
+// There is an instance of *Class* class, it models the type BankAccount we just wrote,
+// this *Class* instance has members, like:
+// 1. simpleName: BankAccount
+// 2. fields: a collection that has all the fields, methods, and constructors, 
+//      it has an entry for id, an entry for balance, an entry for each constructor and each method
+```
+This *Class* instance is actually accessible at run-time.
+So, we have a model to work with our bank account class.
+Every time we create a BankAccount instance, the *Class* instance that represents Bankaccount is 
+used as a MOLD for the memory allowed for an instance of BankAccount.
+
+The relationship between the *Class* instance and the Type(BankAccount) instance is not just limited to creation of instances.
+Each Type instance has a reference to the *Class* instance that describe it.
+
+So, we can create 1000 instances of the Type, and they all reference ONE INSTANCE of *Class*, the one that describes the Type.
+
+This means, we can refer to any object without knowing what type that object actually is, because we can get to the *Class* instance that describes it, and USE that *Class* instance to construct other instances of that object.
+
+### How to access a type's *Class* instance
+If we have an instance of a given type, we can use getClass() method to get the *Class* instance that describes it.
+If we have only the type's NAME as a string, we can use Class.forName() static method and pass the type's name as long as it's a fully qualified name (i.e. with packages and all that).
+We can also use typename.class on the type's name, like String.class for example.
+``` Java
+void showName(Class<?> theClass) { // Notice we have a generic type '?'
+    System.out.println(theClass.getSimpleName());
+}
+
+// The function accepts a *Class* reference, that describes a given type e.g. BankAccount
+// So here we should pass the *Class* instance that describes BankAccount.
+// But the parameter has a generic <?>, it can specialize the type it operating against.
+// In many cases we don't know the type that's going to be passed, that's why we put the generic argument.
+
+void doWorkCase1(Object o) {
+    Class<?> c = obj.getClass();
+    showName(c);
+}
+
+// This function above can accept any type, then get its *Class* instance, then passes that to the showName function.
+// It accepts an object reference, which is the first case that we described.
+
+void doWorkCase2(String fqn) { // fqn as in Fully Qualified Name, something like "com.pluralsight.tutorial.BankAccount"
+    Class<?> c = Class.forName(fqn);
+    showName(c);
+}
+```
+Both ways to access the *Class* instance return the same reference to the same *Class* instance, the same description of the type BankAccount.
+
+### How to access a Type's info
+Once we access the *Class* instance that describes a Type, we can know:
+- Its superclass, if it has one.
+- Interfaces,
+- Modifiers,
+- Members,
+We've got a lot of power now :'D
+``` Java
+public final class HighVolumeAccount extends BankAccount implements Runnable {
+    // constructors
+    public int[] readDailyDeposits() {...} 
+    public String run() {
+        for(int depositAmt: readDailyDeposits()) {
+            deposit(depositAmt);
+        }
+    }
+}
+
+void classInfo(Object obj) {
+    Class<?> c = obj.getClass();
+    System.out.println(c.getSimpleName());      
+    Class<?> superclass = c.getSuperclass();    // a reference to the *Class* instance that describes its superclass
+                                                // we can do that again to the superclass,
+                                                // we can walk all the way up the hierarchy and get the info of all that
+    Class<?>[] interfaces = c.getInterfaces();  // same thing, we get *Class* instances that describe all interfaces
+                                                // implemented by that class
+    for(Class<?> interface: interfaces) {
+        System.out.println(interface.getSimpleName());
+    }
+} 
+```
+We can also use the method getModifiers(), this returns ONE integer value, why?
+Each modifier is represented by a simple bit inside that integer, so, we need to interrogate that integer to know the modifiers, we can use Modifier class to interpret that integer.
+
+For example:
+``` Java
+void typeModifiers(Object obj) {
+    Class<?> c = obj.getClass();
+    int modifiers = c.getModifiers();
+
+    // if((modifiers & Modifier.FINAL) > 0) {...} // this is a bitwise comparison 
+    if(Modifier.isFinal(modifiers)) { //this is much easier
+        ...
+    }
+
+    if(Modifier.isPrivate(modifiers)) {
+        ...
+    }
+
+    // Other methods are isProtected, isPublic, etc.
+}
+```
+
+### How to access a Type's members
+We can access a Type's DECLARED members, all of them, public, private, protected, etc. using:
+- getDeclaredFields()
+- getDeclaredMethods()
+- getDeclaredConstructors()
+
+We can access a Type's Declared AND inherited members, ONLY THE PUBLIC ONES.
+- getFields()
+- getMembers()
+- getConstructors()
+There's something, Constructors are NOT inherited, so getConstructors just shows the public declared constructors of the Type.
+``` Java
+// Using the class BankAccount
+
+void fieldInfo(Object o) {
+    Class<?> c = o.getClass();
+    
+    Field[] fields = c.getFields();
+    for(Field f: fields) {
+        System.out.println(f);
+    }
+
+
+    Field[] declaredFields = c.getDeclaredFields();
+    for(Field f: declaredFields) {
+        System.out.println(f);
+    }
+}
+
+
+void methodInfo(Object o) {
+    Class<?> c = o.getClass();
+    
+    Method[] methods = c.getMethods();
+    for(Method m: methods) {
+        System.out.println(m);
+    } 
+
+    Method[] declaredMethods = c.getDeclaredMethods();
+    for(Method m: declaredMethods) {
+        System.out.println(m);
+    }
+}
+
+```
+Using getFields and getMembers will get all declared and inherited methods, all the way up the hierarchy to Object class.
+What if we don't want that, what if we want to exclude the inherited ones or some methods from a specific class?
+``` Java
+void methodInfo(Object o) {
+    Class<?> c = o.getClass();
+    
+    Method[] methods = c.getMethods();
+    for(Method m: methods) {
+        if(m.getDeclaringClass() != Object.class) { // Here
+            System.out.println(m);
+        }
+    } 
+
+    Method[] declaredMethods = c.getDeclaredMethods();
+    for(Method m: declaredMethods) {
+        System.out.println(m);
+    }
+}
+```
+Also, we can access specific members by passing the member signature (name of field, or name of methods plus parameters, or parameter types of constructor) to the functions we used i.e. getFields, getMethods, etc.
+
+Also, we can get the modifiers of members by using getModifier() with a certain member, then use Modifiers class to know what the modifiers of that member are.
+
+### Interacting with Object Instances
+So far we've accessed nearly everything about a Type.
+But what about actually USING this info?
+
+We can use reflection to perform Actions, we can invoke Members.
+If we have a BankAccount object and a BankAccount reference pointing to it, we can invoke the Type's methods.
+If we have a BankAccount object and an OBJECT reference pointing to it, we CAN NOT invoke the Type's methods that are not inherited from Object (methods declared inside BankAccount e.g. getId() or deposit()).
+That's because the reference lacks the information about these methods.
+
+Now, we can call getClass on the object and get the info we got in the last section.
+So, we can get the *Class* instance, 
+then get the info for getId(),
+then apply it to the Object reference,
+then use the Object reference now to call getId(), and the call would work :o
+
+``` Java
+public static void main(String[] args) {
+    BankAccount acct1 = new BankAccount("1");
+    callGetId(acct1);
+}
+
+void callGetId(Object obj) {
+    try {
+        Class<?> c = obj.getClass();
+        Method m = c.getMethod("getId");    // Now we have the info for getId
+        Object result = m.invoke(obj);      // We invoked the method on the object reference of BankAccount acct1
+    } catch(Exception e) {
+        ...
+    }
+}
+
+void callDeposit(Object obj, int amount) {
+    try {
+        Class<?> c = obj.getClass();
+        Method m = c.getMethod("deposit", int.class);   
+        // deposit() has one parameter, an int, so we pass int.class, the type description of 'int'
+        
+        Object result = m.invoke(obj, amount); // We pass any arguments after the object reference
+    } catch(Exception e) {
+        ...
+    }
+}
+```
+
+While Reflection gives us runtime access to types and their members, it IS SLOWER Than compile-time access and usage.
+
+### Creating instances of objects with Reflection
+Since we can access a Type's constructors, we can invoke them and create new instances of a type.
+If we're going to use the default constructor, we can use another method, newInstance(), which is a method of the class *Class*.
+

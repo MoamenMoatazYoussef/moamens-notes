@@ -2537,4 +2537,130 @@ Now, serialization before modification, then deserialization after modification,
 
 But, well, we may need to do more work to make them logically compatible, so what do we do?
 
-### 
+### Custom Serialization
+We can add custom serialization by adding writeObject and readObject methods to a type.
+Both methods are called through reflection, so they are private.
+
+How to implement writeObject:
+- void return type.
+- throws IOException.
+- accepts ObjectOutputStream that's used to write values, and calls method defaulWriteObject() for default behavior.
+
+How to implement readObject:
+- void returntype.
+- throws IOException and ClassNotFoundException
+- accepts ObjectInputStream that's used to read values, call method readFields() to access values by the name of the field, and calls defaultReadObject() for default behavior.
+
+
+``` Java
+class BankAccount implements Serializable {
+    // all the stuff from before
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        ObjectInputStream.GetField fields = in.readFields(); 
+        //we have all fields here as a map or something
+        
+        id = (String) fields.get("id", null); 
+        // now we can get field values by name of the field
+        // we cast it because it returns as Object
+
+        balance = fields.get("balance", 0);
+        // The last argument is a default value if no value for balance is found
+
+        lastTxType = fields.get("lastTxType", "u");
+        lastTxAmount = fields.get("lastTxAmount", -1);
+    }
+}
+```
+
+### Transient Fields
+Sometimes, we don't want fields to be serialized, because:
+- we calculate them from other fields, or
+- avoid unnecessary memory usage.
+
+We do that by using 'transient' keyword.
+
+Example:
+``` Java
+public class AccountGroup implements Serializable {
+    private Map<String, BankAccount> accountMap = new HashMap<>();
+
+    // Notice the use of transient here
+    private transient int totalBalance;
+
+    public int getTotalBalance() { return totalBalance; }
+    public void addAccount(BankAccount account) {
+        totalBalance += account.getBalance();
+        accountMap.put(account.getId(), account);
+    }
+}
+```
+
+That class is serializable, all members are serializable.
+The totalBalance can be calculated from the map, we don't need to serialize it.
+so, we used the keyword transient in its declaration.
+
+``` Java
+BankAccount acct1 = new BankAccount("1234", 500);
+BankAccount acct2 = new BankAccount("5678", 700);
+
+AccountGroup group = new AccountGroup();
+group.add(acct1);
+group.add(acct2);
+saveGroup(group, "group.dat");
+```
+
+Serializing the AccountGroup would be the same as serializing BankAccount:
+``` Java
+void saveGroup(AccountGroup g, String filename) {
+    try(ObjectOutputStream objectStream = new ObjectOutputStream(Files.newOutputStream(Paths.get(filename))) {
+        objectStream.writeObject(g);
+    } catch(IOException e) {
+        // handle exception
+    }
+}
+```
+
+Deserializing the AccountGroup:
+``` Java
+AccountGroup loadGroup(String filename) {
+    AccountGroup g = null;
+    try(ObjectInputStream objectStream = new ObjectInputStream(Files.newInputStream(Paths.get(filename)))) {
+        g = (AccountGroup) objectStream.readObject();
+    } catch(IOException e) {
+        // handle exception
+    } catch(ClassNotFoundException) {
+        // handle exception
+    }
+    return g;
+}
+```
+But now, if we try to get the totalBalance, it will be 0 because we Excluded it from serialization by the keyword 'transient'.
+So, we need to manually calculate it.
+``` Java
+public class AccountGroup implements Serializable {
+    // all the stuff from before
+
+    void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        // Calling the default behavior because we won't modify it,
+        // we'll extend it by calculating the transient values.
+        in.defaultReadObject();
+
+        // Here we do the calculation for totalBalance
+        for(BankAccount a: accountMap.values()) {
+            totalBalance += a.getBalance();
+        }
+    }
+
+    // Notice we didn't implement writeObject, because we don't need to, we just
+    // modify the readObject to calculate totalBalance because it's a transient field
+}
+```
+
+And that is it everybody, thanks for reading, Java Core Platform, we're **DONEEEEEEEEEEEEEEEEE**
+
+---

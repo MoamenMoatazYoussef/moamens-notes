@@ -964,7 +964,7 @@ public static <E> void printArray(E[] arr) {
         }
         System.out.println();
     }
-```ENDOCDE
+```
 
 Bounded type parameters:
 - Restrict the kinds of data types allowed in some generics e.g. allowing only Numbers e.g. integer, float, etc. but not Boolean.

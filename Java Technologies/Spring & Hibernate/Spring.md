@@ -1,11 +1,11 @@
 # Spring & Hibernate For Beginners
 
 ## Table of Contents
-[Why Spring?] (#user-content-why-spring)
-[Overview of Spring](#overview-of-spring)
-[Setting Up Spring](#setting-up-spring)
-[Installing Tomcat](#installing-tomcat)
-[Spring Inversion Of Control](#spring-inversion-of-control)
+[Why Spring?](#user-content-why-spring)  <br />
+[Overview of Spring](#overview-of-spring)  <br />
+[Setting Up Spring](#setting-up-spring)  <br />
+[Installing Tomcat](#installing-tomcat)  <br />
+[Spring Inversion Of Control](#spring-inversion-of-control)  <br />
 
 
 ## Why Spring?
@@ -172,3 +172,149 @@ Now, you're done setting up Spring.
 What is Inversion of Control?
 It's externalizing the construction and management of object.
 i.e. your app will outsource creation and management of objects, which will be handled by object factories.
+
+If we have an app that communicates with a BaseballCoach that gives you a workout.
+But the coach should be configurable, like TennisCoach, SoccerCoach, etc.
+
+Rough implementation:
+``` Java
+public class BaseballCoach {
+	public String getDailyWorkout() {
+		return "Insanity";
+	}
+}
+
+
+public class MyApp {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		BaseballCoach theCoach = new BaseballCoach();
+		System.out.println(theCoach.getDailyWorkout());
+	}
+
+}
+
+```
+Instead of that, we could program to an interface to make all coaches work with MyApp:
+
+Check this out:
+``` Java
+public interface Coach {
+	public String getDailyWorkout();
+}
+
+public class BaseballCoach implements Coach {
+
+    @Override
+	public String getDailyWorkout() {
+		return "Insanity";
+	}
+}
+
+// We can add another type of coach
+public class TrackCoach implements Coach {
+
+	@Override
+	public String getDailyWorkout() {
+		// TODO Auto-generated method stub
+		return "Run 10 miles per hour";
+	}
+
+}
+
+
+public class MyApp {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Coach theCoach = new BaseballCoach();
+
+        // If you change it to:
+        // Coach theCoach = new TrackCoach();
+        // It will work correctly :)
+
+		System.out.println(theCoach.getDailyWorkout());
+	}
+
+}
+```
+That's better.
+But the app isn't configurable, we're still changing CODE between TrackCoach and BaseballCoach.
+
+It would be convenient to read the implementation name from a config file and act upon it.
+Maybe we can do that using Reflection, But we'll focus on how Spring addresses this problem.
+
+### Spring Container a.k.a. *ApplicationContext*
+It:
+- Creates and manages objects (inversion of control).
+- Injects object's dependencies (dependency injection).
+
+How to configure Spring Container:
+- XML config file (legacy, but a lot of legacy apps use it).
+- Through annotations.
+- Through source code.
+
+We'll use that, we'll talk to the Spring Container so that it gives us the correct Coach. 
+
+#### What the hell is a Spring Bean?
+A "Spring Bean" is simply a Java object, created from normal Java classes, they have dependencies, etc. They are just java object instances.
+When a Java Object is created by the Spring Container, it's called a Spring Bean.
+It's just an object that's being managed by the Container.
+
+More info:
+https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-introduction
+
+#### Spring Development Process
+1. Configure your Spring Beans.
+2. Create a Spring Container.
+    Some specialized implementations:
+    - ClassPathXmlApplicationContext.
+    - AnnotationConfigApplicationContext.
+    - GenericWebApplicationContext.
+    - and others. (VanossGaming reference xD)
+3. Retrieve Beans from the Container.
+
+#### Back to our app
+Earlier we downloaded the course zip file, which has a lot of files in it, called "spring-and-hibernate-source-code".
+
+Inside it -> spring-core -> spring-demo-one -> applicationContext.xml
+
+Copy that, paste it into the src directory of your project.
+
+Open it, it's an XML file.
+Now, we'll define our beans, first step in our spring dev process:
+``` XML
+<bean id="myCoach"
+    class="com.luv2code.springdemo.TrackCoach">
+</bean>
+```
+
+Now, we'll use a Java class, we'll create a new class called HelloSpringApp.
+In it, we'll do the next spring dev steps:
+2. Load the spring config file.
+3. Retrieve bean from spring container.
+``` Java
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class HelloSpringApp {
+
+	public static void main(String[] args) {
+		
+		// Load the config file
+		ClassPathXmlApplicationContext context = 
+				new ClassPathXmlApplicationContext("applicationContext.xml");
+
+		// Retrieve your bean
+		Coach theCoach = context.getBean("myCoach", Coach.class);
+		
+		// do stuff with the bean
+		System.out.println(theCoach.getDailyWorkout());
+	}
+
+}
+```
+
+Run that, it'll work.  <br />
+NOTE: If you see red log messages, don't worry that's normal :) you can make them appear if you want, we'll discuss that later.
+

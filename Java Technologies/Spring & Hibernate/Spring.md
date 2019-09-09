@@ -1,19 +1,11 @@
 # Spring & Hibernate For Beginners
 
 ## Table of Contents
-<<<<<<< HEAD
 [Why Spring?](#user-content-why-spring)  <br />
 [Overview of Spring](#overview-of-spring)  <br />
 [Setting Up Spring](#setting-up-spring)  <br />
 [Installing Tomcat](#installing-tomcat)  <br />
 [Spring Inversion Of Control](#spring-inversion-of-control)  <br />
-=======
-[Why Spring?] (#why-spring)
-[Overview of Spring](#overview-of-spring)
-[Setting Up Spring](#setting-up-spring)
-[Installing Tomcat](#installing-tomcat)
-[Spring Inversion Of Control](#spring-inversion-of-control)
->>>>>>> 3b22de3dfd77ab9b17ada22b4c7f974d0e5f41d5
 
 
 ## Why Spring?

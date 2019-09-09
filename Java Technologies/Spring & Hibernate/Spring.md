@@ -4,7 +4,7 @@
 [Why Spring?](#user-content-why-spring)  <br />
 [Overview of Spring](#overview-of-spring)  <br />
 [Setting Up Spring](#setting-up-spring)  <br />
-[Installing Tomcat](#installing-tomcat)  <br />
+- [Installing Tomcat](#installing-tomcat)  <br />
 [Spring Inversion Of Control](#spring-inversion-of-control)  <br />
 [Spring Dependency Injection](#spring-dependency-injection)   <br />
 

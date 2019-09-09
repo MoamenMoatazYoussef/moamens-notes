@@ -2,9 +2,12 @@
 
 ## Table of Contents
 [Streams](#Streams)
-    [Reading](#Reading)
-    [Writing](#Writing)
-    [Error handling in Streams](#Error handling in Streams)
+
+[Reading](#Reading)
+
+[Writing](#Writing)
+
+[Error handling in Streams](#error-handling-in-streams)
 
 ## Streams
 

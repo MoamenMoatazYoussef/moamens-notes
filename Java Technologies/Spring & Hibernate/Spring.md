@@ -6,7 +6,7 @@
 [Setting Up Spring](#setting-up-spring)  <br />
 [Installing Tomcat](#installing-tomcat)  <br />
 [Spring Inversion Of Control](#spring-inversion-of-control)  <br />
-
+[Spring Dependency Injection](#spring-dependency-injection)   <br />
 
 ## Why Spring?
 First of all, why spring?
@@ -420,3 +420,181 @@ https://gist.github.com/darbyluv2code/cfb16c2fd1825a947d8faca3724b47a9
 
 Once you make these updates, then you will be able to see additional logging data. :-)
 
+## Spring Dependency Injection
+So what exactly is that?
+If I'm going to buy a car, and that car will be made in the factory on demand, in the factory there's all the different parts of the car.
+The mechanics assemble the car, they inject all of the dependencies of the car, like the engine, tires, seats, etc. then they deliver the car for you.
+You don't have to build the car yourself.
+
+Dependency injection is the same, Spring has an object factory,
+When we retrieve the coach object, it may have other dependencies, other objects needed for the coach object's construction.
+The Spring framework gets those objects and constructs the coach object.
+What you get is a ready-to-use object.
+
+In our example, our coach provides daily workouts.
+Now, the coach will provide Fortunes, and to do that, they'll need the help of a HELPER called FortuneService.
+
+The helper is called "dependency".
+
+There are a lot of injection types in Spring, two of the most used are:
+- Constructor Injection.
+- Setter Injection.
+
+### Construction Injection
+Steps:
+1. Define the dependency's interface and class.
+2. Create a constructor in our class for injections.
+3. Configure the depencency injection in Spring config file.
+
+We'll see how that is done in our example.
+
+#### Step 1: Define the dependency's interface and class
+First, we need to define the dependency interface:
+``` Java 
+public interface FortuneService {
+	public String getFortune();
+}
+```
+
+Then we create the dependency class:
+``` Java
+public class HappyFortune implements FortuneService {
+
+	@Override
+	public String getFortune() {
+		// TODO Auto-generated method stub
+		return "You don't know the power of the dark side";
+	}
+
+}
+```
+
+Now, modify the coach interface to make them able to Give fortune:
+``` Java
+public interface Coach {
+	public String getDailyWorkout();
+	public String getDailyFortune();
+}
+```
+
+That will cause errors in BaseballCoach and TrackCoach because the new method isn't implemented in them, so we go and add them, let them return null for now.
+
+#### Step 2: Create a constructor in our class for injections
+First, in BaseballCoach, we'll define a private FortuneService reference, 
+then add a constructor that accepts that reference,
+finally, we'll use that in our getDailyFortune method:
+``` Java
+public class BaseballCoach implements Coach {
+	
+	public FortuneService fortuneService;
+	
+	public BaseballCoach(FortuneService theFortuneService) {
+		fortuneService = theFortuneService;
+	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "Insanity";
+	}
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+}
+```
+Nice. <br />
+Do the same for TrackCoach and add a message to the fortune or whatever. <br />
+
+#### Step 3: Configure the depencency injection in Spring config file
+
+Add the bean to applicationContext.xml:
+``` XML
+<bean id="myFortuneService"
+    class="com.luv2code.springdemo.HappyFortuneService">
+</bean>
+```
+
+Now, in the coach bean, we'll do the actual injection:
+``` XML
+    <bean id="myCoach"
+    	class="com.luv2code.springdemo.TrackCoach">
+    	<constructor-arg ref="myFortuneService"></constructor-arg>
+    </bean>
+```
+
+Now, go to HellpSpringApp class, just print out theCoach.getDailyFortune(), see the result :)
+
+### Setter Injection
+Spring injects dependencies by calling setters on your class.
+
+Steps:
+1. Create setter methods that'll be used for injections.
+2. Configure the dependency injection in the config file.
+
+#### Step 1: Create setter methods that'll be used for injections
+First, we'll create a new class: CricketCoach.
+Inside it we'll add the setter.
+``` Java
+public class CricketCoach implements Coach {
+
+	private FortuneService fortuneService;
+	
+	// We need the no arg constructor since Spring will use it
+	// to create the instance
+	public CricketCoach() {
+		// That is just for debugging, no other purpose
+		System.out.println("Inside the constructor of CricketCoach");
+	}
+	
+	// Step 1 here, just a normal setter for our dependency
+	public void setFortuneService(FortuneService fortuneService) {
+		this.fortuneService = fortuneService;
+	}
+
+	@Override
+	public String getDailyWorkout() {
+		return "Practice fast bowling";
+	}
+
+	@Override
+	public String getDailyFortune() {
+		return "Darth...Vader, " + fortuneService.getFortune();
+	}
+}
+```
+
+#### Step 2: Configure the dependency injection in the config file
+In the config file, add the CricketCoach bean and add a <property > tag like this:
+``` XML
+    <bean id="myCricketCoach"
+    	class="com.luv2code.springdemo.CricketCoach">
+    	
+    	<!-- Setting up out setter injection -->
+    	<property name="fortuneService" ref="myFortuneService"></property>
+    	<!-- That will call the setter, setFortuneService -->
+    	
+    </bean>
+```
+
+Finally, make the MyApp class like this:
+``` Java
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class MyApp {
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context = 
+				new ClassPathXmlApplicationContext("applicationContext.xml");
+
+		Coach theCoach = context.getBean("myCricketCoach", Coach.class);
+		
+		System.out.println(theCoach.getDailyWorkout());
+		System.out.println(theCoach.getDailyFortune());
+		
+		context.close();
+	}
+}
+```
+
+Run it, it'll be as awesome as me B| <br />
+Nice.

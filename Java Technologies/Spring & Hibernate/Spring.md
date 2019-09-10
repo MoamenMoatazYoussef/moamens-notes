@@ -56,6 +56,17 @@
     + [Which type of injection should I use?](#which-type-of-injection-should-i-use-)
     + [Qualifiers for Dependency Injection](#qualifiers-for-dependency-injection)
   * [Bean Scope and Lifecycle with Annotations](#bean-scope-and-lifecycle-with-annotations)
+    + [Bean Scope with Annotations](#bean-scope-with-annotations)
+    + [Bean Lifecycle with Annotations](#bean-lifecycle-with-annotations)
+  * [Spring Configuration With Java Code (no XML)](#spring-configuration-with-java-code--no-xml-)
+    + [Java Config Class with Component Scaning](#java-config-class-with-component-scaning)
+    + [Java Config Class with Manual Bean Configuration](#java-config-class-with-manual-bean-configuration)
+      - [Java Config Class with Manual Bean Configuration - Example](#java-config-class-with-manual-bean-configuration---example)
+    + [Java Config Class with injecting Values by a Properties File](#java-config-class-with-injecting-values-by-a-properties-file)
+      - [Step 1: Create a properties file](#step-1--create-a-properties-file)
+      - [Step 2: Load it in Java Config Class](#step-2--load-it-in-java-config-class)
+      - [Step 3: Reference its values](#step-3--reference-its-values)
+  * [Spring MVC - Building Spring Web Apps](#spring-mvc---building-spring-web-apps)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -970,6 +981,8 @@ Also, the destroy sysout statement is printed when we execute context.close()
 - If the scope is prototype, spring does **not** call the destroy method.
 - Because spring doesn't manage the complete lifecycle of a prototype bean.
 - So, our code must clean up prototype-scoped object and release resources that they were holding.
+- To get the Spring container to release resources held by prototype-scoped beans, try using a custom bean post-processor, which holds a reference to beans that need to be cleaned up, check this out:
+https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-factory-extension-bpp
 
 ## Spring Configuration With Java Annotations
 See annotations from Java Core note, here:
@@ -1425,4 +1438,445 @@ private String name;
 ```
 
 ## Bean Scope and Lifecycle with Annotations
+### Bean Scope with Annotations
 We simply use @Scope annotation to specify a bean's scope, passing in the scope we want, like @Scope("prototype") for example.
+
+In eclipse, create a new main class called "AnnotationBeanScopeDemoApp", add the main code we've been writing for a while now:
+- Load spring config file.
+- Retrieving bean from container.
+``` Java
+
+public class AnnotationBeanScopeDemoApp {
+
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context = 
+			new ClassPathXmlApplicationContext("applicationContext.xml"); 
+			
+		Coach theCoach = context.getBean("tennisCoach", Coach.class);
+		Coach alphaCoach = context.getBean("tennisCoach", Coach.class);
+			
+		System.out.println(theCoach == alphaCoach);
+			
+		context.close();
+	}
+
+}
+```
+If we run that, we'll get 'true' since the default scope is Singleton.
+
+To change the scope, go to TennisCoach, add this to the class, above it:
+``` Java
+@Scope("prototype")
+```
+Since it's prototype, theCoach and alphaCoach should be different instances.
+
+Run the main app, the result of comparing their equality will be "false".
+
+Nice :) <br />
+
+
+### Bean Lifecycle with Annotations
+Steps:
+- Define init and destroy methods.
+- Add @PostConstruct and @PreDestroy annotations to the methods.
+
+The same rules apply, the init and destroy methods are no-arg, can be of any return type but void is common, and can get any access modifier.
+
+Go to TennisCoach, define init and destroy methods called doStartupStuff and doDestroyStuff or something.
+Put some sysouts in them to verify that they do run.
+**REMOVE THE PROTOTYPE SCOPE**, remember the destroy method is NOT called if the scope is prototype.
+``` Java
+@Component
+public class TennisCoach implements Coach {
+	
+	@Autowired
+	@Qualifier("randomFortuneService")
+	private FortuneService fortuneService;
+	
+	public FortuneService getFortuneService() {
+		return fortuneService;
+	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "You can do it, Rafael";
+	}
+
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+	
+	// Notice here the annotation
+	@PostConstruct
+	public void doStartupStuff() {
+		System.out.println("Initializing the bean - custom mode");
+	}
+	
+	// Notice here the annotation
+	@PreDestroy
+	public void doDestroyStuff() {
+		System.out.println("Destroying the bean - custom mode");
+	}
+
+}
+
+```
+Run the main code without any changes to it, it'll work like crazy :)
+
+*Note:*
+If you're using Java 9 or higher, an error will be thrown for @PostConstruct and @PreDestroy annotations.
+
+That's because they're part of javax.annotation, which has been removed from the default classpath, so Eclipse can't find it.
+
+Solution:
+1. Download javax.annotation:
+http://central.maven.org/maven2/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.jar
+
+2. Copy the JAR file to the lib in your project.
+3. Add it to the java build path.
+
+## Spring Configuration With Java Code (no XML)
+There are three ways to configure Spring container:
+- Full XML config, the first thing we did.
+- XML component scan, the second thing we did.
+- Java config class, we'll do that now, we don't need to go to the XML at all.
+
+Steps:
+- Create a java class, annotate it as @Configuration.
+- Add component scanning with @ComponentScan (optional)
+- Read Spring Java config class.
+- Retrieve bean from container.
+
+### Java Config Class with Component Scaning
+
+Create a new class, call it SportConfig.
+Above it, add the @Configuration annotation.
+
+The class is empty, so we either:
+- Manually add beans and stuff.
+- Use @ComponentScan annotation, passing in the package name.
+	It will scan components and do the same stuff that it did before.
+
+Here, Add the @ComponentScan annotation, pass to it the name of the package. i.e.  "com.luv2code.springdemo".
+
+
+Create a new main class, call it "JavaConfigDemoApp", but instead of using ClassPathXmlApplicationContext to load an xml config file,
+We use AnnotationConfigApplicationContext to load our SportConfig class.
+``` Java
+public class JavaConfigDemoApp {
+
+	public static void main(String[] args) {
+		AnnotationConfigApplicationContext context = 
+			new AnnotationConfigApplicationContext(SportConfig.class); 
+			
+		Coach theCoach = context.getBean("tennisCoach", Coach.class);
+			
+		System.out.println(theCoach.getDailyWorkout());
+		System.out.println(theCoach.getDailyFortune());
+			
+		context.close();
+	}
+
+}
+```
+Run it, and it'll work :) <br />
+
+*Note:* Log messages have been removed from latest Spring releases, so we only see our sysouts, not the Spring's logging.
+To see the logging messages of Spring:
+1. Create a logging properties file, in it define logger levels like this:
+``` txt
+root.logger.level=FINE
+printed.logger.level=FINE
+```
+Read more about Logging here:
+https://www.vogella.com/tutorials/Logging/article.html
+
+2. Create a config class to config the parent logger and console handler, it will use @PropertySource annotation and @Value annotations to inject values into fields.
+``` Java
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+ 
+import javax.annotation.PostConstruct;
+ 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+ 
+@Configuration
+@PropertySource("classpath:mylogger.properties")
+public class MyLoggerConfig {
+ 
+	@Value("${root.logger.level}")
+	private String rootLoggerLevel;
+ 
+	@Value("${printed.logger.level}")
+	private String printedLoggerLevel;
+	
+	@PostConstruct
+	public void initLogger() {
+ 
+		// parse levels
+		Level rootLevel = Level.parse(rootLoggerLevel);
+		Level printedLevel = Level.parse(printedLoggerLevel);
+		
+		// get logger for app context
+		Logger applicationContextLogger = Logger.getLogger(AnnotationConfigApplicationContext.class.getName());
+ 
+		// get parent logger
+		Logger loggerParent = applicationContextLogger.getParent();
+ 
+		// set root logging level
+		loggerParent.setLevel(rootLevel);
+		
+		// set up console handler
+		ConsoleHandler consoleHandler = new ConsoleHandler();
+		consoleHandler.setLevel(printedLevel);
+		consoleHandler.setFormatter(new SimpleFormatter());
+		
+		// add handler to the logger
+		loggerParent.addHandler(consoleHandler);
+	}
+	
+}
+```
+
+### Java Config Class with Manual Bean Configuration
+Steps:
+- Define methods to expose the bean.
+- Inject bean dependencies.
+- Read java config class.
+- Retrieve bean from Spring container.
+
+First, we'll create a new implementation of FortuneService called SadFortuneService:
+``` Java
+public class SadFortuneService implements FortuneService {
+
+	@Override
+	public String getFortune() {
+		return "Today is a sad day :(";
+	}
+
+}
+```
+
+Then create a new class SwimCoach that implements Coach. No special annotations or anything.
+``` Java
+public class SwimCoach implements Coach {
+	private FortuneService fortuneService;
+	
+	public SwimCoach(FortuneService fs) {
+		fortuneService = fs;
+	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "Swim 1000 meters as a warmup";
+	}
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+
+}
+```
+
+#### Java Config Class with Manual Bean Configuration - Example
+Go to SportConfig.
+Add a method to define beans for SadFortuneService.
+We'll use the @Bean annotation.
+``` Java
+@Bean
+public FortuneService sadFortuneService() {
+	return new SadFortuneService();
+}
+```
+Then, add a method to define a bean for SwimCoach, and inject dependencies for SwimCoach.
+``` Java
+@Bean
+public Coach swimCoach() {
+	return new SwimCoach(sadFortuneService());
+	// Notice we call the previous method here to inject dependencies
+}
+```
+Remove the @ComponentScan annotation.
+The class looks like this now:
+``` java
+@Configuration
+public class SportConfig {
+
+	@Bean
+	public FortuneService sadFortuneService() {
+		return new SadFortuneService();
+	}
+	
+	@Bean
+	public Coach swimCoach() {
+		return new SwimCoach(sadFortuneService());
+	}
+	
+}
+```
+You can name the methods anything, but you'll use thise names as bean id after that.
+
+Now, make a new main app called "SwimJavaConfigDemoApp".
+``` Java
+public class SwimJavaConfigDemoApp {
+
+	public static void main(String[] args) {
+		AnnotationConfigApplicationContext context = 
+			new AnnotationConfigApplicationContext(SportConfig.class); 
+				
+		// Notice here we used the same name as the method
+		// that makes the bean, and the dependencies are injected
+		Coach theCoach = context.getBean("swimCoach", Coach.class);
+				
+		System.out.println(theCoach.getDailyWorkout());
+		System.out.println(theCoach.getDailyFortune());
+				
+		context.close();
+	}
+
+}
+```
+
+*Note:*
+How does @Bean work?
+- First, the @Bean annotation intercepts the initial request for "swimCoach" bean.
+- Spring scans the memory for an instance of swimCoach.
+- If none found, then:
+	- The annotation tells Spring that we're creating a Bean component manually.
+	- No scope is defined, so default is singleton.
+	- The method name will be the bean ID.
+	- The return type is of an interface, this is useful for injection for something that has many implementations.
+- The @Bean annotation will intercept any requests for "swimCoach" bean after that, because the scope is Singleton so it returns the same instance of the bean that was created before, effectively setting a flag.
+- So, if we call the method again, the code inside it doesn't actually execute, the reference to the created instance will instantly be returned.
+- The same process for sadFortuneService.
+
+In short, methods that define beans execute only once if the scope is Singleton.
+
+### Java Config Class with injecting Values by a Properties File
+Steps:
+- Create a properties file.
+- Load it in Java Config Class.
+- Reference its values.
+
+#### Step 1: Create a properties file
+Create a properties file and put in it:
+``` txt
+foo.email=moamen.is.awesome@gmail.com
+foo.team=New York Giants
+```
+#### Step 2: Load it in Java Config Class
+Then go to SportConfig, use @PropertySource on the class and pass "classpath:sport.properties" to it as argument.
+``` Java
+@Configuration
+//@ComponentScan("com.luv2code.springdemo")
+@PropertySource("classpath:sport-properties")
+public class SportConfig {
+
+	@Bean
+	public FortuneService sadFortuneService() {
+		return new SadFortuneService();
+	}
+	
+	@Bean
+	public Coach swimCoach() {
+		return new SwimCoach(sadFortuneService());
+	}
+	
+}
+```
+#### Step 3: Reference its values
+Go to SwimCoach, 
+Create email and team fields,
+Use the @Value annotation to inject values into fields.
+Also, generate the getters for the new fields, I generated both getters and setters.
+``` Java
+public class SwimCoach implements Coach {
+	private FortuneService fortuneService;
+
+	@Value("${foo.email}")
+	private String email;
+	
+	@Value("${foo.team}")
+	private String team;
+	
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getTeam() {
+		return team;
+	}
+
+	public void setTeam(String team) {
+		this.team = team;
+	}
+
+	public SwimCoach(FortuneService fs) {
+		fortuneService = fs;
+	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "Swim 1000 meters as a warmup";
+	}
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+
+}
+```
+Now, we go to the main app, but change Coach to SwimCoach so that we can use the new fields, getters, and setters.
+``` Java
+public class SwimJavaConfigDemoApp {
+
+	public static void main(String[] args) {
+		AnnotationConfigApplicationContext context = 
+			new AnnotationConfigApplicationContext(SportConfig.class); 
+				
+		SwimCoach theCoach = context.getBean("swimCoach", SwimCoach.class);
+				
+		System.out.println(theCoach.getDailyWorkout());
+		System.out.println(theCoach.getDailyFortune());
+		
+		System.out.println(theCoach.getEmail());
+		System.out.println(theCoach.getTeam());
+				
+		context.close();
+	}
+
+}
+```
+
+Run that awesomeness, and it will work like The Miz (WWE reference xD).
+
+*Note:*
+If the output was:
+${foo.email}
+${foo.team}
+instead of their values, that's a problem with Spring versions.
+If you're using Spring 4.2 or lower, you need to add this code to SportConfig:
+``` Java
+ // add support to resolve ${...} properties
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer
+                    propertySourcesPlaceHolderConfigurer() {
+        
+        return new PropertySourcesPlaceholderConfigurer();
+    }
+```
+
+## Spring MVC - Building Spring Web Apps

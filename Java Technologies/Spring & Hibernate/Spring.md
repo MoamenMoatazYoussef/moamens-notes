@@ -59,6 +59,7 @@
     + [Bean Scope with Annotations](#bean-scope-with-annotations)
     + [Bean Lifecycle with Annotations](#bean-lifecycle-with-annotations)
   * [Spring Configuration With Java Code (no XML)](#spring-configuration-with-java-code--no-xml-)
+<<<<<<< HEAD
     + [Java Config Class with Component Scaning](#java-config-class-with-component-scaning)
     + [Java Config Class with Manual Bean Configuration](#java-config-class-with-manual-bean-configuration)
       - [Java Config Class with Manual Bean Configuration - Example](#java-config-class-with-manual-bean-configuration---example)
@@ -67,6 +68,8 @@
       - [Step 2: Load it in Java Config Class](#step-2--load-it-in-java-config-class)
       - [Step 3: Reference its values](#step-3--reference-its-values)
   * [Spring MVC - Building Spring Web Apps](#spring-mvc---building-spring-web-apps)
+=======
+>>>>>>> 699863e66db7a9f7191535c7fac4af66f1fbc6ac
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 

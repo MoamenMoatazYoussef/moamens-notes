@@ -56,6 +56,9 @@
     + [Which type of injection should I use?](#which-type-of-injection-should-i-use-)
     + [Qualifiers for Dependency Injection](#qualifiers-for-dependency-injection)
   * [Bean Scope and Lifecycle with Annotations](#bean-scope-and-lifecycle-with-annotations)
+    + [Bean Scope with Annotations](#bean-scope-with-annotations)
+    + [Bean Lifecycle with Annotations](#bean-lifecycle-with-annotations)
+  * [Spring Configuration With Java Code (no XML)](#spring-configuration-with-java-code--no-xml-)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -970,6 +973,8 @@ Also, the destroy sysout statement is printed when we execute context.close()
 - If the scope is prototype, spring does **not** call the destroy method.
 - Because spring doesn't manage the complete lifecycle of a prototype bean.
 - So, our code must clean up prototype-scoped object and release resources that they were holding.
+- To get the Spring container to release resources held by prototype-scoped beans, try using a custom bean post-processor, which holds a reference to beans that need to be cleaned up, check this out:
+https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-factory-extension-bpp
 
 ## Spring Configuration With Java Annotations
 See annotations from Java Core note, here:
@@ -1425,4 +1430,104 @@ private String name;
 ```
 
 ## Bean Scope and Lifecycle with Annotations
+### Bean Scope with Annotations
 We simply use @Scope annotation to specify a bean's scope, passing in the scope we want, like @Scope("prototype") for example.
+
+In eclipse, create a new main class called "AnnotationBeanScopeDemoApp", add the main code we've been writing for a while now:
+- Load spring config file.
+- Retrieving bean from container.
+``` Java
+
+public class AnnotationBeanScopeDemoApp {
+
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context = 
+			new ClassPathXmlApplicationContext("applicationContext.xml"); 
+			
+		Coach theCoach = context.getBean("tennisCoach", Coach.class);
+		Coach alphaCoach = context.getBean("tennisCoach", Coach.class);
+			
+		System.out.println(theCoach == alphaCoach);
+			
+		context.close();
+	}
+
+}
+```
+If we run that, we'll get 'true' since the default scope is Singleton.
+
+To change the scope, go to TennisCoach, add this to the class, above it:
+``` Java
+@Scope("prototype")
+```
+Since it's prototype, theCoach and alphaCoach should be different instances.
+
+Run the main app, the result of comparing their equality will be "false".
+
+Nice :) <br />
+
+
+### Bean Lifecycle with Annotations
+Steps:
+- Define init and destroy methods.
+- Add @PostConstruct and @PreDestroy annotations to the methods.
+
+The same rules apply, the init and destroy methods are no-arg, can be of any return type but void is common, and can get any access modifier.
+
+Go to TennisCoach, define init and destroy methods called doStartupStuff and doDestroyStuff or something.
+Put some sysouts in them to verify that they do run.
+**REMOVE THE PROTOTYPE SCOPE**, remember the destroy method is NOT called if the scope is prototype.
+``` Java
+@Component
+public class TennisCoach implements Coach {
+	
+	@Autowired
+	@Qualifier("randomFortuneService")
+	private FortuneService fortuneService;
+	
+	public FortuneService getFortuneService() {
+		return fortuneService;
+	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "You can do it, Rafael";
+	}
+
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+	
+	// Notice here the annotation
+	@PostConstruct
+	public void doStartupStuff() {
+		System.out.println("Initializing the bean - custom mode");
+	}
+	
+	// Notice here the annotation
+	@PreDestroy
+	public void doDestroyStuff() {
+		System.out.println("Destroying the bean - custom mode");
+	}
+
+}
+
+```
+Run the main code without any changes to it, it'll work like crazy :)
+
+*Note:*
+If you're using Java 9 or higher, an error will be thrown for @PostConstruct and @PreDestroy annotations.
+
+That's because they're part of javax.annotation, which has been removed from the default classpath, so Eclipse can't find it.
+
+Solution:
+1. Download javax.annotation:
+http://central.maven.org/maven2/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.jar
+
+2. Copy the JAR file to the lib in your project.
+3. Add it to the java build path.
+
+## Spring Configuration With Java Code (no XML)
+This a way to configure Spring using Java directly, we don't need to go to the XML at all.

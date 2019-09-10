@@ -3,6 +3,7 @@
 ## Table of Contents
 - [Spring & Hibernate For Beginners](#spring---hibernate-for-beginners)
   * [Table of Contents](#table-of-contents)
+  * [Notes before you read](#notes-before-you-read)
   * [Why Spring?](#why-spring-)
   * [Overview of Spring](#overview-of-spring)
     + [Contents of Spring Framework](#contents-of-spring-framework)
@@ -46,6 +47,14 @@
     + [Using Default Component Names](#using-default-component-names)
       - [What happens if](#what-happens-if)
   * [Dependency Injection With Annotations](#dependency-injection-with-annotations)
+    + [Construction Injection with Annotations](#construction-injection-with-annotations)
+      - [Step 1: Define the dependency interface or class](#step-1--define-the-dependency-interface-or-class)
+      - [Step 2 and 3: Creata a constructor in your class for injections, then configure the dependency injection with @Autowired annotation.](#step-2-and-3--creata-a-constructor-in-your-class-for-injections--then-configure-the-dependency-injection-with--autowired-annotation)
+    + [Setter Injection with Annotations](#setter-injection-with-annotations)
+    + [Method Injection with Annotations](#method-injection-with-annotations)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
 
 ## Notes before you read
 - You'll see me writing "sysout" a lot, sysout means System.out.println.

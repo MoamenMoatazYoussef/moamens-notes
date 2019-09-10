@@ -18,7 +18,9 @@
 	* [Setter Injection](#setter-injection)  <br />
 	* [Injecting Literal Values in Spring Objects ](#injecting-literal-values-in-spring-objects)  <br />
 	* [Injecting Values from a Properties File](#injecting-values-from-a-properties-file)  <br />
-	 
+* [Spring Bean Scopes and Lifecycle](#spring-bean-scopes-and-lifecycle)  <br/ >	 
+	* [Spring Bean Scope](#spring-bean-scope)  <br />
+	* [Bean Lifecycle Methods](#bean-lifecycle-methods)  <br />
 
 ## Why Spring?
 First of all, why spring?
@@ -350,7 +352,7 @@ Now our app is:
 Yeah we're awesome B|  <br />
 
 
-#### NOTE
+*Note:*
 If you see red log messages, don't worry that's normal :) you can make them appear if you want:
 1. Create a bean to configure the parent logger and console handler
 
@@ -753,3 +755,201 @@ Notice what's being passed to the value attribute in the <property> tags:
 ```
 
 Nice work. :) <br />
+
+## Spring Bean Scopes and Lifecycle
+### Spring Bean Scope
+The Bean Scope is the lifecycle of a bean:
+- How long it will live.
+- How many instances of it are created.
+- How is it shared.
+
+Default scope is: Singletong
+
+What is Singleton?
+- Creating ONE INSTANCE of the bean.
+- Cached in memory.
+- All requests for the bean returns a reference to that one instance.
+
+This is good for STATELESS BEANS i.e. we don't want to keep any state.
+
+We can specify the scope by adding a scope attribute in the bean like: scope="singleton".
+
+Othe scopes:
+- prototype: creates an instance each time the container requests a bean. (Good for STATEFUL BEANS)
+- request, session, and global-session: scoped to an HTTP web request.
+
+In our example we'll try the scopes out:
+- Copy the config file and paste it in the same place, naming it beanScope-applicationContext.xml
+- In the new file, remove the properties file line and the myCricketCoach.
+- Create another main app class called BeanScopeDemoApp.java
+
+Steps to do in the new app:
+- Load the new config file.
+- retrieve bean from container. Actually we'll retrieve TWO BEANS from the container:
+``` Java
+public class BeanScopeDemoApp {
+
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context 
+			= new ClassPathXmlApplicationContext("beanScope-applicationContext.xml");
+		
+		Coach theCoach = context.getBean("myCoach", Coach.class);
+		Coach alphaCoach = context.getBean("myCoach", Coach.class);
+
+		boolean isSingleton = (theCoach == alphaCoach);
+		System.out.println(isSingleton);
+		
+		context.close();
+	}
+
+}
+``` 
+
+Default scope is singleton, so theCoach and alphaCoach should be referencing the same bean, right?
+
+Yes :)
+Check the output of isSingleton.
+
+Let's change the bean scope to Prototype and see the result:
+``` XML
+    <bean id="myCoach"
+    	class="com.luv2code.springdemo.TrackCoach" scope="prototype">
+    	<constructor-arg ref="myFortuneService"></constructor-arg>
+    </bean>
+```
+The result will be false :o
+
+### Bean Lifecycle Methods
+- Beans are instantiated.
+- Dependencies are injected.
+- Internal Spring processing occuring in the bean factory.
+- **Your custom init method**
+- *Bean is ready to use*
+- **Your custom destroy method**
+
+As you can see, we can do a custom init method WHEN the bean is created, in it we can:
+- Call custom business logic methods.
+- Set up handles to resources like db, network, etc.
+
+We can also do the same before the bean is destroyed.
+
+Both methods can have any access modifier and any return type, but void is common because you usually are not able to capture the return value.
+Both methods cannot accept any arguments.
+
+How do we do this?
+In the config file, in the bean, we can add two attributes:
+- init-method
+- destroy-method
+
+Steps to do that:
+- Define the init and destroy methods.
+- Configure the method names in the config file.
+
+#### Step 1: Define the init and destroy methods
+We'll add the methods in our TrackCoach class:
+``` Java
+public class TrackCoach implements Coach {
+	private FortuneService fortuneService;
+//	private int id;
+	
+	public TrackCoach() {
+		
+	}
+	
+	public TrackCoach(FortuneService theFortuneService) {
+		fortuneService = theFortuneService;
+	}
+
+	@Override
+	public String getDailyWorkout() {
+		return "Run 10 miles per hour";
+	}
+
+	@Override
+	public String getDailyFortune() {
+		return "Luke, " + fortuneService.getFortune();
+	}
+	
+	// define init method
+	public void doMyStartupStuff() {
+		System.out.println("Initializing the bean - custom mode");
+	}
+	
+	// define destroy method
+	public void doMyDestroyStuff() {
+		System.out.println("Destroying the bean - custom mode");
+	}
+}
+```
+
+#### Step 2: Configure the method names in the config file
+Copy and paste the config file, name the new one "beanLifecycle-applicationContext.xml"
+
+*Note:* as you can see, we can have many config files in one project.
+
+Inside it, remove the prototype scope from earlier (Now it's default, which is Singleton).
+Then add the two attributes:
+``` XML
+    <bean id="myCoach"
+    	class="com.luv2code.springdemo.TrackCoach" 
+    	init-method="doMyStartupStuff"
+    	destroy-method="doMyDestroyStuff">
+    	<constructor-arg ref="myFortuneService"></constructor-arg>
+    </bean>
+```
+
+Then make a new main class, copy the BeanScopeDemoApp and name the new class BeanLifecycleDemoApp:
+``` Java
+public class BeanLifecycleDemoApp {
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context 
+			= new ClassPathXmlApplicationContext("beanLifecycle-applicationContext.xml");
+		
+		Coach theCoach = context.getBean("myCoach", Coach.class);
+		Coach alphaCoach = context.getBean("myCoach", Coach.class);
+
+		boolean isSingleton = (theCoach == alphaCoach);
+		System.out.println(isSingleton);
+		
+		context.close();
+	}
+
+}
+
+```
+
+Now run it, it will print the sysout statements in the init and destroy methods we defined :)
+
+*Note:* If you created theCoach and alphaCoach, and we removed the prototype scope, you'll notice that the output will print the sysout statements in our init and destroy methods once, this means that both reference the same bean i.e. Singleton scope ;)
+
+Also, the destroy sysout statement is printed when we execute context.close()
+
+*Note:* 
+- If the scope is prototype, spring does **not** call the destroy method.
+- Because spring doesn't manage the complete lifecycle of a prototype bean.
+- So, our code must clean up prototype-scoped object and release resources that they were holding.
+
+## Spring Configuration With Java Annotations
+See annotations from Java Core note, here:
+https://bit.ly/2m8tKj4
+
+Why use annotations with Spring configuration?
+- XML can be very verbose (exxessively detailed and tiring) for large projects.
+- Using annotations for configurations minimize the XML configuration.
+
+### Component Scanning
+
+When we add an annotation to a class:
+- Spring will scan classes for annotation.
+- When it finds an anootation for a class, it registers the bean instantiated from that class with those annotations.
+
+Steps:
+- Enable component scanning in Spring config file.
+- Add @Component annotation for java classes.
+- Retrieve the bean from the container.
+
+#### Step 1: Enable component scanning in Spring config file
+First, we'll make a brand new project in Eclipse to separate things a little bit.
+Call it spring-demo-annotations or something.
+Copy the lib directory from spring-demo-one (i.e. the first project), to the new project.
+Configure the build path just like before.

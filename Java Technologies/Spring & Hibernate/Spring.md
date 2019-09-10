@@ -1,12 +1,24 @@
 # Spring & Hibernate For Beginners
 
 ## Table of Contents
-[Why Spring?](#user-content-why-spring)  <br />
-[Overview of Spring](#overview-of-spring)  <br />
-[Setting Up Spring](#setting-up-spring)  <br />
-- [Installing Tomcat](#installing-tomcat)  <br />
-[Spring Inversion Of Control](#spring-inversion-of-control)  <br />
-[Spring Dependency Injection](#spring-dependency-injection)   <br />
+* [Why Spring?](#user-content-why-spring)  <br />
+* [Overview of Spring](#overview-of-spring)  <br />
+	* [Contents of Spring Framework](#contents-of-spring-framework)  <br />
+	* [Spring Projects](#spring-projects)  <br />
+* [Setting Up Spring](#setting-up-spring)  <br />
+	* [Installing Tomcat](#installing-tomcat)  <br />
+	* [Installing Eclipse](#installing-eclipse)  <br />
+	* [Connecting Tomcat to Eclipse](#connecting-tomcat-to-eclipse)  <br />
+	* [Download Spring JAR files](#download-spring-jar-files)  <br />
+* [Spring Inversion Of Control](#spring-inversion-of-control)  <br />
+	* [Spring Container](#spring-container)  <br />
+
+* [Spring Dependency Injection](#spring-dependency-injection)   <br />
+	* [Construction Injection](#construction-injection)  <br />
+	* [Setter Injection](#setter-injection)  <br />
+	* [Injecting Literal Values in Spring Objects ](#injecting-literal-values-in-spring-objects)  <br />
+	* [Injecting Values from a Properties File](#injecting-values-from-a-properties-file)  <br />
+	 
 
 ## Why Spring?
 First of all, why spring?
@@ -245,7 +257,7 @@ But the app isn't configurable, we're still changing CODE between TrackCoach and
 It would be convenient to read the implementation name from a config file and act upon it.
 Maybe we can do that using Reflection, But we'll focus on how Spring addresses this problem.
 
-### Spring Container a.k.a. *ApplicationContext*
+### Spring Container
 It:
 - Creates and manages objects (inversion of control).
 - Injects object's dependencies (dependency injection).
@@ -416,7 +428,6 @@ File: applicationContext.xml (snippet)
 ```
 Source code is available here.
 https://gist.github.com/darbyluv2code/cfb16c2fd1825a947d8faca3724b47a9
----
 
 Once you make these updates, then you will be able to see additional logging data. :-)
 
@@ -440,7 +451,7 @@ There are a lot of injection types in Spring, two of the most used are:
 - Constructor Injection.
 - Setter Injection.
 
-### Construction Injection
+### Construction Injection 
 Steps:
 1. Define the dependency's interface and class.
 2. Create a constructor in our class for injections.
@@ -525,7 +536,7 @@ Now, in the coach bean, we'll do the actual injection:
 
 Now, go to HellpSpringApp class, just print out theCoach.getDailyFortune(), see the result :)
 
-### Setter Injection
+### Setter Injection 
 Spring injects dependencies by calling setters on your class.
 
 Steps:
@@ -599,7 +610,7 @@ public class MyApp {
 Run it, it'll be as awesome as me B| <br />
 Nice.
 
-### Injecting Literal Values in Spring Objects
+### Injecting Literal Values in Spring Objects 
 What if we want to inject values, like Strings, etc.?
 
 Steps:
@@ -699,7 +710,7 @@ public class MyApp {
 
 Nice. :) <br />
 
-### Injecting Values from a Properties File
+### Injecting Values from a Properties File 
 Finally, we'll look at how we can inject values but without hardcoding them into the config file, we'll read them from a Properties file.
 
 Steps:

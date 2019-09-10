@@ -58,7 +58,7 @@
   * [Bean Scope and Lifecycle with Annotations](#bean-scope-and-lifecycle-with-annotations)
     + [Bean Scope with Annotations](#bean-scope-with-annotations)
     + [Bean Lifecycle with Annotations](#bean-lifecycle-with-annotations)
-  * [Spring Configuration With Java Code (no XML)](#spring-configuration-with-java-code--no-xml-)
+  * [Spring Configuration With Java Code (no xml)](#spring-configuration-with-java-code--no-xml-)
     + [Java Config Class with Component Scaning](#java-config-class-with-component-scaning)
     + [Java Config Class with Manual Bean Configuration](#java-config-class-with-manual-bean-configuration)
       - [Java Config Class with Manual Bean Configuration - Example](#java-config-class-with-manual-bean-configuration---example)
@@ -67,6 +67,7 @@
       - [Step 2: Load it in Java Config Class](#step-2--load-it-in-java-config-class)
       - [Step 3: Reference its values](#step-3--reference-its-values)
   * [Spring MVC - Building Spring Web Apps](#spring-mvc---building-spring-web-apps)
+
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -318,7 +319,7 @@ It:
 - Injects object's dependencies (dependency injection).
 
 How to configure Spring Container:
-- XML config file (legacy, but a lot of legacy apps use it).
+- xml config file (legacy, but a lot of legacy apps use it).
 - Through annotations.
 - Through source code.
 
@@ -349,9 +350,9 @@ Inside it -> spring-core -> spring-demo-one -> applicationContext.xml
 
 Copy that, paste it into the src directory of your project.
 
-Open it, it's an XML file.
+Open it, it's an xml file.
 Now, we'll define our beans, first step in our spring dev process:
-``` XML
+``` xml
 <bean id="myCoach"
     class="com.luv2code.springdemo.TrackCoach">
 </bean>
@@ -405,7 +406,7 @@ Now our app is:
 Yeah we're awesome B|  <br />
 
 
-*Note:*
+***Note:***
 If you see red log messages, don't worry that's normal :) you can make them appear if you want:
 1. Create a bean to configure the parent logger and console handler
 
@@ -465,12 +466,12 @@ public class MyLoggerConfig {
 ---
 ```
 
-2. Configure the bean in the Spring XML config file
+2. Configure the bean in the Spring xml config file
 
-In your XML config file, add the following bean entry. Make sure to list this as the first bean so that it is initialized first. Since the bean is initialized first, then you will get all of the logging traffic. If you move it later in the config file after the other beans, then you will miss out on some of the initial logging messages.
+In your xml config file, add the following bean entry. Make sure to list this as the first bean so that it is initialized first. Since the bean is initialized first, then you will get all of the logging traffic. If you move it later in the config file after the other beans, then you will miss out on some of the initial logging messages.
 
 File: applicationContext.xml (snippet)
-``` XML
+``` xml
 <!-- 
 	Add a logger config to see logging messages.		
 	- For more detailed logs, set values to "FINEST"
@@ -575,14 +576,14 @@ Do the same for TrackCoach and add a message to the fortune or whatever. <br />
 #### Step 3: Configure the depencency injection in Spring config file
 
 Add the bean to applicationContext.xml:
-``` XML
+``` xml
 <bean id="myFortuneService"
     class="com.luv2code.springdemo.HappyFortuneService">
 </bean>
 ```
 
 Now, in the coach bean, we'll do the actual injection:
-``` XML
+``` xml
     <bean id="myCoach"
     	class="com.luv2code.springdemo.TrackCoach">
     	<constructor-arg ref="myFortuneService"></constructor-arg>
@@ -632,7 +633,7 @@ public class CricketCoach implements Coach {
 
 #### Step 2: Configure the dependency injection in the config file
 In the config file, add the CricketCoach bean and add a <property > tag like this:
-``` XML
+``` xml
     <bean id="myCricketCoach"
     	class="com.luv2code.springdemo.CricketCoach">
     	
@@ -725,7 +726,7 @@ public class CricketCoach implements Coach {
 ```
 #### Step 2: Configure the config file
 Now, in the config file, do that:
-``` XML
+``` xml
 	<bean id="myCricketCoach"
     	class="com.luv2code.springdemo.CricketCoach">
     	
@@ -784,14 +785,14 @@ Easiest thing of my life.
 
 #### Step 2: Load the properties file into the Spring config file
 Now, in our config file, just before our beans, add this:
-``` XML
+``` xml
 <context:property-placeholder location="classpath:sport.properties"/>
 ```
 
 #### Step 3: Reference the values from the Properties file
 In the config file, replace the things passed to the value attribute with these:
 Notice what's being passed to the value attribute in the <property> tags:
-``` XML
+``` xml
     <bean id="myCricketCoach"
     	class="com.luv2code.springdemo.CricketCoach">
     	
@@ -864,7 +865,7 @@ Yes :)
 Check the output of isSingleton.
 
 Let's change the bean scope to Prototype and see the result:
-``` XML
+``` xml
     <bean id="myCoach"
     	class="com.luv2code.springdemo.TrackCoach" scope="prototype">
     	<constructor-arg ref="myFortuneService"></constructor-arg>
@@ -938,11 +939,11 @@ public class TrackCoach implements Coach {
 #### Step 2: Configure the method names in the config file
 Copy and paste the config file, name the new one "beanLifecycle-applicationContext.xml"
 
-*Note:* as you can see, we can have many config files in one project.
+***Note:*** as you can see, we can have many config files in one project.
 
 Inside it, remove the prototype scope from earlier (Now it's default, which is Singleton).
 Then add the two attributes:
-``` XML
+``` xml
     <bean id="myCoach"
     	class="com.luv2code.springdemo.TrackCoach" 
     	init-method="doMyStartupStuff"
@@ -973,11 +974,11 @@ public class BeanLifecycleDemoApp {
 
 Now run it, it will print the sysout statements in the init and destroy methods we defined :)
 
-*Note:* If you created theCoach and alphaCoach, and we removed the prototype scope, you'll notice that the output will print the sysout statements in our init and destroy methods once, this means that both reference the same bean i.e. Singleton scope ;)
+***Note:*** If you created theCoach and alphaCoach, and we removed the prototype scope, you'll notice that the output will print the sysout statements in our init and destroy methods once, this means that both reference the same bean i.e. Singleton scope ;)
 
 Also, the destroy sysout statement is printed when we execute context.close()
 
-*Note:* 
+***Note:*** 
 - If the scope is prototype, spring does **not** call the destroy method.
 - Because spring doesn't manage the complete lifecycle of a prototype bean.
 - So, our code must clean up prototype-scoped object and release resources that they were holding.
@@ -989,8 +990,8 @@ See annotations from Java Core note, here:
 https://bit.ly/2m8tKj4
 
 Why use annotations with Spring configuration?
-- XML can be very verbose (exxessively detailed and tiring) for large projects.
-- Using annotations for configurations minimize the XML configuration.
+- xml can be very verbose (exxessively detailed and tiring) for large projects.
+- Using annotations for configurations minimize the xml configuration.
 
 ### Component Scanning
 
@@ -1014,14 +1015,14 @@ Add a package to it, call it "com.luv2code.springdemo".
 #### Step 1: Enable component scanning in Spring config file
 Copy the config file from the previous project "applicationContext.xml", to the new project.
 
-*Note:* It's important that the config files are directly in the src directory.
+***Note:*** It's important that the config files are directly in the src directory.
 
 Remove all the bean entries and the properties file.
 Close the previous project, right click on it and choose Close.
 
 Now go to the config file in the new project (The one we pasted).
 Add this line to enable component scanning:
-``` XML
+``` xml
 <context:component-scan base-package="com.luv2code.springdemo" />
 ```
 
@@ -1114,7 +1115,7 @@ public class AnnotationDemoApp {
 
 That's it :) <br />
 
-*Note:* As you can see, here we're outsourcing the bean creation i.e. Inversion of control
+***Note:*** As you can see, here we're outsourcing the bean creation i.e. Inversion of control
 
 #### What happens if
 - You pass a wrong ID to the context.getbean?
@@ -1143,7 +1144,7 @@ Steps for Constructor Injection:
 - Creata a constructor in your class for injections.
 - Configure the dependency injection with @Autowired annotation.
 
-*Note:* What if there are many FortuneService implementations?
+***Note:*** What if there are many FortuneService implementations?
 Spring has a special annotation @Qualifier, which chooses which implementation to inject in which bean, we'll cover that later.
 
 ### Construction Injection with Annotations
@@ -1219,7 +1220,7 @@ System.out.println(theCoach.getDailyFortune());
 
 And run it. It'll work, cuz we work B| <br />
 
-*Note:*
+***Note:***
 We can remove the @Autowired annotation and it would still work, why?
 As of Spring Framework 4.3, an @Autowired annotation on such a constructor is no longer necessary if the target bean only defines one constructor to begin with. However, if several constructors are available, at least one must be annotated to teach the container which one to use.
 
@@ -1406,13 +1407,13 @@ public class TennisCoach implements Coach {
 
 Run the main app, it'll be working. <br />
 
-*Note:*
+***Note:***
 In the default bean names, if the first AND second letters are uppercase, the name is NOT converted to camel case i.e. first letter stays uppercase.
 That is done by a Spring component called *Java beans Introspector*, with a method called decapitalize.
 Documentation:
 https://docs.oracle.com/javase/8/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)
 
-*Note:*
+***Note:***
 Weirdly, @Qualifier in constructors should be place WITH the arguments:
 ``` Java
 @Autowired
@@ -1421,14 +1422,14 @@ public TennisCoach(@Qualifier("randomFortuneService") FortuneService theFortuneS
 }
 ```
 
-*Note:*
+***Note:***
 Injecting properties files using Java annotations is done by:
 - Creating the file, obviously.
 ``` txt
 foo.name=New York Giants
 ```
 - Loading it into the config file, just like before.
-``` XML
+``` xml
 <context:property-placeholder location="classpath:sport.properties"/>
 ```
 - Doing this in the class that has the fields to be injected:
@@ -1525,7 +1526,7 @@ public class TennisCoach implements Coach {
 ```
 Run the main code without any changes to it, it'll work like crazy :)
 
-*Note:*
+***Note:***
 If you're using Java 9 or higher, an error will be thrown for @PostConstruct and @PreDestroy annotations.
 
 That's because they're part of javax.annotation, which has been removed from the default classpath, so Eclipse can't find it.
@@ -1537,11 +1538,11 @@ http://central.maven.org/maven2/javax/annotation/javax.annotation-api/1.2/javax.
 2. Copy the JAR file to the lib in your project.
 3. Add it to the java build path.
 
-## Spring Configuration With Java Code (no XML)
+## Spring Configuration With Java Code (no xml)
 There are three ways to configure Spring container:
-- Full XML config, the first thing we did.
-- XML component scan, the second thing we did.
-- Java config class, we'll do that now, we don't need to go to the XML at all.
+- Full xml config, the first thing we did.
+- xml component scan, the second thing we did.
+- Java config class, we'll do that now, we don't need to go to the xml at all.
 
 Steps:
 - Create a java class, annotate it as @Configuration.
@@ -1583,7 +1584,7 @@ public class JavaConfigDemoApp {
 ```
 Run it, and it'll work :) <br />
 
-*Note:* Log messages have been removed from latest Spring releases, so we only see our sysouts, not the Spring's logging.
+***Note:*** Log messages have been removed from latest Spring releases, so we only see our sysouts, not the Spring's logging.
 To see the logging messages of Spring:
 1. Create a logging properties file, in it define logger levels like this:
 ``` txt
@@ -1745,7 +1746,7 @@ public class SwimJavaConfigDemoApp {
 }
 ```
 
-*Note:*
+***Note:***
 How does @Bean work?
 - First, the @Bean annotation intercepts the initial request for "swimCoach" bean.
 - Spring scans the memory for an instance of swimCoach.
@@ -1863,7 +1864,7 @@ public class SwimJavaConfigDemoApp {
 
 Run that awesomeness, and it will work like The Miz (WWE reference xD).
 
-*Note:*
+***Note:***
 If the output was:
 ${foo.email}
 ${foo.team}
@@ -1880,3 +1881,162 @@ If you're using Spring 4.2 or lower, you need to add this code to SportConfig:
 ```
 
 ## Spring MVC - Building Spring Web Apps
+### What is Spring MVC?
+- A framework for building Web apps in Java.
+- Based on MVC.
+- Leverages Core Spring framework.
+
+The full documentation of Spring MVC (Which is very good btw):
+https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html
+
+Books:
+Just search Spring MVC on amazon, you'll find a lot of good books.
+
+### Components of Spring MVC
+- A set of web pages to layout UI components.
+- A collection of Spring Beans.
+- Spring configurations.
+
+So how does Spring MVC work behind the scenes?
+- An incoming request occurs.
+- A component called "Front Controller" or "DispatcherServlet" that will delegate the request to other objects in our system.
+- It's part of the Spring framework.
+- Already developed and in the JAR files we loaded.
+- WE create the Model, View, and Controller classes.
+	- Model: contain data.
+	- View: the JSP page where data is rendered.
+	- Controller: The business logic.
+	
+Controller:
+- This is the business logic, here we handle requests, store/retrieve data, place them in model, etc.
+- Send that to the appropriate view template.
+
+Model:
+- The local container that contains the data.
+- Stores and retrieve data from databases or web services.
+- It can be any java object or collection.
+
+View:
+- View templates and model data, where our JSP page reads the model data and displays it.
+- Most commonly is JSP + JSTL.
+- There are other view templates like Groovy, Velocity, Thymeleaf, Freemarker, etc. Check the docs.
+
+### Setting Up Spring MVC
+We already did these:
+- Install Tomcat.
+- Install Eclipse.
+- Connect Eclipse to Tomcat.
+
+Now we'll do two more steps:
+- Download Spring MVC source code for this training.
+http://www.luv2code.com/downloads/udemy-spring-hibernate/solution-code-spring-mvc-config-files.zip
+- Download the latest Spring JAR viles from the Spring website.
+
+### Spring MVC Configuration
+This is probably the hardest part of Spring MVC: getting the config right.
+
+Steps:
+- Add configurations to the file WEB-INF/web.xml
+	- Configure Spring MVC Dispatcher Servlet.
+	- Set up URL mappings to that Servlet.
+- Add configurations to file WEB-INF/spring-mvc-demo-servlet.xml
+	- Add support for Spring component scanning, conversion, formatting, valudation.
+	- Configure Spring MVC View Resolver.
+
+Change your Eclipse perspective:
+Open the Window menu -> Perspective -> Open Perspective -> Java EE
+
+Create a new project:
+File -> New -> Dynamic Web Project
+Call it "spring-mvc-demo"
+In WebContent/WEB-INF/lib, add the spring JAR files, along with the JAR files from the latest download, the ones in this path:
+solution-code-spring-mvc-config-files\solution-code-spring-mvc-config-files\spring-mvc\starter-files\spring-mvc-demo\lib
+
+Then, in the same path:
+solution-code-spring-mvc-config-files\solution-code-spring-mvc-config-files\spring-mvc\starter-files\spring-mvc-demo\config
+
+Get: 
+- web.xml 
+- spring-mvc-demo-servlet.xml
+And put them in WEB-INF/lib
+
+***Note:*** These files usually cause a lot of problems since configuring them isn't easy, but these ones are pre-configured, use them until you get good at configuring them.
+
+Open web.xml, you'll find the steps we discussed earlier.
+Open spring-mvc-demo-servlet.xml, which is a regular config file for Spring, also the configs we discussed earlier are viewed here.
+
+Create the folder 'view' in WEB-INF.
+
+Now Spring MVC should be configured and ready to go, we'll start writing code next.
+
+### Spring MVC: Creating Controllers and Views
+Steps:
+- Create controller class.
+- Define controller method.
+- Add request mapping to the controller method.
+- Return the view name.
+- Develop view page.
+
+We'll use @Controller annotation, which inherits from @Component, so it will be picked up during component scanning.
+
+#### Step 1: Create controller class
+Create a new package in Java Resources/src, call it "com.luv2code.springdemo.mvc".
+Create a new class, called "HomeController".
+Add the @Controller to the class
+``` Java
+@Controller
+public class HomeController {
+
+}
+```
+#### Step 2: Define controller method
+Add a new method to the controller:
+``` Java
+@Controller
+public class HomeController {
+	public String showPage() {
+		return null;
+	}
+}
+```
+#### Step 3: Add request mapping to the controller method
+Add the annotation @RequestMapping and pass "\" as argument:
+``` Java
+@Controller
+public class HomeController {
+	
+	@RequestMapping("/")
+	public String showPage() {
+		return null;
+	}
+}
+```
+#### Step 4: Return the view name
+Return the name of the page (the incomplete name of the page because the prefix and suffix are added from spring-mvc-demo-servlet.xml )
+``` Java
+@Controller
+public class HomeController {
+	
+	@RequestMapping("/")
+	public String showPage() {
+		return "main-menu";
+	}
+}
+
+```
+#### Step 5: Develop view page
+In the WebContent/WEB-INF/view folder, create a new file, name it <the-view-name-you-returned-in-last-step>.jsp, here it's "main-menu.jsp".
+Inside it, write any html you want like:
+``` html
+<!DOCTYPE html>
+
+<head>
+	<title>Moamen's Spring MVC</title>
+</head>
+
+<body>
+	<span>Moamen is amazing</span>
+</body>
+```
+
+Now right-click on the project folder, Run as Run on server, choose default server, click finish.

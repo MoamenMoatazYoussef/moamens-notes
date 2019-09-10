@@ -3,6 +3,7 @@
 ## Table of Contents
 - [Spring & Hibernate For Beginners](#spring---hibernate-for-beginners)
   * [Table of Contents](#table-of-contents)
+  * [Notes before you read](#notes-before-you-read)
   * [Why Spring?](#why-spring-)
   * [Overview of Spring](#overview-of-spring)
     + [Contents of Spring Framework](#contents-of-spring-framework)
@@ -46,6 +47,18 @@
     + [Using Default Component Names](#using-default-component-names)
       - [What happens if](#what-happens-if)
   * [Dependency Injection With Annotations](#dependency-injection-with-annotations)
+    + [Construction Injection with Annotations](#construction-injection-with-annotations)
+      - [Step 1: Define the dependency interface or class](#step-1--define-the-dependency-interface-or-class)
+      - [Step 2 and 3: Creata a constructor in your class for injections, then configure the dependency injection with @Autowired annotation.](#step-2-and-3--creata-a-constructor-in-your-class-for-injections--then-configure-the-dependency-injection-with--autowired-annotation)
+    + [Setter Injection with Annotations](#setter-injection-with-annotations)
+    + [Method Injection with Annotations](#method-injection-with-annotations)
+    + [Field Injection with Annotations](#field-injection-with-annotations)
+    + [Which type of injection should I use?](#which-type-of-injection-should-i-use-)
+    + [Qualifiers for Dependency Injection](#qualifiers-for-dependency-injection)
+  * [Bean Scope and Lifecycle with Annotations](#bean-scope-and-lifecycle-with-annotations)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
 
 ## Notes before you read
 - You'll see me writing "sysout" a lot, sysout means System.out.println.
@@ -1250,3 +1263,166 @@ public class TennisCoach implements Coach {
 No changes are needed to the main app, just run it and it'll be awesomely working ^_^
 
 ### Method Injection with Annotations
+We can actually use ANY method, not just setters, to inject stuff.
+Just add @Autowired to the method.
+
+To test it, go to TennisCoach, just change the setter method's name to any other name.
+Then move to the main app, run it, it'll work.
+
+Spring is awesome, not as awesome as we are *obviously*, but it is awesome you know.
+Not sure if it's awesome because we -the *most awesome peopl on the entire planet*- are using it, or it's awesome on its own B|
+
+### Field Injection with Annotations
+We can inject dependencies by setting values in our classes directly even private ones.
+Behind the scenes, Spring does that by Injection.
+
+Steps:
+- Configure the dependency injection with @Autowired annotation.
+
+That's it :'D
+
+Just place @Autowired on the field directly
+``` Java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TennisCoach implements Coach {
+	@Autowired
+	private FortuneService fortuneService;
+	
+//	@Autowired
+//	public TennisCoach(FortuneService fs) {
+//		fortuneService = fs;
+//	}
+	
+	public FortuneService getFortuneService() {
+		return fortuneService;
+	}
+
+//	@Autowired
+//	public void setFortuneService(FortuneService fortuneService) {
+//		this.fortuneService = fortuneService;
+//	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "You can do it, Rafael";
+	}
+
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+
+}
+```
+
+No changes to the main app, just run it and it'll be alive and kicking.
+
+(I just thought that you may understand "kicking" as having som errors, but no, it means that it's working properly :'D )
+
+### Which type of injection should I use?
+Choose a style and stay consistent in your project i.e. in a project, choose ONE style and whenever you need injection, use THAT style.
+
+People argue about which one is a superior style of injection, but you know that's just developers arguing, so choose the one you're comfortable with and do your thing.
+
+### Qualifiers for Dependency Injection
+So far we've been using Autowiring where:
+- Spring scans components to find an implementation for FortuneService.
+- Finds HappyFortuneService.
+- And injects it.
+
+What if, we have MORE THAN one implementation for FortuneService, like:
+- RandomFortuneService.
+- DatabaseFortuneService.
+- RESTfulFortuneService.
+- HappyFortuneService.
+
+If you work normally like before, a NoUniqueBeanDefinitionException will be thrown
+Along with a list of all implementations of what's being injected.
+
+So, we have to qualify each one to be unique, using the @Qualifier annotation, passing a bean id to it (Be it default name or specified name).
+
+Let's do that in code.
+First, create a new class that implements for FortuneService, like RandomFortuneService.
+``` Java
+// Don't forget to add the @Component annotation
+@Component
+public class RandomFortuneService implements FortuneService {
+
+	@Override
+	public String getFortune() {
+		return "And we keep driving through that night, it's a late goodbye..";
+	}
+
+}
+```
+Now run the main app.
+The exception NoUniqueBeanDefinitionException will be thrown.
+
+We'll modify TennisCoach and add the @Qualifier annotation, passing in the bean id we want, I'll pass the new one, randomFortuneService:
+``` Java
+@Component
+public class TennisCoach implements Coach {
+	
+	// Notice here we passed the bean id of the bean we want
+	@Autowired
+	@Qualifier("randomFortuneService")
+	private FortuneService fortuneService;
+	
+	public FortuneService getFortuneService() {
+		return fortuneService;
+	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "You can do it, Rafael";
+	}
+
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+
+}
+
+```
+
+Run the main app, it'll be working. <br />
+
+*Note:*
+In the default bean names, if the first AND second letters are uppercase, the name is NOT converted to camel case i.e. first letter stays uppercase.
+That is done by a Spring component called *Java beans Introspector*, with a method called decapitalize.
+Documentation:
+https://docs.oracle.com/javase/8/docs/api/java/beans/Introspector.html#decapitalize(java.lang.String)
+
+*Note:*
+Weirdly, @Qualifier in constructors should be place WITH the arguments:
+``` Java
+@Autowired
+public TennisCoach(@Qualifier("randomFortuneService") FortuneService theFortuneService) {        
+    fortuneService = theFortuneService;
+}
+```
+
+*Note:*
+Injecting properties files using Java annotations is done by:
+- Creating the file, obviously.
+``` txt
+foo.name=New York Giants
+```
+- Loading it into the config file, just like before.
+``` XML
+<context:property-placeholder location="classpath:sport.properties"/>
+```
+- Doing this in the class that has the fields to be injected:
+``` Java
+@Value("${foo.name}")
+private String name;
+```
+
+## Bean Scope and Lifecycle with Annotations
+We simply use @Scope annotation to specify a bean's scope, passing in the scope we want, like @Scope("prototype") for example.

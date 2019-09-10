@@ -47,6 +47,9 @@
       - [What happens if](#what-happens-if)
   * [Dependency Injection With Annotations](#dependency-injection-with-annotations)
 
+## Notes before you read
+- You'll see me writing "sysout" a lot, sysout means System.out.println.
+-----
 
 ## Why Spring?
 First of all, why spring?
@@ -1113,3 +1116,137 @@ Steps for Constructor Injection:
 - Define the dependency interface/class.
 - Creata a constructor in your class for injections.
 - Configure the dependency injection with @Autowired annotation.
+
+*Note:* What if there are many FortuneService implementations?
+Spring has a special annotation @Qualifier, which chooses which implementation to inject in which bean, we'll cover that later.
+
+### Construction Injection with Annotations
+#### Step 1: Define the dependency interface or class
+Create a new interface FortuneService just like before.
+``` Java
+public interface FortuneService {
+	public String getFortune();
+}
+```
+Now create a class that'll implement that interface, HappyFortuneService also just like before.
+BUT, add the @Component annotation.
+``` Java
+import org.springframework.stereotype.Component;
+
+@Component
+public class HappyFortuneService implements FortuneService {
+
+	@Override
+	public String getFortune() {
+		return "Unpredictable fortune, my past";
+	}
+}
+```
+
+Really basic stuff for us now cuz we're awesome B|
+
+Now, we'll add a method to the Coach interface, getDailyFortune(), juuust like before.
+``` Java
+public interface Coach {
+	public String getDailyWorkout();
+	public String getDailyFortune();
+}
+```
+
+#### Step 2 and 3: Creata a constructor in your class for injections, then configure the dependency injection with @Autowired annotation.
+Now the TennisCoach class will break since it doesn't fully implement Coach now, so we'll fix that, by:
+- Adding a private FortuneService field to TennisCoach.
+- Implementing getDailyFortune() method and use the new field in it.
+- Create an constructor that takes a FortuneService as argument.
+- Add the @Autowired annotation.
+``` Java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TennisCoach implements Coach {
+	private FortuneService fortuneService;
+	
+	@Autowired
+	public TennisCoach(FortuneService fs) {
+		fortuneService = fs;
+	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "You can do it, Rafael";
+	}
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+
+}
+```
+Spring will SCAN the components to see what implements the FortuneService interface.
+It will find HappyFortuneService.
+So it will inject that into TennisCoach.
+
+Now, in your main app, just add 
+System.out.println(theCoach.getDailyFortune());
+
+And run it. It'll work, cuz we work B| <br />
+
+*Note:*
+We can remove the @Autowired annotation and it would still work, why?
+As of Spring Framework 4.3, an @Autowired annotation on such a constructor is no longer necessary if the target bean only defines one constructor to begin with. However, if several constructors are available, at least one must be annotated to teach the container which one to use.
+
+I personally prefer to use the @Autowired annotation because it makes the code more readable. But as mentioned, the @Autowired is not required for this scenario.
+
+See link to the docs:
+https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-autowired-annotation
+
+### Setter Injection with Annotations
+Steps:
+- Create setter methods for injections.
+- Configure dependency injection with @Autowired annotation.
+
+Go to TennisCoach class, comment out the constructor we added last time, with the annotation.
+Add a no-arg constructor, put any sysout in it or something.
+Add a setter for FortuneService field.
+Then add the @Autowired annotation.
+``` Java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TennisCoach implements Coach {
+	private FortuneService fortuneService;
+	
+//	@Autowired
+//	public TennisCoach(FortuneService fs) {
+//		fortuneService = fs;
+//	}
+	
+	public FortuneService getFortuneService() {
+		return fortuneService;
+	}
+
+	// Here is out setter method, autowired
+	@Autowired
+	public void setFortuneService(FortuneService fortuneService) {
+		this.fortuneService = fortuneService;
+	}
+	
+	@Override
+	public String getDailyWorkout() {
+		return "You can do it, Rafael";
+	}
+
+
+	@Override
+	public String getDailyFortune() {
+		return fortuneService.getFortune();
+	}
+
+}
+```
+No changes are needed to the main app, just run it and it'll be awesomely working ^_^
+
+### Method Injection with Annotations

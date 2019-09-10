@@ -67,7 +67,16 @@
       - [Step 2: Load it in Java Config Class](#step-2--load-it-in-java-config-class)
       - [Step 3: Reference its values](#step-3--reference-its-values)
   * [Spring MVC - Building Spring Web Apps](#spring-mvc---building-spring-web-apps)
-
+    + [What is Spring MVC?](#what-is-spring-mvc-)
+    + [Components of Spring MVC](#components-of-spring-mvc)
+    + [Setting Up Spring MVC](#setting-up-spring-mvc)
+    + [Spring MVC Configuration](#spring-mvc-configuration)
+    + [Spring MVC: Creating Controllers and Views](#spring-mvc--creating-controllers-and-views)
+      - [Step 1: Create controller class](#step-1--create-controller-class)
+      - [Step 2: Define controller method](#step-2--define-controller-method)
+      - [Step 3: Add request mapping to the controller method](#step-3--add-request-mapping-to-the-controller-method)
+      - [Step 4: Return the view name](#step-4--return-the-view-name)
+      - [Step 5: Develop view page](#step-5--develop-view-page)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 

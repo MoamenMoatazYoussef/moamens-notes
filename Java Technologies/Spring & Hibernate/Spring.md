@@ -1,57 +1,56 @@
 # Spring & Hibernate For Beginners
 
 ## Table of Contents
-- [Spring & Hibernate For Beginners](#spring---hibernate-for-beginners)
-  * [Table of Contents](#table-of-contents)
-  * [Notes before you read](#notes-before-you-read)
-  * [Why Spring?](#why-spring-)
-  * [Overview of Spring](#overview-of-spring)
-    + [Contents of Spring Framework](#contents-of-spring-framework)
-    + [Spring Projects](#spring-projects)
-  * [Setting Up Spring](#setting-up-spring)
-    + [Installing Tomcat](#installing-tomcat)
-    + [Installing Eclipse](#installing-eclipse)
-    + [Connectiong Tomcat to Eclipse](#connectiong-tomcat-to-eclipse)
-    + [Download Spring JAR files](#download-spring-jar-files)
-  * [Spring Inversion Of Control](#spring-inversion-of-control)
-    + [Spring Container](#spring-container)
-  * [Spring Dependency Injection](#spring-dependency-injection)
-    + [Constructor Injection](#constructor-injection)
-    + [Setter Injection](#setter-injection)
-    + [Injecting Literal Values in Spring Objects](#injecting-literal-values-in-spring-objects)
-    + [Injecting Values from a Properties File](#injecting-values-from-a-properties-file)
-  * [Spring Bean Scopes and Lifecycle](#spring-bean-scopes-and-lifecycle)
-    + [Spring Bean Scope](#spring-bean-scope)
-    + [Bean Lifecycle Methods](#bean-lifecycle-methods)
-  * [Spring Configuration With Java Annotations](#spring-configuration-with-java-annotations)
-    + [Component Scanning](#component-scanning)
-    + [Using Default Component Names](#using-default-component-names)
-  * [Dependency Injection With Annotations](#dependency-injection-with-annotations)
-    + [Construction Injection with Annotations](#construction-injection-with-annotations)
-    + [Setter Injection with Annotations](#setter-injection-with-annotations)
-    + [Method Injection with Annotations](#method-injection-with-annotations)
-    + [Field Injection with Annotations](#field-injection-with-annotations)
-    + [Which type of injection should I use?](#which-type-of-injection-should-i-use-)
-    + [Qualifiers for Dependency Injection](#qualifiers-for-dependency-injection)
-  * [Bean Scope and Lifecycle with Annotations](#bean-scope-and-lifecycle-with-annotations)
-    + [Bean Scope with Annotations](#bean-scope-with-annotations)
-    + [Bean Lifecycle with Annotations](#bean-lifecycle-with-annotations)
-  * [Spring Configuration With Java Code (no xml)](#spring-configuration-with-java-code--no-xml-)
-    + [Java Config Class with Component Scaning](#java-config-class-with-component-scaning)
-    + [Java Config Class with Manual Bean Configuration](#java-config-class-with-manual-bean-configuration)
-    + [Java Config Class with injecting Values by a Properties File](#java-config-class-with-injecting-values-by-a-properties-file)
-  * [Spring MVC - Building Spring Web Apps](#spring-mvc---building-spring-web-apps)
-    + [What is Spring MVC?](#what-is-spring-mvc-)
-    + [Components of Spring MVC](#components-of-spring-mvc)
-    + [Setting Up Spring MVC](#setting-up-spring-mvc)
-    + [Spring MVC Configuration](#spring-mvc-configuration)
-    + [Spring MVC: Creating Controllers and Views](#spring-mvc--creating-controllers-and-views)
-    + [Reading Form Data with Spring MVC](#reading-form-data-with-spring-mvc)
-    + [Adding Data to Spring Model](#adding-data-to-spring-model)
-    + [How to use CSS, JS, and Images in Spring MVC](#how-to-use-css--js--and-images-in-spring-mvc)
-  * [Spring MVC Request Params and Mappings](#spring-mvc-request-params-and-mappings)
-    + [Adding Controller Request Mapping](#adding-controller-request-mapping)
-  * [Spring MVC Form Tags and Data Binding](#spring-mvc-form-tags-and-data-binding)
+- [Notes before you read](#notes-before-you-read)
+- [Why Spring?](#why-spring-)
+- [Overview of Spring](#overview-of-spring)
+  * [Contents of Spring Framework](#contents-of-spring-framework)
+  * [Spring Projects](#spring-projects)
+- [Setting Up Spring](#setting-up-spring)
+  * [Installing Tomcat](#installing-tomcat)
+  * [Installing Eclipse](#installing-eclipse)
+  * [Connectiong Tomcat to Eclipse](#connectiong-tomcat-to-eclipse)
+  * [Download Spring JAR files](#download-spring-jar-files)
+- [Spring Inversion Of Control](#spring-inversion-of-control)
+  * [Spring Container](#spring-container)
+- [Spring Dependency Injection](#spring-dependency-injection)
+  * [Constructor Injection](#constructor-injection)
+  * [Setter Injection](#setter-injection)
+  * [Injecting Literal Values in Spring Objects](#injecting-literal-values-in-spring-objects)
+  * [Injecting Values from a Properties File](#injecting-values-from-a-properties-file)
+- [Spring Bean Scopes and Lifecycle](#spring-bean-scopes-and-lifecycle)
+  * [Spring Bean Scope](#spring-bean-scope)
+  * [Bean Lifecycle Methods](#bean-lifecycle-methods)
+- [Spring Configuration With Java Annotations](#spring-configuration-with-java-annotations)
+  * [Component Scanning](#component-scanning)
+  * [Using Default Component Names](#using-default-component-names)
+- [Dependency Injection With Annotations](#dependency-injection-with-annotations)
+  * [Construction Injection with Annotations](#construction-injection-with-annotations)
+  * [Setter Injection with Annotations](#setter-injection-with-annotations)
+  * [Method Injection with Annotations](#method-injection-with-annotations)
+  * [Field Injection with Annotations](#field-injection-with-annotations)
+  * [Which type of injection should I use?](#which-type-of-injection-should-i-use-)
+  * [Qualifiers for Dependency Injection](#qualifiers-for-dependency-injection)
+- [Bean Scope and Lifecycle with Annotations](#bean-scope-and-lifecycle-with-annotations)
+  * [Bean Scope with Annotations](#bean-scope-with-annotations)
+  * [Bean Lifecycle with Annotations](#bean-lifecycle-with-annotations)
+- [Spring Configuration With Java Code (no xml)](#spring-configuration-with-java-code--no-xml-)
+  * [Java Config Class with Component Scaning](#java-config-class-with-component-scaning)
+  * [Java Config Class with Manual Bean Configuration](#java-config-class-with-manual-bean-configuration)
+  * [Java Config Class with injecting Values by a Properties File](#java-config-class-with-injecting-values-by-a-properties-file)
+- [Spring MVC - Building Spring Web Apps](#spring-mvc---building-spring-web-apps)
+  * [What is Spring MVC?](#what-is-spring-mvc-)
+  * [Components of Spring MVC](#components-of-spring-mvc)
+  * [Setting Up Spring MVC](#setting-up-spring-mvc)
+  * [Spring MVC Configuration](#spring-mvc-configuration)
+  * [Spring MVC: Creating Controllers and Views](#spring-mvc--creating-controllers-and-views)
+  * [Reading Form Data with Spring MVC](#reading-form-data-with-spring-mvc)
+  * [Adding Data to Spring Model](#adding-data-to-spring-model)
+  * [How to use CSS, JS, and Images in Spring MVC](#how-to-use-css--js--and-images-in-spring-mvc)
+- [Spring MVC Request Params and Mappings](#spring-mvc-request-params-and-mappings)
+  * [Adding Controller Request Mapping](#adding-controller-request-mapping)
+- [Spring MVC Form Tags and Data Binding](#spring-mvc-form-tags-and-data-binding)
+  * [Spring MVC Dropdown Lists](#spring-mvc-dropdown-lists)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -2575,4 +2574,218 @@ public class StudentController {
 - Now run *le* app and check *le* result.
 - Nice work :) <br/>
 
-### 
+### Spring MVC Dropdown Lists
+Steps:
+1. Update HTML form.
+2. Update Student class.
+3. Update confirmation page.
+**Step 1: Update HTML form**<br/>
+- Go to student-form.jsp.
+- Add a Spring MVC dropdown list tag, and add some options to it:
+- Give the form path="country" attribute:
+``` html
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Moamen's student form</title>
+	</head>
+	<body>
+		<form:form action="processForm" modelAttribute="student">
+		 
+		 First name: <form:input path="firstName"></form:input>
+		<br />
+		
+		 Last name: <form:input path="lastName"></form:input>
+		<br />
+		
+		Country: <form:select path="country">
+			<form:option value="USA" label="USA"/>
+			<form:option value="Brazil" label="Brazil"/>
+			<form:option value="France" label="France"/>
+			<form:option value="China" label="China"/>
+			<form:option value="Egypt" label="Egypt"/>
+			<form:option value="Antartica" label="Antartica"/>
+			<form:option value="Australia" label="Australia"/>
+		</form:select> 
+		
+		<input type="submit" value="Submit"/>
+		
+		</form:form>
+	</body>
+</html>
+```
+**Step 2: Update Student class**<br/>
+- Go to Student class.
+- Add a new field "country".
+- Generate getters and setters for it.
+``` Java
+public class Student {
+	private String firstName;
+	private String lastName;
+	private String country;
+	
+	public String getCountry() {
+		return country;
+	}
+
+	...
+}
+```
+**Step 3: Update confirmation page** <br/>
+- Go to student-confirm.jsp.
+- Add the ${student.country} to it.
+``` html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Moamen's student confirmation</title>
+	</head>
+	<body>
+		The student ${student.firstName} ${student.lastName} is confirmed.
+		<br />
+		Country: ${student.country }
+	</body>
+</html>
+```
+
+Now run it, and see the result.
+
+Real nice :) <br/>
+
+**Wait, what if we want to read the list of countries from a JAVA class, not hardcode it?** <br/>
+
+Steps:
+1. Define country options in a class.
+- Go to Student.
+- Add a LinkedHashMap field whose key and value are Strings.
+- In the no-arg constructor, init and populate the LinkedHashMap.
+- Generate getters for the LinkedHashMap.
+``` Java
+public class Student {
+	...
+	private LinkedHashMap<String, String> countryOptions;
+	
+	public LinkedHashMap<String, String> getCountryOptions() {
+		return countryOptions;
+	}
+
+	...
+
+	public Student() {
+		countryOptions = new LinkedHashMap<>();
+		countryOptions.put("USA", "USA");
+		countryOptions.put("Brazil", "Brazil");
+		countryOptions.put("France", "France");
+		countryOptions.put("China", "China");
+		countryOptions.put("Egypt", "Egypt");
+		countryOptions.put("Antartica", "Antartica");
+		countryOptions.put("Australia", "Australia");
+		// To see that it really changes, we'll add one more
+		countryOptions.put("Spaaaace", "Spaaaace");
+	}
+
+	...
+}
+```
+2. Step 2: Update the form to use these values, not the hardcoded ones.
+- Go to student-form.jsp.
+- Instead of <form:option>, use <form:option***s*** items="${student.countryOptions}">.
+``` html
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Moamen's student form</title>
+	</head>
+	<body>
+		...
+		Country: <form:select path="country">
+			<form:options items="${student.countryOptions}" />
+		</form:select> 
+		
+		<input type="submit" value="Submit"/>
+		
+		</form:form>
+	</body>
+</html>
+```
+
+Now run it. <br/>
+Does it work? <br/>
+Does it really work? <br/>
+I said it would work, didn't I? <br/>
+
+***Get on my level, son!***
+
+(would be a shame if it didn't run xD )
+
+**We can also read the countries from a Properties File** <br/>
+1. Create a properties file in WEB-INF directly, called "countries.properties".
+***Note:*** IT MUST BE IN THE WEB-INF DIRECTLY.
+
+2. Add key=value:
+``` txt
+Brazil=Brazil
+USA=USA
+```
+
+3. Go to spring-mvc-demo-servlet.xml, remove the header and add this:
+``` xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+        xmlns:context="http://www.springframework.org/schema/context" 
+        xmlns:mvc="http://www.springframework.org/schema/mvc" 
+        xmlns:util="http://www.springframework.org/schema/util" 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:schemaLocation="
+            http://www.springframework.org/schema/beans     
+            http://www.springframework.org/schema/beans/spring-beans.xsd     
+            http://www.springframework.org/schema/context     
+            http://www.springframework.org/schema/context/spring-context.xsd     
+            http://www.springframework.org/schema/mvc         
+            http://www.springframework.org/schema/mvc/spring-mvc.xsd 
+            http://www.springframework.org/schema/util     
+            http://www.springframework.org/schema/util/spring-util.xsd">
+```
+
+4. Load the properties file in the Spring config file.
+- Go to spring-mvc-demo-servlet.xml.
+- Add the following lines:
+``` xml
+<util:properties id="countryOptions" location="classpath:../countries.properties" />
+```
+
+5. Inject the properties values into your Spring Controller: StudentController.java
+``` Java
+@Value("#{countryOptions}") 
+private Map<String, String> countryOptions;
+```
+
+5. Add the country options to the Spring MVC model. Attribute name: theCountryOptions
+``` Java
+@RequestMapping("/showForm") 
+public String showForm(Model theModel) { 
+ 
+    // create a student object Student 
+    Student theStudent = new Student();
+ 
+    // add student object to the model 
+    theModel.addAttribute("student", theStudent); 
+ 
+    // add the country options to the model 
+    theModel.addAttribute("theCountryOptions", countryOptions); 
+ 
+    return "student-form"; 
+}
+```
+
+6. Update the JSP page, student-form.jsp, to use the new model attribute for the drop-down list: theCountryOptions
+``` html
+<form:select path="country"> 
+ <form:options items="${theCountryOptions}" />
+</form:select>
+```
+7. Remove all references to country option from your Student.java. 
+
+Now run it :) <br />

@@ -15,41 +15,19 @@
     + [Download Spring JAR files](#download-spring-jar-files)
   * [Spring Inversion Of Control](#spring-inversion-of-control)
     + [Spring Container](#spring-container)
-      - [What the hell is a Spring Bean?](#what-the-hell-is-a-spring-bean-)
-      - [Spring Development Process](#spring-development-process)
-      - [Back to our app](#back-to-our-app)
   * [Spring Dependency Injection](#spring-dependency-injection)
     + [Constructor Injection](#constructor-injection)
-      - [Step 1: Define the dependency's interface and class](#step-1--define-the-dependency-s-interface-and-class)
-      - [Step 2: Create a constructor in our class for injections](#step-2--create-a-constructor-in-our-class-for-injections)
-      - [Step 3: Configure the depencency injection in Spring config file](#step-3--configure-the-depencency-injection-in-spring-config-file)
     + [Setter Injection](#setter-injection)
-      - [Step 1: Create setter methods that'll be used for injections](#step-1--create-setter-methods-that-ll-be-used-for-injections)
-      - [Step 2: Configure the dependency injection in the config file](#step-2--configure-the-dependency-injection-in-the-config-file)
     + [Injecting Literal Values in Spring Objects](#injecting-literal-values-in-spring-objects)
-      - [Step 1: Create setter methods in our class for injections](#step-1--create-setter-methods-in-our-class-for-injections)
-      - [Step 2: Configure the config file](#step-2--configure-the-config-file)
     + [Injecting Values from a Properties File](#injecting-values-from-a-properties-file)
-      - [Step 1: Create the Properties file](#step-1--create-the-properties-file)
-      - [Step 2: Load the properties file into the Spring config file](#step-2--load-the-properties-file-into-the-spring-config-file)
-      - [Step 3: Reference the values from the Properties file](#step-3--reference-the-values-from-the-properties-file)
   * [Spring Bean Scopes and Lifecycle](#spring-bean-scopes-and-lifecycle)
     + [Spring Bean Scope](#spring-bean-scope)
     + [Bean Lifecycle Methods](#bean-lifecycle-methods)
-      - [Step 1: Define the init and destroy methods](#step-1--define-the-init-and-destroy-methods)
-      - [Step 2: Configure the method names in the config file](#step-2--configure-the-method-names-in-the-config-file)
   * [Spring Configuration With Java Annotations](#spring-configuration-with-java-annotations)
     + [Component Scanning](#component-scanning)
-      - [This is getting messy](#this-is-getting-messy)
-      - [Step 1: Enable component scanning in Spring config file](#step-1--enable-component-scanning-in-spring-config-file)
-      - [Step 2: Add @Component annotation for java classes](#step-2--add--component-annotation-for-java-classes)
-      - [Step 3: Retrieve the bean from the container](#step-3--retrieve-the-bean-from-the-container)
     + [Using Default Component Names](#using-default-component-names)
-      - [What happens if](#what-happens-if)
   * [Dependency Injection With Annotations](#dependency-injection-with-annotations)
     + [Construction Injection with Annotations](#construction-injection-with-annotations)
-      - [Step 1: Define the dependency interface or class](#step-1--define-the-dependency-interface-or-class)
-      - [Step 2 and 3: Creata a constructor in your class for injections, then configure the dependency injection with @Autowired annotation.](#step-2-and-3--creata-a-constructor-in-your-class-for-injections--then-configure-the-dependency-injection-with--autowired-annotation)
     + [Setter Injection with Annotations](#setter-injection-with-annotations)
     + [Method Injection with Annotations](#method-injection-with-annotations)
     + [Field Injection with Annotations](#field-injection-with-annotations)
@@ -61,37 +39,15 @@
   * [Spring Configuration With Java Code (no xml)](#spring-configuration-with-java-code--no-xml-)
     + [Java Config Class with Component Scaning](#java-config-class-with-component-scaning)
     + [Java Config Class with Manual Bean Configuration](#java-config-class-with-manual-bean-configuration)
-      - [Java Config Class with Manual Bean Configuration - Example](#java-config-class-with-manual-bean-configuration---example)
     + [Java Config Class with injecting Values by a Properties File](#java-config-class-with-injecting-values-by-a-properties-file)
-      - [Step 1: Create a properties file](#step-1--create-a-properties-file)
-      - [Step 2: Load it in Java Config Class](#step-2--load-it-in-java-config-class)
-      - [Step 3: Reference its values](#step-3--reference-its-values)
   * [Spring MVC - Building Spring Web Apps](#spring-mvc---building-spring-web-apps)
     + [What is Spring MVC?](#what-is-spring-mvc-)
     + [Components of Spring MVC](#components-of-spring-mvc)
     + [Setting Up Spring MVC](#setting-up-spring-mvc)
     + [Spring MVC Configuration](#spring-mvc-configuration)
-      - [Configuration: JAR Files](#configuration--jar-files)
-      - [Configuration: Config Files](#configuration--config-files)
     + [Spring MVC: Creating Controllers and Views](#spring-mvc--creating-controllers-and-views)
-      - [Step 1: Create controller class](#step-1--create-controller-class)
-      - [Step 2: Define controller method](#step-2--define-controller-method)
-      - [Step 3: Add request mapping to the controller method](#step-3--add-request-mapping-to-the-controller-method)
-      - [Step 4: Return the view name](#step-4--return-the-view-name)
-      - [Step 5: Develop view page](#step-5--develop-view-page)
     + [Reading Form Data with Spring MVC](#reading-form-data-with-spring-mvc)
-      - [Step 1: Create controller class](#step-1--create-controller-class-1)
-      - [Step 2: Create controller method to show HTML form](#step-2--create-controller-method-to-show-html-form)
-      - [Step 3: Create the view page for the HTML form](#step-3--create-the-view-page-for-the-html-form)
-      - [Step 4: Create controller method to process HTML form](#step-4--create-controller-method-to-process-html-form)
-      - [Step 5: Create the view page for confirmation](#step-5--create-the-view-page-for-confirmation)
     + [Adding Data to Spring Model](#adding-data-to-spring-model)
-      - [Step 1: Create a new method to process form data](#step-1--create-a-new-method-to-process-form-data)
-      - [Step 2: Read the form data](#step-2--read-the-form-data)
-      - [Step 3: Convert it to uppercase and create a message using the uppercase data](#step-3--convert-it-to-uppercase-and-create-a-message-using-the-uppercase-data)
-      - [Step 4: Add THAT to the model and return a page name](#step-4--add-that-to-the-model-and-return-a-page-name)
-      - [Step 5: Make the View display the data we wrote in the model](#step-5--make-the-view-display-the-data-we-wrote-in-the-model)
-      - [Step 6: Modify the form to map to the NEW method, not the old one](#step-6--modify-the-form-to-map-to-the-new-method--not-the-old-one)
     + [How to use CSS, JS, and Images in Spring MVC](#how-to-use-css--js--and-images-in-spring-mvc)
   * [Spring MVC Request Params and Mappings](#spring-mvc-request-params-and-mappings)
     + [Adding Controller Request Mapping](#adding-controller-request-mapping)
@@ -353,7 +309,7 @@ How to configure Spring Container:
 
 We'll use that, we'll talk to the Spring Container so that it gives us the correct Coach. 
 
-#### What the hell is a Spring Bean?
+**What the hell is a Spring Bean?**<br/>
 A "Spring Bean" is simply a Java object, created from normal Java classes, they have dependencies, etc. They are just java object instances.
 When a Java Object is created by the Spring Container, it's called a Spring Bean.
 It's just an object that's being managed by the Container.
@@ -361,7 +317,7 @@ It's just an object that's being managed by the Container.
 More info:
 https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-introduction
 
-#### Spring Development Process
+**Spring Development Process
 1. Configure your Spring Beans.
 2. Create a Spring Container.
     Some specialized implementations:
@@ -371,7 +327,7 @@ https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#
     - and others. (VanossGaming reference xD)
 3. Retrieve Beans from the Container.
 
-#### Back to our app
+**Back to our app
 Earlier we downloaded the course zip file, which has a lot of files in it, called "spring-and-hibernate-source-code".
 
 Inside it -> spring-core -> spring-demo-one -> applicationContext.xml
@@ -543,7 +499,7 @@ Steps:
 
 We'll see how that is done in our example.
 
-#### Step 1: Define the dependency's interface and class
+**Step 1: Define the dependency's interface and class** <br/>
 First, we need to define the dependency interface:
 ``` Java 
 public interface FortuneService {
@@ -574,7 +530,7 @@ public interface Coach {
 
 That will cause errors in BaseballCoach and TrackCoach because the new method isn't implemented in them, so we go and add them, let them return null for now.
 
-#### Step 2: Create a constructor in our class for injections
+**Step 2: Create a constructor in our class for injections** <br/>
 First, in BaseballCoach, we'll define a private FortuneService reference, 
 then add a constructor that accepts that reference,
 finally, we'll use that in our getDailyFortune method:
@@ -601,7 +557,7 @@ public class BaseballCoach implements Coach {
 Nice. <br />
 Do the same for TrackCoach and add a message to the fortune or whatever. <br />
 
-#### Step 3: Configure the depencency injection in Spring config file
+**Step 3: Configure the depencency injection in Spring config file** <br/>
 
 Add the bean to applicationContext.xml:
 ``` xml
@@ -627,7 +583,7 @@ Steps:
 1. Create setter methods that'll be used for injections.
 2. Configure the dependency injection in the config file.
 
-#### Step 1: Create setter methods that'll be used for injections
+**Step 1: Create setter methods that'll be used for injections** <br/>
 First, we'll create a new class: CricketCoach.
 Inside it we'll add the setter.
 ``` Java
@@ -659,7 +615,7 @@ public class CricketCoach implements Coach {
 }
 ```
 
-#### Step 2: Configure the dependency injection in the config file
+**Step 2: Configure the dependency injection in the config file** <br/>
 In the config file, add the CricketCoach bean and add a <property > tag like this:
 ``` xml
     <bean id="myCricketCoach"
@@ -701,7 +657,7 @@ Steps:
 1. Create setter methods in our class for injections.
 2. Configure the config file.
 
-#### Step 1: Create setter methods in our class for injections
+**Step 1: Create setter methods in our class for injections** <br/>
 We'll do that in CricketCoach, 
 first we'll add some private fields like emailAddress, team.
 
@@ -752,7 +708,7 @@ public class CricketCoach implements Coach {
 
 }
 ```
-#### Step 2: Configure the config file
+**Step 2: Configure the config file** <br/>
 Now, in the config file, do that:
 ``` xml
 	<bean id="myCricketCoach"
@@ -802,7 +758,7 @@ Steps:
 2. Load the properties file into the Spring config file.
 3. Reference the values from the Properties file.
 
-#### Step 1: Create the Properties file
+**Step 1: Create the Properties file** <br/>
 Create a new file of type File, call it sport.properties.
 Write this into it:
 ``` txt
@@ -811,13 +767,13 @@ foo.team=Texas Bulls
 ```
 Easiest thing of my life.
 
-#### Step 2: Load the properties file into the Spring config file
+**Step 2: Load the properties file into the Spring config file** <br/>
 Now, in our config file, just before our beans, add this:
 ``` xml
 <context:property-placeholder location="classpath:sport.properties"/>
 ```
 
-#### Step 3: Reference the values from the Properties file
+**Step 3: Reference the values from the Properties file** <br/>
 In the config file, replace the things passed to the value attribute with these:
 Notice what's being passed to the value attribute in the <property> tags:
 ``` xml
@@ -927,7 +883,7 @@ Steps to do that:
 - Define the init and destroy methods.
 - Configure the method names in the config file.
 
-#### Step 1: Define the init and destroy methods
+**Step 1: Define the init and destroy methods**<br/>
 We'll add the methods in our TrackCoach class:
 ``` Java
 public class TrackCoach implements Coach {
@@ -964,7 +920,7 @@ public class TrackCoach implements Coach {
 }
 ```
 
-#### Step 2: Configure the method names in the config file
+**Step 2: Configure the method names in the config file**<br/>
 Copy and paste the config file, name the new one "beanLifecycle-applicationContext.xml"
 
 ***Note:*** as you can see, we can have many config files in one project.
@@ -1032,7 +988,7 @@ Steps:
 - Add @Component annotation for java classes.
 - Retrieve the bean from the container.
 
-#### This is getting messy
+**This is getting messy**<br/>
 Since things are getting complex, we'll separate them a little bit.
 First, we'll make a brand new project in Eclipse to separate things a little bit.
 Call it spring-demo-annotations or something.
@@ -1040,7 +996,7 @@ Copy the lib directory from spring-demo-one (i.e. the first project), to the new
 Configure the build path just like before.
 Add a package to it, call it "com.luv2code.springdemo".
 
-#### Step 1: Enable component scanning in Spring config file
+**Step 1: Enable component scanning in Spring config file**<br/>
 Copy the config file from the previous project "applicationContext.xml", to the new project.
 
 ***Note:*** It's important that the config files are directly in the src directory.
@@ -1054,7 +1010,7 @@ Add this line to enable component scanning:
 <context:component-scan base-package="com.luv2code.springdemo" />
 ```
 
-#### Step 2: Add @Component annotation for java classes
+**Step 2: Add @Component annotation for java classes**<br/>
 First, we'll create the Coach interface just like before.
 Then we'll create a TennisCoach class that implements it.
 And we'll add the @Component annotation to it, giving it a "bean id" argument, which Spring will use to retrieve the bean after that:
@@ -1072,7 +1028,7 @@ public class TennisCoach implements Coach {
 }
 ```
 
-#### Step 3: Retrieve the bean from the container
+**Step 3: Retrieve the bean from the container**<br/>
 Create a new main class, call it "AnnotationDemoApp" or something.
 First, read the config file.
 Then, get the bean USING the "bean id" argument passed to the @Component annotation.
@@ -1145,7 +1101,7 @@ That's it :) <br />
 
 ***Note:*** As you can see, here we're outsourcing the bean creation i.e. Inversion of control
 
-#### What happens if
+**What happens if
 - You pass a wrong ID to the context.getbean?
 	- NoSuchBeanDefinitionException will be raised.
 
@@ -1176,7 +1132,7 @@ Steps for Constructor Injection:
 Spring has a special annotation @Qualifier, which chooses which implementation to inject in which bean, we'll cover that later.
 
 ### Construction Injection with Annotations
-#### Step 1: Define the dependency interface or class
+**Step 1: Define the dependency interface or class**<br/>
 Create a new interface FortuneService just like before.
 ``` Java
 public interface FortuneService {
@@ -1208,7 +1164,7 @@ public interface Coach {
 }
 ```
 
-#### Step 2 and 3: Creata a constructor in your class for injections, then configure the dependency injection with @Autowired annotation.
+**Step 2 and 3: Creata a constructor in your class for injections, then configure the dependency injection with @Autowired annotation.**<br/>
 Now the TennisCoach class will break since it doesn't fully implement Coach now, so we'll fix that, by:
 - Adding a private FortuneService field to TennisCoach.
 - Implementing getDailyFortune() method and use the new field in it.
@@ -1715,7 +1671,7 @@ public class SwimCoach implements Coach {
 }
 ```
 
-#### Java Config Class with Manual Bean Configuration - Example
+**Java Config Class with Manual Bean Configuration - Example
 Go to SportConfig.
 Add a method to define beans for SadFortuneService.
 We'll use the @Bean annotation.
@@ -1795,13 +1751,13 @@ Steps:
 - Load it in Java Config Class.
 - Reference its values.
 
-#### Step 1: Create a properties file
+**Step 1: Create a properties file**<br/>
 Create a properties file and put in it:
 ``` txt
 foo.email=moamen.is.awesome@gmail.com
 foo.team=New York Giants
 ```
-#### Step 2: Load it in Java Config Class
+**Step 2: Load it in Java Config Class**<br/>
 Then go to SportConfig, use @PropertySource on the class and pass "classpath:sport.properties" to it as argument.
 ``` Java
 @Configuration
@@ -1821,7 +1777,7 @@ public class SportConfig {
 	
 }
 ```
-#### Step 3: Reference its values
+**Step 3: Reference its values**<br/>
 Go to SwimCoach, 
 Create email and team fields,
 Use the @Value annotation to inject values into fields.
@@ -1973,7 +1929,7 @@ Steps:
 
 **Note:** I messed up many times on these steps, which caused errors in Tomcat and stuff, so **concentrate** :'D
 
-#### Configuration: JAR Files
+**Configuration: JAR Files
 ***Note:*** These files usually cause a lot of problems since configuring them isn't easy, but these ones are pre-configured, use them until you get good at configuring them.
 
 1. Change your Eclipse perspective:
@@ -1998,7 +1954,7 @@ ONLY COPY THE TWO javax.servlet.jsp.jstl files, DO NOT COPY the commons-logging 
 
 Copy the two files and put them in WEB-INF/lib directory in the project.
 
-#### Configuration: Config Files
+**Configuration: Config Files
 6. Go to this path:
 ./solution-code-spring-mvc-config-files\solution-code-spring-mvc-config-files\spring-mvc\starter-files\spring-mvc-demo\config
 
@@ -2031,7 +1987,7 @@ Steps:
 
 We'll use @Controller annotation, which inherits from @Component, so it will be picked up during component scanning.
 
-#### Step 1: Create controller class
+**Step 1: Create controller class**<br/>
 Create a new package in Java Resources/src, call it "com.luv2code.springdemo.mvc".
 Create a new class, called "HomeController".
 Add the @Controller to the class
@@ -2041,7 +1997,7 @@ public class HomeController {
 
 }
 ```
-#### Step 2: Define controller method
+**Step 2: Define controller method**<br/>
 Add a new method to the controller:
 ``` Java
 @Controller
@@ -2051,7 +2007,7 @@ public class HomeController {
 	}
 }
 ```
-#### Step 3: Add request mapping to the controller method
+**Step 3: Add request mapping to the controller method**<br/>
 Add the annotation @RequestMapping and pass "\" as argument:
 ``` Java
 @Controller
@@ -2063,7 +2019,7 @@ public class HomeController {
 	}
 }
 ```
-#### Step 4: Return the view name
+**Step 4: Return the view name**<br/>
 Return the name of the page (the incomplete name of the page because the prefix and suffix are added from spring-mvc-demo-servlet.xml )
 ``` Java
 @Controller
@@ -2076,7 +2032,7 @@ public class HomeController {
 }
 
 ```
-#### Step 5: Develop view page
+**Step 5: Develop view page**<br/>
 In the WebContent/WEB-INF/view folder, create a new file, name it <the-view-name-you-returned-in-last-step>.jsp, here it's "main-menu.jsp".
 Inside it, write any html you want like:
 ``` html
@@ -2124,10 +2080,10 @@ Steps:
 - Create controller method to process HTML form, annotate it with /processForm
 - Create the view page for confirmation.
 
-#### Step 1: Create controller class
+**Step 1: Create controller class**<br/>
 Create a new class, call it "HelloWorldController".
 
-#### Step 2: Create controller method to show HTML form
+**Step 2: Create controller method to show HTML form**<br/>
 ``` Java
 @RequestMapping("/showForm")
 public String showForm() {
@@ -2135,7 +2091,7 @@ public String showForm() {
 }
 ```
 
-#### Step 3: Create the view page for the HTML form
+**Step 3: Create the view page for the HTML form**<br/>
 Create a new File in WEB-INF/view, call it "form.jsp" (according to the name returned from the controller method that's mapped to it).
 ``` html
 <!DOCTYPE html>
@@ -2161,7 +2117,7 @@ to check it out.
 If we hit submit, we'll get the most famous error on the planet: 404 not found.
 That's because processForm isn't made yet :'D
 
-#### Step 4: Create controller method to process HTML form
+**Step 4: Create controller method to process HTML form**<br/>
 Create a controller method in HelloWorldController and map it to "/processForm"
 ``` Java
 @RequestMapping("/processForm")
@@ -2170,7 +2126,7 @@ public String processForm() {
 }
 ```
 
-#### Step 5: Create the view page for confirmation
+**Step 5: Create the view page for confirmation**<br/>
 In the WEB-INF/view folder, create the view page for confirmation called "confirm.jsp", then write it:
 ``` html
 <!DOCTYPE html>
@@ -2237,14 +2193,13 @@ Now, creating the new View page:
 - To access data, we use ${key}, where key is the key we used to save the message to the model.
 
 Review of Steps:
-- Create a new method to process form data.
-- Read the form data.
-- Convert it to uppercase and create a message using the uppercase data.
-- Add THAT to the model and return a page name.
-- Make the View display the data we wrote in the model.
-- Modify the form to map to the NEW method, not the old one.
+1. Create a new method to process form data.
+2. Read the form data.
+3. Convert it to uppercase and create a message using the uppercase data.
+4. Add THAT to the model and return a page name.
+5. Make the View display the data we wrote in the model.
 
-#### Step 1: Create a new method to process form data
+**Step 1: Create a new method to process form data**<br/>
 In HelloWorldController, add the new method.
 ``` Java
 @RequestMapping("/processFormVersionTwo")
@@ -2253,7 +2208,7 @@ public String processFormUppercase(HttpServletRequest request, Model model) {
 }
 ```
 
-#### Step 2: Read the form data
+**Step 2: Read the form data**<br/>
 ``` Java
 @RequestMapping("/processFormVersionTwo")
 public String processFormUppercase(HttpServletRequest request, Model model) {
@@ -2261,7 +2216,7 @@ public String processFormUppercase(HttpServletRequest request, Model model) {
 }
 ```
 
-#### Step 3: Convert it to uppercase and create a message using the uppercase data
+**Step 3: Convert it to uppercase and create a message using the uppercase data**<br/>
 ``` Java
 @RequestMapping("/processFormVersionTwo")
 public String processFormUppercase(HttpServletRequest request, Model model) {
@@ -2271,7 +2226,7 @@ public String processFormUppercase(HttpServletRequest request, Model model) {
 }
 ```
 
-#### Step 4: Add THAT to the model and return a page name
+**Step 4: Add THAT to the model and return a page name**<br/>
 ``` Java
 @RequestMapping("/processFormVersionTwo")
 public String processFormUppercase(HttpServletRequest request, Model model) {
@@ -2282,7 +2237,7 @@ public String processFormUppercase(HttpServletRequest request, Model model) {
 }
 ```
 
-#### Step 5: Make the View display the data we wrote in the model
+**Step 5: Make the View display the data we wrote in the model**<br/>
 Now go to confirm.jsp:
 ``` html
 <!DOCTYPE html>
@@ -2297,7 +2252,7 @@ Now go to confirm.jsp:
 </html>
 ```
 
-#### Step 6: Modify the form to map to the NEW method, not the old one
+**Step 6: Modify the form to map to the NEW method, not the old one**<br/>
 Go to form.jsp:
 ``` html
 <!DOCTYPE html>
@@ -2435,3 +2390,189 @@ public class HelloWorldController {
 That means, we need to go to our main-menu.jsp file and change *le* href attribute of *le* anchor tag to point to *le* hello/showForm, not *le* showForm directly.
 
 ## Spring MVC Form Tags and Data Binding
+We already know HTML form tags.
+But Spring MVC has some form tags that lift a lot of the work off our backs.
+Check them out here:
+www.luv2code.com/spring-mvc-form-tags
+
+How to use them?
+- In th View page, we just write HTML, and inside it we write Spring MVC tags.
+- Reference them using taglib reference.
+
+We'll do this:
+- We'll have two forms: first name and last name.
+- User submits them.
+- Controller sends user to confirmation page.
+
+To show the form, we MUST add the model attribute, Which is a bean that holds form data, that is used for data binding.
+
+We'll write a method in the controller that:
+- Receives parameter "Model theModel".
+- Adds a new Student() object to the model. (We'll see the Student class later).
+- The Spring MVC input forms have an attribute "path", that is used to bind this form field to a property on the bean.
+	Example: 
+	- if path="firstName", 
+	- when the form is loaded, 
+	- Spring will call a method like getFirstName(),
+	- and gets the data if there is data.
+	- When the form is submitted, the model will be set by calling setFirstName().
+
+- So, in our method, we can use getFirstName and setFirstName.
+- Also, actual data binding will happen when we use Spring MVC forms without us explicitly doing it, which is the biggest feature of it.
+
+So what is the development process steps?
+Steps:
+1. Create Student class.
+2. Create Student Controller class.
+3. Create an HTML form.
+4. Create the form processing code.
+5. Create the confirmation page.
+
+**Step 1: Create Student class**<br/>
+- Create a new class, Student. 
+- Put two private fields in it: firstName, lastName.
+- Generate setters and getters for both fields. 
+``` Java
+public class Student {
+	private String firstName;
+	private String lastName;
+	
+	public Student() {
+		
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+}
+```
+
+**Step 2: Create Student Controller class**<br/>
+- Create a new class, StudentController.
+- Annotate it with @Controller and @RequestMapping("/student").
+- Add a method to show the form.
+- Inside that method, create a new Student() object.
+- Add the new Student to the Model.
+``` Java
+@Controller
+@RequestMapping("/student")
+public class StudentController {
+	
+	@RequestMapping("/showForm")
+	public String showForm(Model theModel) {
+		Student theStudent = new Student();
+		theModel.addAttribute("student", theStudent);
+		return "student-form";
+	}
+}
+```
+
+**Step 3: Create an HTML form**<br/>
+- Create a new file in WEB-INF/view called "student-form.jsp".
+- The form:form is the Spring MVC form tag.
+- Make sure that the taglib IS EXACTLY like this.
+- When the form is loaded, Spring calls getFirstName() and getLastName().
+- When the form is submitted, Spring calls setFirstName() and setLastName().
+``` html
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Moamen's student form</title>
+	</head>
+	<body>
+		<!-- Using the Spring MVC form tag -->
+		<form:form action="processForm" modelAttribute="student">
+		<!-- 
+			the modelAttribute MUST match the code we used in our controller,
+			so if we added a new Student() with the key "student" in the model,
+			this attribute must have THE EXACT KEY.
+		 -->
+		 
+		 First name: <form:input path="firstName"></form:input>
+		<br />
+		
+		 Last name: <form:input path="lastName"></form:input>
+		<br />
+		<input type="submit" value="Submit"/>
+		</form:form>
+	</body>
+</html>
+```
+**Step 4: Create the form processing code**<br/>
+- Go to StudentController.
+- Add a new method and map it to /processForm.
+``` Java
+@Controller
+@RequestMapping("/student")
+public class StudentController {
+	
+	@RequestMapping("/showForm")
+	public String showForm(Model theModel) {
+		Student theStudent = new Student();
+		theModel.addAttribute("student", theStudent);
+		return "student-form";
+	}
+
+	// Here is the new method
+	@RequestMapping("/processForm")
+	public String processForm(@ModelAttribute("student") Student theStudent) {
+
+		// you can sysout things here to test it, for example:
+		System.out.println(theStudent.getFirstName());
+		return "student-confirm";
+	}
+}
+```
+
+**Step 5: Create the confirmation page**<br/>
+- Create a new file in WEB-INF/view called "student-confirm.jsp".
+``` html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Moamen's student confirmation</title>
+	</head>
+	<body>
+		The student ${student.firstName} ${student.lastName} is confirmed.
+		<!-- 
+			student.firstName will make Spring call getFirstName() 
+			same for student.lastName
+		--> 		
+	</body>
+</html>
+```
+
+- Also, change the main-menu.jsp file.
+- We'll copy *le* achor tag and paste *le* anchor tag but change *le* href attribute to *le* "student/showForm", *s'il vous plait*.
+``` html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Moamen is average</title>
+</head>
+<body>
+<p>Moamen is indeed average, but that makes him awesome</p>
+<div><a href="hello/showForm">Click to go to the hello form</a></div>
+<div><a href="student/showForm">Click to go to the student form</a></div>
+
+</body>
+</html>
+```
+
+- Now run *le* app and check *le* result.
+- Nice work :) <br/>
+
+### 

@@ -71,12 +71,31 @@
     + [Components of Spring MVC](#components-of-spring-mvc)
     + [Setting Up Spring MVC](#setting-up-spring-mvc)
     + [Spring MVC Configuration](#spring-mvc-configuration)
+      - [Configuration: JAR Files](#configuration--jar-files)
+      - [Configuration: Config Files](#configuration--config-files)
     + [Spring MVC: Creating Controllers and Views](#spring-mvc--creating-controllers-and-views)
       - [Step 1: Create controller class](#step-1--create-controller-class)
       - [Step 2: Define controller method](#step-2--define-controller-method)
       - [Step 3: Add request mapping to the controller method](#step-3--add-request-mapping-to-the-controller-method)
       - [Step 4: Return the view name](#step-4--return-the-view-name)
       - [Step 5: Develop view page](#step-5--develop-view-page)
+    + [Reading Form Data with Spring MVC](#reading-form-data-with-spring-mvc)
+      - [Step 1: Create controller class](#step-1--create-controller-class-1)
+      - [Step 2: Create controller method to show HTML form](#step-2--create-controller-method-to-show-html-form)
+      - [Step 3: Create the view page for the HTML form](#step-3--create-the-view-page-for-the-html-form)
+      - [Step 4: Create controller method to process HTML form](#step-4--create-controller-method-to-process-html-form)
+      - [Step 5: Create the view page for confirmation](#step-5--create-the-view-page-for-confirmation)
+    + [Adding Data to Spring Model](#adding-data-to-spring-model)
+      - [Step 1: Create a new method to process form data](#step-1--create-a-new-method-to-process-form-data)
+      - [Step 2: Read the form data](#step-2--read-the-form-data)
+      - [Step 3: Convert it to uppercase and create a message using the uppercase data](#step-3--convert-it-to-uppercase-and-create-a-message-using-the-uppercase-data)
+      - [Step 4: Add THAT to the model and return a page name](#step-4--add-that-to-the-model-and-return-a-page-name)
+      - [Step 5: Make the View display the data we wrote in the model](#step-5--make-the-view-display-the-data-we-wrote-in-the-model)
+      - [Step 6: Modify the form to map to the NEW method, not the old one](#step-6--modify-the-form-to-map-to-the-new-method--not-the-old-one)
+    + [How to use CSS, JS, and Images in Spring MVC](#how-to-use-css--js--and-images-in-spring-mvc)
+  * [Spring MVC Request Params and Mappings](#spring-mvc-request-params-and-mappings)
+    + [Adding Controller Request Mapping](#adding-controller-request-mapping)
+  * [Spring MVC Form Tags and Data Binding](#spring-mvc-form-tags-and-data-binding)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
@@ -1952,31 +1971,55 @@ Steps:
 	- Add support for Spring component scanning, conversion, formatting, valudation.
 	- Configure Spring MVC View Resolver.
 
-Change your Eclipse perspective:
-Open the Window menu -> Perspective -> Open Perspective -> Java EE
+**Note:** I messed up many times on these steps, which caused errors in Tomcat and stuff, so **concentrate** :'D
 
-Create a new project:
-File -> New -> Dynamic Web Project
-Call it "spring-mvc-demo"
-In WebContent/WEB-INF/lib, add the spring JAR files, along with the JAR files from the latest download, the ones in this path:
-solution-code-spring-mvc-config-files\solution-code-spring-mvc-config-files\spring-mvc\starter-files\spring-mvc-demo\lib
-
-Then, in the same path:
-solution-code-spring-mvc-config-files\solution-code-spring-mvc-config-files\spring-mvc\starter-files\spring-mvc-demo\config
-
-Get: 
-- web.xml 
-- spring-mvc-demo-servlet.xml
-And put them in WEB-INF/lib
-
+#### Configuration: JAR Files
 ***Note:*** These files usually cause a lot of problems since configuring them isn't easy, but these ones are pre-configured, use them until you get good at configuring them.
 
-Open web.xml, you'll find the steps we discussed earlier.
-Open spring-mvc-demo-servlet.xml, which is a regular config file for Spring, also the configs we discussed earlier are viewed here.
+1. Change your Eclipse perspective:
+Open the Window menu -> Perspective -> Open Perspective -> Java EE
 
-Create the folder 'view' in WEB-INF.
+2. Create a new project:
+File -> New -> Dynamic Web Project
+Call it "spring-mvc-demo"
 
-Now Spring MVC should be configured and ready to go, we'll start writing code next.
+3. Open the project tree , you'll find a folder called WebContent, inside it WEB-INF/lib. 
+
+4. Add the spring JAR files (We added those before) in the WebContent/WEB-INF/lib folder in the project. (Anything in WEB-INF is automatically on the build path, so don't worry about adding them manually)
+
+5. Go to this path in the Spring MVC files we downloaded earlier:
+./solution-code-spring-mvc-config-files\solution-code-spring-mvc-config-files\spring-mvc\starter-files\spring-mvc-demo\lib
+
+Inside you'll find three JAR files:
+commons-logging ... .jar
+and two other files called javax.servlet.jsp.jstl ...
+
+ONLY COPY THE TWO javax.servlet.jsp.jstl files, DO NOT COPY the commons-logging file.
+
+Copy the two files and put them in WEB-INF/lib directory in the project.
+
+#### Configuration: Config Files
+6. Go to this path:
+./solution-code-spring-mvc-config-files\solution-code-spring-mvc-config-files\spring-mvc\starter-files\spring-mvc-demo\config
+
+7. Copy those two files: 
+- web.xml 
+- spring-mvc-demo-servlet.xml
+And paste them in WEB-INF directly, **NOT in the lib**.
+
+8. Open web.xml, you'll find the steps we discussed earlier.
+
+9. Open spring-mvc-demo-servlet.xml, which is a regular config file for Spring, also the configs we discussed earlier are viewed here.
+
+10. Create the folder 'view' in WEB-INF directly, **not in the lib**.
+
+So WEB-INF now has 4 items:
+- lib: which has Spring JAR files and ONLY TWO Spring MVC Files.
+- view: an empty folder for now.
+- web.xml
+- spring-mvc-demo-servlet.xml
+
+Now , hopefully, Spring MVC should be configured and ready to go, we'll start writing code next.
 
 ### Spring MVC: Creating Controllers and Views
 Steps:
@@ -2048,4 +2091,347 @@ Inside it, write any html you want like:
 </body>
 ```
 
+***Note:*** If you see an error at !DOCTYPE that says "the superclass javax.servlet.http.httpservlet was not found on the java build path", right click on the project -> Properties -> Project Facets -> open Runtime tab -> check the box next to Apache Tomcat -> Apply & close.
+
 Now right-click on the project folder, Run as Run on server, choose default server, click finish.
+
+You'll see your page opening (Hopefully, if not then check configuration xD).
+
+***Note:*** If you see an error because of ports, double click on Tomcat in eclipse Servers section, set the Tomcat Admin Port to be DIFFERENT FROM the HTTP port.
+
+### Reading Form Data with Spring MVC
+If we have a form, the user enters some data and submits it, it'll go to our Spring MVC app, which will show a confirmation page.
+
+Flow of the application:
+- They enter /showForm (to show the JSP form).
+- This goes to our controller.
+- Form is shown.
+- They enter data and submit.
+- Data is passed to /processForm request mapping.
+- Which goes to controller.
+- Controller passes back confirmation page.
+
+So, we'll use ONE controller that has TWO request mappings.
+
+How does that look like?
+The controller will have two methods, each will be annotated by @RequestMapping(here we put the mapping).
+So, one for /showForm, and one for /processForm.
+
+Steps:
+- Create controller class.
+- Create controller method to show HTML form, annotate it with /showForm
+- Create the view page for the HTML form.
+- Create controller method to process HTML form, annotate it with /processForm
+- Create the view page for confirmation.
+
+#### Step 1: Create controller class
+Create a new class, call it "HelloWorldController".
+
+#### Step 2: Create controller method to show HTML form
+``` Java
+@RequestMapping("/showForm")
+public String showForm() {
+	return "form";
+}
+```
+
+#### Step 3: Create the view page for the HTML form
+Create a new File in WEB-INF/view, call it "form.jsp" (according to the name returned from the controller method that's mapped to it).
+``` html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>My form</title>
+	</head>
+	<body>
+		<form action="processForm" method="GET">
+			<input type="text" 	name="studentName"
+				placeholder="What's your name?" />
+			
+			<input type="submit" />
+		</form>
+	</body>
+</html>
+```
+
+Run the project, change the url to:
+http://localhost:8091/spring-mvc-demo/showForm
+to check it out.
+
+If we hit submit, we'll get the most famous error on the planet: 404 not found.
+That's because processForm isn't made yet :'D
+
+#### Step 4: Create controller method to process HTML form
+Create a controller method in HelloWorldController and map it to "/processForm"
+``` Java
+@RequestMapping("/processForm")
+public String processForm() {
+	return "confirm";
+}
+```
+
+#### Step 5: Create the view page for confirmation
+In the WEB-INF/view folder, create the view page for confirmation called "confirm.jsp", then write it:
+``` html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Data is received</title>
+	</head>
+	<body>
+		<h1>Congrats ${param.studentName}, you submitted successfully, you can push buttons, WOW!</h1>
+	</body>
+</html>
+```
+
+Notice that we passed the data that was submitted into the HTML, param.studentName, remember that "studentName" was the name we gave to the input form.
+
+Now run it, go to the page /showForm, enter your name, submit, and see the result.
+
+Nice. ;) <br />
+
+But, you may wonder, can we just open on the showForm page from a link in the main page?
+Yes of course, *mon ami*, do this with me *s'il vous plait*.
+
+Go to *le* file main-menu.jsp, set up *un* anchor tag, and set *le* href attribute in *le* anchor tag to:
+``` html
+<a href="showForm">Click to go to the form</a>
+```
+
+Then run *le* project and see *ils* result.
+*Voila! mon ami*, *le* link is *le* working.
+*french laugh*
+
+### Adding Data to Spring Model
+We covered the Controller and the View templates, but how do we interact with the model?
+
+The model is just a data container.
+We can put ANYTHING in the model: strings, objects, info from data base, etc.
+We can load it up.
+View templates (jsp) can access it.
+
+Steps:
+- Create a new method to process form data.
+- Read the form data.
+- Convert it to uppercase and create a message using the uppercase data.
+- Add THAT to the model and return a page name.
+- Make the View display the data we wrote in the model.
+- Modify the form to map to the NEW method, not the old one.
+
+The method will have a mapping to a new View page.
+and it will receive two arguments: HttpServletRequest, and Model.
+
+The HttpServletRequest holds form data.
+The model is, well, the model xD
+
+The model is initially empty, we can add data to it, we can add any kind of data together btw, Lists, Strings, user-defined classes, etc. 
+
+So, the method will:
+- First, read the form data.
+- Convert it to uppercase.
+- Create a message using the uppercase data.
+- Add the message to the model in the form of key/value.
+- return a page name.
+
+Now, creating the new View page:
+- To access data, we use ${key}, where key is the key we used to save the message to the model.
+
+Review of Steps:
+- Create a new method to process form data.
+- Read the form data.
+- Convert it to uppercase and create a message using the uppercase data.
+- Add THAT to the model and return a page name.
+- Make the View display the data we wrote in the model.
+- Modify the form to map to the NEW method, not the old one.
+
+#### Step 1: Create a new method to process form data
+In HelloWorldController, add the new method.
+``` Java
+@RequestMapping("/processFormVersionTwo")
+public String processFormUppercase(HttpServletRequest request, Model model) {
+	
+}
+```
+
+#### Step 2: Read the form data
+``` Java
+@RequestMapping("/processFormVersionTwo")
+public String processFormUppercase(HttpServletRequest request, Model model) {
+	String theName = request.getParameter("studentName");
+}
+```
+
+#### Step 3: Convert it to uppercase and create a message using the uppercase data
+``` Java
+@RequestMapping("/processFormVersionTwo")
+public String processFormUppercase(HttpServletRequest request, Model model) {
+	String theName = request.getParameter("studentName");
+	theName = theName.toUpperCase();
+	String message = "Yo!" + theName;
+}
+```
+
+#### Step 4: Add THAT to the model and return a page name
+``` Java
+@RequestMapping("/processFormVersionTwo")
+public String processFormUppercase(HttpServletRequest request, Model model) {
+	String theName = request.getParameter("studentName");
+	theName = theName.toUpperCase();
+	String message = "Yo!" + theName;model.addAttribute("message", message);
+	return "confirm";
+}
+```
+
+#### Step 5: Make the View display the data we wrote in the model
+Now go to confirm.jsp:
+``` html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Data is received</title>
+	</head>
+	<body>
+		<h1>Congrats ${param.studentName}, you submitted successfully, you can push buttons, WOW!</h1>
+		<h2>${message}
+	</body>
+</html>
+```
+
+#### Step 6: Modify the form to map to the NEW method, not the old one
+Go to form.jsp:
+``` html
+<!DOCTYPE html>
+<html>
+<head>
+<title>My form</title>
+</head>
+<body>
+	<form action="processFormVersionTwo" method="GET">
+		<input type="text" name="studentName"
+			placeholder="What's your name?" />
+			
+		<input type="submit" />
+	</form>
+</body>
+</html>
+```
+
+*le* Work is *le* nice, *mon ami*, give a round of applause for *vous-mêmes, s'il vous-plait* ;) B| <br />
+
+### How to use CSS, JS, and Images in Spring MVC
+These are static resources, any static resource is processed as a URL mapping in Spring MVC.
+
+In WebContent, create a new folder "resources", or "assets", or whatever you want.
+In it, create a folder for css, one for js, one for images (one per static resource type).
+In spring-mvc-demo-servlet.xml, add this:
+``` xml
+<mvc:resources mapping="/resources/**" location="/resources/"></mvc:resources>
+```
+In the view pages, you can access static files using:
+``` html
+<img src="${pageContext.request.contextPath}/resources/images/spring-logo.png">
+```
+You will need to use the JSP expression "${pageContext.request.contextPath}" to access the correct root directory.
+
+Same for CSS and JS.
+``` html
+ <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/resources/css/my-test.css">
+
+<script src="${pageContext.request.contextPath}/resources/js/simple-test.js"></script>
+```
+
+***Note:***
+You can deploy to Tomcat using Web Application Archive (WAR) files.
+They are a compressed version of your web app (sort of like the minfied js file of any frontend app).
+It's actually a .zip file but uses the .war extension.
+It's the same as WebContent compressed as a zip file.
+It has all the pages, images, css, js, since your code compiles into WEB-INF/classes, it also has your classes, along with supporting classes in WEB-INF/lib.
+WAR files are part of the JEE specification, so all JEE servers support this format.
+
+Steps to to if you want:
+1. In Eclipse, stop Tomcat
+
+2. Right-click your project and select Export > WAR File
+
+3. In the Destination field, enter: <any-directory>/mycoolapp.war
+
+4. Outside of Eclipse, start Tomcat
+- If you are using MS Windows, then you should find it on the Start menu
+
+5. Make sure Tomcat is up and running by visiting: http://localhost:8080
+
+6. Deploy your new WAR file by copying it to <tomcat-install-directory>\webapps
+
+Give it about 10-15 seconds to make the deployment. You'll know the deployment is over because you'll see a new folder created in webapps ... with your WAR file name.
+
+7. Visit your new app. If your war file was: mycoolapp.war then you can access it with:  http://localhost:8080/mycoolapp
+
+## Spring MVC Request Params and Mappings
+This is a different technique for reading form data.
+Spring has an annotation @RequestParam.
+This allows us to read form data AND automatically bind it to a parameter in our methods.
+Behind the scenes, Spring:
+- Reads the requested data.
+- Bind it to the variable we want.
+
+How do we do this in code?
+In HelloWorldController in the new method we added, copy it and paste it, giving it a new name and new Request Mapping.
+Now, in the new function, we'll change it a bit:
+``` Java
+@RequestMapping("/processFormVersionThree")
+public String processFormVersionThree(
+		@RequestParam("studentName") String theName
+		, Model model) {
+		
+	theName = theName.toUpperCase();
+		
+	String message = "Yo sup dude! " + theName;
+		
+	model.addAttribute("message", message);
+		
+	return "confirm";
+}
+```
+Notice many things:
+- We removed the HttpServletRequest parameter, and instead used the @RequestParam and after it a String theName.
+	- Spring got the data and bound it to theName behind the scenes.
+- So we didn't need the explicit line that gets the data and puts it into theName, so we removed it.
+- The rest is the same.
+
+Go to form.jsp, change the action to "processFormVersionThree".
+Run it, it'll be working like Bill Gates will interview it.(what?) B|
+
+### Adding Controller Request Mapping
+We can define request mappings at the controller level.
+It acts like the parent mapping for the controller.
+Any methods with mapping are mapped RELATIVE to the controller's path, so a mapping on the controller acts as a root directory from which the request mapping are Looked for.
+Now method mappings are relative to the PARENT MAPPING on the controller.
+
+Which is a great technique to classify mappings and avoid naming conflicts between mappings.
+
+Create a new controller class, name it whatever.
+Inside it, add a method with a request mapping that is THE SAME AS another mapping in HelloWorldController e.g. "processFormVersionThree".
+Just copy a previous mapping and paste it.
+
+Now run it. <br />
+The console window will raise many exceptions, such as:
+- ServletException.
+- IllegalStateException: Ambiguous Mapping, which says that the mapping is already being used (The error we're looking for).
+
+If you look at the web page, you'll see the 500 error.
+
+***Note:*** That error will be common for you Spring developers, poor souls xD
+
+How to solve this?
+In the HelloWorldController, add a mapping ABOVE the controller itself:
+``` Java
+@Controller
+@RequestMapping("/hello")
+public class HelloWorldController {
+	...
+}
+```
+
+That means, we need to go to our main-menu.jsp file and change *le* href attribute of *le* anchor tag to point to *le* hello/showForm, not *le* showForm directly.
+
+## Spring MVC Form Tags and Data Binding

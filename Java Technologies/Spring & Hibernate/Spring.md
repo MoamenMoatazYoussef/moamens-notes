@@ -2575,4 +2575,218 @@ public class StudentController {
 - Now run *le* app and check *le* result.
 - Nice work :) <br/>
 
-### 
+### Spring MVC Dropdown Lists
+Steps:
+1. Update HTML form.
+2. Update Student class.
+3. Update confirmation page.
+**Step 1: Update HTML form**<br/>
+- Go to student-form.jsp.
+- Add a Spring MVC dropdown list tag, and add some options to it:
+- Give the form path="country" attribute:
+``` html
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Moamen's student form</title>
+	</head>
+	<body>
+		<form:form action="processForm" modelAttribute="student">
+		 
+		 First name: <form:input path="firstName"></form:input>
+		<br />
+		
+		 Last name: <form:input path="lastName"></form:input>
+		<br />
+		
+		Country: <form:select path="country">
+			<form:option value="USA" label="USA"/>
+			<form:option value="Brazil" label="Brazil"/>
+			<form:option value="France" label="France"/>
+			<form:option value="China" label="China"/>
+			<form:option value="Egypt" label="Egypt"/>
+			<form:option value="Antartica" label="Antartica"/>
+			<form:option value="Australia" label="Australia"/>
+		</form:select> 
+		
+		<input type="submit" value="Submit"/>
+		
+		</form:form>
+	</body>
+</html>
+```
+**Step 2: Update Student class**<br/>
+- Go to Student class.
+- Add a new field "country".
+- Generate getters and setters for it.
+``` Java
+public class Student {
+	private String firstName;
+	private String lastName;
+	private String country;
+	
+	public String getCountry() {
+		return country;
+	}
+
+	...
+}
+```
+**Step 3: Update confirmation page** <br/>
+- Go to student-confirm.jsp.
+- Add the ${student.country} to it.
+``` html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Moamen's student confirmation</title>
+	</head>
+	<body>
+		The student ${student.firstName} ${student.lastName} is confirmed.
+		<br />
+		Country: ${student.country }
+	</body>
+</html>
+```
+
+Now run it, and see the result.
+
+Real nice :) <br/>
+
+**Wait, what if we want to read the list of countries from a JAVA class, not hardcode it?** <br/>
+
+Steps:
+1. Define country options in a class.
+- Go to Student.
+- Add a LinkedHashMap field whose key and value are Strings.
+- In the no-arg constructor, init and populate the LinkedHashMap.
+- Generate getters for the LinkedHashMap.
+``` Java
+public class Student {
+	...
+	private LinkedHashMap<String, String> countryOptions;
+	
+	public LinkedHashMap<String, String> getCountryOptions() {
+		return countryOptions;
+	}
+
+	...
+
+	public Student() {
+		countryOptions = new LinkedHashMap<>();
+		countryOptions.put("USA", "USA");
+		countryOptions.put("Brazil", "Brazil");
+		countryOptions.put("France", "France");
+		countryOptions.put("China", "China");
+		countryOptions.put("Egypt", "Egypt");
+		countryOptions.put("Antartica", "Antartica");
+		countryOptions.put("Australia", "Australia");
+		// To see that it really changes, we'll add one more
+		countryOptions.put("Spaaaace", "Spaaaace");
+	}
+
+	...
+}
+```
+2. Step 2: Update the form to use these values, not the hardcoded ones.
+- Go to student-form.jsp.
+- Instead of <form:option>, use <form:option***s*** items="${student.countryOptions}">.
+``` html
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Moamen's student form</title>
+	</head>
+	<body>
+		...
+		Country: <form:select path="country">
+			<form:options items="${student.countryOptions}" />
+		</form:select> 
+		
+		<input type="submit" value="Submit"/>
+		
+		</form:form>
+	</body>
+</html>
+```
+
+Now run it. <br/>
+Does it work? <br/>
+Does it really work? <br/>
+I said it would work, didn't I? <br/>
+
+***Get on my level, son!***
+
+(would be a shame if it didn't run xD )
+
+**We can also read the countries from a Properties File** <br/>
+1. Create a properties file in WEB-INF directly, called "countries.properties".
+***Note:*** IT MUST BE IN THE WEB-INF DIRECTLY.
+
+2. Add key=value:
+``` txt
+Brazil=Brazil
+USA=USA
+```
+
+3. Go to spring-mvc-demo-servlet.xml, remove the header and add this:
+``` xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+        xmlns:context="http://www.springframework.org/schema/context" 
+        xmlns:mvc="http://www.springframework.org/schema/mvc" 
+        xmlns:util="http://www.springframework.org/schema/util" 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:schemaLocation="
+            http://www.springframework.org/schema/beans     
+            http://www.springframework.org/schema/beans/spring-beans.xsd     
+            http://www.springframework.org/schema/context     
+            http://www.springframework.org/schema/context/spring-context.xsd     
+            http://www.springframework.org/schema/mvc         
+            http://www.springframework.org/schema/mvc/spring-mvc.xsd 
+            http://www.springframework.org/schema/util     
+            http://www.springframework.org/schema/util/spring-util.xsd">
+```
+
+4. Load the properties file in the Spring config file.
+- Go to spring-mvc-demo-servlet.xml.
+- Add the following lines:
+``` xml
+<util:properties id="countryOptions" location="classpath:../countries.properties" />
+```
+
+5. Inject the properties values into your Spring Controller: StudentController.java
+``` Java
+@Value("#{countryOptions}") 
+private Map<String, String> countryOptions;
+```
+
+5. Add the country options to the Spring MVC model. Attribute name: theCountryOptions
+``` Java
+@RequestMapping("/showForm") 
+public String showForm(Model theModel) { 
+ 
+    // create a student object Student 
+    Student theStudent = new Student();
+ 
+    // add student object to the model 
+    theModel.addAttribute("student", theStudent); 
+ 
+    // add the country options to the model 
+    theModel.addAttribute("theCountryOptions", countryOptions); 
+ 
+    return "student-form"; 
+}
+```
+
+6. Update the JSP page, student-form.jsp, to use the new model attribute for the drop-down list: theCountryOptions
+``` html
+<form:select path="country"> 
+ <form:options items="${theCountryOptions}" />
+</form:select>
+```
+7. Remove all references to country option from your Student.java. 
+
+Now run it :) <br />

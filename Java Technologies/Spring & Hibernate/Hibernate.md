@@ -1,5 +1,17 @@
 # Hibernate
 ## Table of Contents
+- [Notes](#notes)
+- [What is Hibernate anyway?](#what-is-hibernate-anyway-)
+- [How does it work?](#how-does-it-work-)
+- [What is the relationship between Hibernate and JDBC?](#what-is-the-relationship-between-hibernate-and-jdbc-)
+- [Hibernate Installation](#hibernate-installation)
+- [Hibernate Configuratin With Annotations](#hibernate-configuratin-with-annotations)
+  * [Hibernate Configuration](#hibernate-configuration)
+  * [Annotate the Java Class](#annotate-the-java-class)
+- [Hibernate CRUD Features](#hibernate-crud-features)
+  * [Creating and Saving Java Objects](#creating-and-saving-java-objects)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
 ## Notes
 - sysout means System.out.println, I'm lazy.
@@ -485,9 +497,30 @@ public static void main(String[] args) {
                                 .addAnnotatedClass(Student.class)
                                 .buildSessionFactory();
     
+    // The config filename isn't required,
+    // we can just say .configure() because the name
+    // hibernate.cfg.xml is the default, and Hibernate
+    // will look for it in the classpath
+
     Session session = factory.getCurrentSession();
     try {
         // use session to save/retrieve data
+
+        // for example, 
+        // Saving:
+        Student tempStudent = new Student("M", "M", "M@m.com");
+        
+        // starting a transaction
+        session.beginTransaction();
+
+        // saving the tempStudent object to the DB
+        // Hibernate knows how to connect to DB and
+        // how to map tempStudent to the DB
+        session.save(tempStudent);
+
+        // commit the transaction
+        session.getTransaction().commit();
+
     } catch(...) {
         // your catch blocks here.
     } finally {

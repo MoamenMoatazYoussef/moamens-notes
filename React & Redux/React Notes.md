@@ -2,10 +2,6 @@ The Road To Learn React:
 ========================
 Tips:
 -----
-- Anything between //// and //// is code in the language who's name is written after the first ////.
-  - Starting at chapter 3: Code Organization, the filename will be written after the language.
-  - //// sandbox: this means that this isn't a particular file or code, it's JUST and illustration example.
-  - A file change will be indicated by //// old-lang old-file >>>> new-lang new-file
 - This notes assumes that you are familiar with HTML, CSS, JS ES5 at least, npm, and git.
 - This note assumes that you are familiar with JS topics like: IIFEs, modules, scope, closure.
 - Anything after >> is a command in a command prompt, terminal, or bash.
@@ -56,7 +52,7 @@ JSX is the syntax used in React, JSX is JS.
 Open the src/App.js and you will fine a boilerplate code written in JSX,
 the code inside is a JSX code, but it's familiar because JSX is JS.
 Here's the code:
-//// JSX
+``` JSX
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
@@ -78,21 +74,21 @@ class App extends Component {
 }
 
 export default App;
-//// ENDCODE
+```
 
 - import and export are ES6 syntax, we'll see them later.
 - First, we have a React ES6 class whose name is App, so this is a component declaration.
     We can instantiate it and use it everywhere in our application. 
     We do that with adding this:
-    //// HTML
+    ``` HTML
         <App />
-    //// ENDCODE
+    ```
 - This class returns an HTML element that will be rendered, specified in the render() function.
 - Inside the render function we see something that looks very similar to HTML, but it's not.
     Here comes JSX, JSX lets us mix HTML and JS.
 
 To make things simpler, we'll remove the JSX inside and write basic HTML:
-//// JSX 
+``` JSX 
 import React, { Component } from 'react';
 import './App.css';
 
@@ -107,10 +103,10 @@ class App extends Component {
 }
 
 export default App;
-//// ENDCODE
+```
 
 We can only return HTML in our render(), we can't put JS in there but we can put JS variables containing data or HTML, in curly braces:
-//// JSX
+``` JSX
 import React, { Component } from 'react';
 import './App.css';
 
@@ -126,7 +122,7 @@ class App extends Component {
 }
 
 export default App;
-//// ENDCODE
+```
 
 Notive that div has a className attribute, it reflects the 'class' attribute in HTML.
 Because of technical reasons, JSX replaces some HTML internal attributes with their own.
@@ -135,7 +131,7 @@ ReactDOM:
 ---------
 So, where is our app component used?
 In src/index.js:
-//// JSX
+``` JSX
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
@@ -145,7 +141,7 @@ ReactDOM.render(
     <App />,
     document.getElementById('root')
 );
-//// ENDCODE
+```
 
 This global object ReactDOM has a function render(), it takes a DOM node in the HTML and replace it with the JSX.
 We can use this function many times, this is why React is easy to integrate with foreign apps.
@@ -158,7 +154,7 @@ Hot Module Replacement:
 -----------------------
 It's something we can do to make life for us developers easier, it's entirely optional but consider it anyway.
 Hot Module Replacement (HMR): a tool to reload your app in the browser, in the code in src/index.js:
-//// JSX
+``` JSX
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
@@ -172,7 +168,7 @@ ReactDOM.render(
 if (module.hot) {
     module.hot.accept();
 }
-//// ENDCODE
+```
 
 The browser will NOT refresh, but will display the correct output.
 Why this is good:
@@ -182,7 +178,7 @@ Why this is good:
 Complex JS in JSX:
 ------------------
 Let's render a list of items in our app:
-//// JSX
+``` JSX
 import React, { Component } from 'react';
 import './App.css';
 
@@ -221,12 +217,12 @@ class App extends Component {
 }
 
 export default App;
-//// ENDCODE
+```
 
 As you can see, using JS inside HTML is really powerful in JSX.
 React will render every item, but we should add one helper for React to improve performance: 
 assign a key attribute to each list element, so that React can identify added, changed, and removed items when the list changes:
-//// JSX part of the above code
+``` JSX part of the above code
 class App extends Component {
     render() {
         return(
@@ -244,7 +240,7 @@ class App extends Component {
         );
     }
 }
-//// ENDCODE
+```
 
 Make sure that the key attribute is a STABLE IDENTIFIER i.e. will stay unique no matter how the array changes, do not use the index of the item in the array.
 
@@ -266,7 +262,7 @@ Internal component state:
 -------------------------
 This is a variable kept in any React component that allows us to save, modify, and delete properties stored in the component, they are usually a list of items.
 They can be initialized using a constructor:
-//// JSX
+``` JSX
 const list = [
     {
         title: 'the walking dead',
@@ -286,7 +282,7 @@ class App extends Component {
     }
     ...
 }
-//// ENDCODE
+```
 We always have to call super() in any React Component's constructor (or constructor of any class that extends it).
 Of course, we can access the local state using "this" e.g. we can use it in render().
 Now the list resides in the internal component state, we can add, change, and remove items from it, every time the state is changed, the render() method runs again.
@@ -298,7 +294,7 @@ Uniditectional Data Flow:
 -------------------------
 We will make some components interact with each other so that we can try to change the internal state through components.
 For example, we'll make a list of stuff with buttons, when we click a button, the item with the button disappears.
-//// JSX
+``` JSX
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
@@ -358,7 +354,7 @@ class App extends Component {
 }
 
 export default App;
-//// ENDCODE
+```
 
 The onDismiss function in the onClick handler is an ARROW function enclosed by another function, that way we can use item.id to identify the item that will be dismissed.
 What we just did is called 'unidirectional data flow', where an action triggers a function or class method that modifies the internal state, then the render() function runs again.
@@ -367,7 +363,7 @@ To bind onDismiss to the class, we used hard binding using bind().
 Don't define business logic inside the constructor to avoid using bind, define business logic outside in separate functions then bind those functions in the constructor normally.
 
 Note: ES6 by default binds any defined ARROW functions to the class they were defined inside:
-//// ES6
+``` ES6
 class Whatever {
     myFunction = () => {
         //code
@@ -375,35 +371,35 @@ class Whatever {
 
     ...
 }
-//// ENDCODE
+```
 React documentation uses this method to bind functions to classes, if you don't like it that's fine, but knowing it will help in reading docs.
 
 Event Handlers:
 ---------------
 Passing an executed function to onClick directly usually executes immediately when the application is opened in your browser, this is why we didn't do this:
-//// JSX
+``` JSX
 <button
 onClick={this.onDismiss(item.objectID)} //we didn't do this: we didn't pass this.onDismiss() to be executed.
 type="button">
     Dismiss
 </button>
-//// ENDCODE
+```
 
 Instead, we wrapped the passed function into another function DEFINITION:
-//// JSX
+``` JSX
 <button
 onClick={() => this.onDismiss(item.objectID)} //see? we wrapped it in an arrow function then passed the wrapping function, of course the wrapper function doesn't have to be arrow.
 type="button">
     Dismiss
 </button>
-//// ENDCODE
+```
 
 Note: doing this means that the wrapper function will be instantiated every time, this 'can' affect performance if we're working with a huge table of data or something. This isn't usually an issue, but it can be.
 
 Interactions with forms and events:
 -----------------------------------
 Let's add another functionality to our application, we'll add sort of a search functionality that filters our list based on what we search for.
-//// JSX
+``` JSX
 render() {
     return (
       <div className="App">
@@ -416,9 +412,9 @@ render() {
        </div>
     );
 }
-//// ENDCODE
+```
 To implement the search functionality, we need to store the value of input in our local state, to do this first we define a handler onChange:
-//// JSX
+``` JSX
 render() {
     return (
       <div className="App">
@@ -433,10 +429,10 @@ render() {
        </div>
     );
 }
-//// ENDCODE
+```
 
 Now we'll implement the searching function itself, remember to bind onSearchChange in the constructor of the class:
-//// JSX
+``` JSX
 class App extends component {
     constructor() {
         super();
@@ -455,13 +451,13 @@ class App extends component {
         });
     }
 }
-//// ENDCODE
+```
 
 Note: this.setState() is a shallow merge, it preserves other properties if they're not updated, so we don't need to pass the previous list to it every time.
 
 We haven't yet implemented the searching, but we can use searchTerm to 'temporarily' filter the list, this is done in the render() method, before we map over the list we apply a filter on it.
 We can't do what we did in onDismiss because this filtering is temporary, we don't want to change the internal list itself.
-//// JSX
+``` JSX
 render() {
     return (
       <div className="App">
@@ -476,27 +472,27 @@ render() {
        </div>
     );
 }
-//// ENDCODE
+```
 
 Now we need to implement ourSearchFunction, we will define it OUTSIDE our class, but this means it can't access searchTerm or state, so we need to pass it and return a new function to evaluate the filter condition we want.
 Let's call the function isSearched:
-//// JSX
+``` JSX
 function isSearched(searchTerm) {
     return function(item) { //the big function returns another function, this will be used in the filter
         return item.name.toLowerCase().includes(searchTerm.toLowerCase());
     }
 }
-//// ENDCODE
+```
 We used an includes() function, which is ES6
 
 Of course, we can make it super concise by doing this:
-//// JSX
+``` JSX
 const isSearched = searchTerm => item => item.name.toLowerCase().includes(searchTerm.toLowerCase());
-//// ENDCODE
+```
 
 Remember that this function is defined OUTSIDE the class.
 Now we'll use this filter in our render function:
-//// JSX
+``` JSX
 render() {
     return (
       <div className="App">
@@ -513,10 +509,10 @@ render() {
         </div>
     );
 }
-//// ENDCODE
+```
 
 The search functionality should work now, here is the full code:
-//// JSX
+``` JSX
 import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './App.css';
@@ -589,7 +585,7 @@ class App extends Component {
 const isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
 export default App;
-//// ENDCODE
+```
 
 *** Destructing ***
 
@@ -600,7 +596,7 @@ They modify that value internally if someone changes it from the outside, this i
 
 In React, we need our elements to be Controlled Components.
 We do that by setting these states manually e.g. in the previous code:
-//// JSX
+``` JSX
 ...
 render() {
     return(
@@ -616,12 +612,12 @@ render() {
     );
 }
 ...
-//// ENDCODE
+```
 
 Split up components:
 --------------------
 This is the last code we've done:
-//// JSX
+``` JSX
 import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './App.css';
@@ -694,14 +690,14 @@ class App extends Component {
 const isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
 export default App;
-//// ENDCODE
+```
 
 As you can see, we have one component that's really big, why not split that into smaller components?
 We'll start with:
 - a component for search input.
 - a component for the list.
 Now, first of all the render function in App will change:
-//// JSX
+``` JSX
 class App extends Component {
     ...
     render() {
@@ -714,10 +710,10 @@ class App extends Component {
         )
     }
 }
-//// ENDCODE
+```
 
 We can pass properties to components:
-//// JSX
+``` JSX
 class App extends Component {
     ...
     render() {
@@ -737,10 +733,10 @@ class App extends Component {
         )
     }
 }
-//// ENDCODE
+```
 
 Now, we define the other two components:
-//// JSX
+``` JSX
 class App extends Component {
     ...
     render() {
@@ -795,10 +791,10 @@ class Table extends Component {
         );
     }
 }
-//// ENDCODE
+```
 
 Now the code is modularized a bit:
-//// JSX
+``` JSX
 import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './App.css';
@@ -900,7 +896,7 @@ render() {
 const isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
 export default App;
-//// ENDCODE
+```
 
 Notice that we've used this.props to access the properties we passed in the App component's render function.
 
@@ -908,7 +904,7 @@ Composable Components:
 ----------------------
 There's a property in the this.props: children, this can be used to pass HTML and text elements to the components from above.
 Like this:
-//// JSX
+``` JSX
 class App extends Component {
     ...
     render() {
@@ -930,7 +926,7 @@ class App extends Component {
         )
     }
 }
-//// ENDCODE
+```
 
 The text added INSIDE the Search component can be accessed via the this.children property.
 This allows us to compose elements of each other and we can plug them into each other like legos.
@@ -939,7 +935,7 @@ Reusable Components:
 --------------------
 Of course as we've seen, classes promote reusability of components.
 To further increase reusability we can wrap normal HTML elements into components like this:
-//// JSX
+``` JSX
 class Button extends Component {
     render() {
         const {
@@ -958,7 +954,7 @@ class Button extends Component {
         );
     }
 }
-//// ENDCODE
+```
 
 It might seem redundant to do this, but now we can just use as many Buttons as we can without needing to rewrite the <button> element.
 Plus modifying the class ensures that all Buttons adapt to the modifications.
@@ -992,7 +988,7 @@ When to use each?
 ==> AUTHOR'S NOTE: I'll start writing FSC instead of "functional stateless components" because I'm lazy, but it's not an official abbreviation or anything.
 
 In our example, Search and Table don't need state or lifecycle, so, we can refactor them to FSC:
-//// JSX
+``` JSX
 function Search(props) {
     const { value, onChange } = props;
     return (
@@ -1004,10 +1000,10 @@ function Search(props) {
         </form>
     );
 }
-//// ENDCODE
+```
 
 We can even put the destructing in the function signature itself:
-//// JSX
+``` JSX
 function Search({ value, onChange }) {
     return (
         <form>
@@ -1018,10 +1014,10 @@ function Search({ value, onChange }) {
         </form>
     );
 }
-//// ENDCODE
+```
 
 Even better, arrow functions:
-//// JSX
+``` JSX
 const Search = ({ value, onChange }) =>
     <form>
         <input type="text"
@@ -1030,10 +1026,10 @@ const Search = ({ value, onChange }) =>
     />
     </form>
     ;
-//// ENDCODE
+```
 
 And here's Table after refactoring it to FSC:
-//// JSX
+``` JSX
 const Table = ({ list, pattern, onDismiss }) =>
       <div>
         {list.filter(isSearched(pattern)).map(item =>
@@ -1051,7 +1047,7 @@ const Table = ({ list, pattern, onDismiss }) =>
         )}
       </div>
     ;
-//// ENDCODE
+```
 
 Styling components:
 -------------------
@@ -1111,14 +1107,14 @@ Fetching Data:
 We'll use the native Fetch API in JS to fetch data, and we'll do the fetching inside componentDidMount.
 Our API url is 'https://hn.algolia.com/api/v1/search?query=redux'
 Now, a quick tip is to 'split' your request URL into variables so that it's easy to change them later by you or another developer if the API changes or request has params, like this:
-//// JSX
+``` JSX
 const PATH_BASE     = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH   = '/search';
 const PARAM_SEARCH  = 'query=';
 const DEFAULT_QUERY = 'redux';
 
 const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
-//// ENDCODE
+```
 
 That will keep the url component flexible in the future.
 Now to do the actual fetching, let's break it into steps:
@@ -1129,7 +1125,7 @@ Now to do the actual fetching, let's break it into steps:
 Note: before we do this, we can remove the old local list since now we'll get data from an API.
 
 Step 1:
-//// JSX
+``` JSX
 class App extends Component {
   constructor(props) {
     ...
@@ -1148,10 +1144,10 @@ class App extends Component {
       ...
   }
 }
-//// ENDCODE
+```
 
 Step 2: implement the doSomethingWithResult method, we'll change its name to setSearchTopStories for this example:
-//// JSX
+``` JSX
 class App extends Component {
   constructor(props) {
     ...
@@ -1176,7 +1172,7 @@ class App extends Component {
       ...
   }
 }
-//// ENDCODE
+```
 
 Step 3: finalizing, which means:
   - binding the new method to the class in the constructor,
@@ -1184,7 +1180,7 @@ Step 3: finalizing, which means:
   - removing 'list' from our component and substituting it with 'result'
   Note: the JSON object returned by the API is not a simple list, it's a complex object, so we'll need to investigate it to know how to get our data.
     in our example, we need to get result.hits in order to get our list of data.
-//// JSX
+``` JSX
 class App extends Component {
   constructor(props) {
     super(props);
@@ -1230,7 +1226,7 @@ class App extends Component {
     );
   }
 }
-//// ENDCODE
+```
 
 What did we just do?
 - Now, our component's initial state has an empty result and a default search term.
@@ -1251,22 +1247,22 @@ Bug 1: the Dismiss button.
     the onDismiss method isn't aware of the complex result object, it only knows a list in the local state.
   Solution?
     Make it operate on the result object itself, 
-    //// const updatedHits = this.state.result.hits.filter(isNotId); ////
+    ``` const updatedHits = this.state.result.hits.filter(isNotId); ```
     but now setState is only aware of result.hits and doesn't change local list except if result object is changed.
     We can mutate the result.hits list, but this is not recommended since React embraces immutable data structs.
     We can generate a new object based on the info we have, we can use Object.assign(target, ...sources) 
-    //// JSX
+    ``` JSX
     const updatedHits   = { hits: updatedHits };
     const updatedResult = Object.assign({}, this.state.result, updatedHits);
-    //// ENDCODE
+    ```
     Now, source objects will merge such that latter objects override former objects if they share the same props i.e. new result will override old result in state, but without mutating any of them, and both will be put in an empty target object.
     We can also use the spread operator like this:
-    //// JSX
+    ``` JSX
     const updatedResult = {...this.state.result, hits: updatedHits };
-    //// ENDCODE
+    ```
 
   So, the final result is:
-  //// JSX
+  ``` JSX
     onDismiss(id) {
       const isNotId = item => item.objectID !== id;
       const updatedHits = this.state.result.hits.filter(isNotId);
@@ -1274,7 +1270,7 @@ Bug 1: the Dismiss button.
         result: { ...this.state.result, hits: updatedHits }
       });
     }
-  //// ENDCODE
+  ```
   
   Note: change all item.id to item.objectID since this is the name of the id prop in the objects retrieved from the API, inside result.hits.
 
@@ -1283,7 +1279,7 @@ Conditional rendering:
 You can make the decision to render an element or another, or none at all.
 One simple example is the if condition we added in the render() method as a check.
 We can apply this on the Table component, where we ONLY wrap it in a condition so that it's displayed ONLY if there's results, but the rest should render even if the result is null, like this:
-//// JSX
+``` JSX
 render() {
     const { searchTerm, result } = this.state;
     return (
@@ -1299,7 +1295,7 @@ render() {
       </div>
     );
   }
-//// ENDCODE
+```
 
 Another way to do this is using && operator, in JS if we do this:
   true && 'hot diggity dog';
@@ -1307,7 +1303,7 @@ the result will always be 'hot diggity dog', while if we do this:
   false && 'hot diggity dog';
 the result will always be false.
 So, applying this:
-//// JSX
+``` JSX
 render() {
     const { searchTerm, result } = this.state;
     return (
@@ -1323,7 +1319,7 @@ render() {
       </div>
     );
   }
-//// ENDCODE
+```
 
 You can check out a lot of other conditional rendering approaches.
 
@@ -1335,14 +1331,14 @@ Bug 2:
   Solution:
     Apply the new search term on Server-side.
     Let's define a function onSearchSubmit that fetches results from the API whenever we execute a search:
-    //// JSX
+    ``` JSX
     onSearchSubmit() {
       const { searchTerm } = this.state;
     }
-    //// ENDCODE
+    ```
     This method should use the same functionality as the componentDidMount, but with the new search term.
     So, we can extract the fetch as a reusable component in a separate function:
-    //// JSX
+    ``` JSX
     fetchSearchTopStories(searchTerm) {
       fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
       .then(response => response.json())
@@ -1359,12 +1355,12 @@ Bug 2:
       const { searchTerm } = this.state;
       this.fetchSearchTopStories(searchTerm);
     }
-    //// ENDCODE
+    ```
 
     Now, we'll add a button that onClick executes the onSearchSubmit since we don't want every single change in the search term to trigger a fetch.
     Alternatively, we can use a delay, but that would be complex, so let's make it a button for now.
     First, we'll pass the onSearchSubmit to the Search component:
-    //// JSX
+    ``` JSX
     render() {
       const { searchTerm, result } = this.state;
       return (
@@ -1384,11 +1380,11 @@ Bug 2:
         </div>
       );
     }
-    //// ENDCODE
+    ```
 
     Then, add a button in the Search component with type 'submit' and onClick triggers onSubmit(),
     we can use the children property to add content to the button:
-    //// JSX
+    ``` JSX
     const Search = ({ value, onChange, onSubmit, children }) => (
       <div className="Search">
         <form onSubmit={onSubmit}>
@@ -1397,17 +1393,17 @@ Bug 2:
         </form>
       </div>
     );
-    //// ENDCODE
+    ```
 
     Now we can remove the filtering done on the table i.e. the client-side search, and remove the isSearched function.
     Now, if we try to search, the browser will reload, since this is the default event handler for submit, so we have to prevent that in onSearchSubmit:
-    //// JSX
+    ``` JSX
     onSearchSubmit(event) {
       const { searchTerm } = this.state;
       this.fetchSearchTopStories(searchTerm);
       event.preventDefault();
     }
-    //// ENDCODE
+    ```
 
     Now, the search will work as intended, a server-side search.
 
@@ -1417,33 +1413,33 @@ When we did the fetch, the data structure returned has more than a list of hits,
 the page property which is set to 0 can be used to fetch more paginated sublists as results, we only need to pass the next page with the same search term to the API.
 
 Let's extend our API in the code to add a page parameter:
-//// JSX
+``` JSX
 const DEFAULT_QUERY = "redux";
 const PATH_BASE = "https://hn.algolia.com/api/v1";
 const PATH_SEARCH = "/search";
 const PARAM_SEARCH = "query=";
 
 const PARAM_PAGE = 'page='; //see? we added it easily, that's why we made the url flexible ^_^
-//// ENDCODE
+```
 
 Now we can compose our url like this (example: searching in page 5):
     `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}5`; (ES6)
     PATH_BASE + PATH_SEARCH + '?' + PARAM_SEARCH + searchTerm + '&' + PARAM_PAGE + '5'`; (ES5)
 
 The fetchSearchTopStories method can take a second argument: the page, set the default to 0.
-//// JSX
+``` JSX
 fetchSearchTopStories(searchTerm, page = 0) {
   fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
     .then(response => response.json())
     .then(result => this.setSearchTopStories(result))
     .catch(error => error);
 }
-//// ENDCODE
+```
 
 Now, we can add a button that loads next pages in our app,
 that button will trigger fetchSearchTopStories but will give it a page argument,
 that page argument should be the next page i.e. current page + 1:
-//// JSX
+``` JSX
 render() {
     const { searchTerm, result } = this.state;
     const page = (result && result.page) || 0; //first, we get the page number or set it to 0.
@@ -1473,10 +1469,10 @@ render() {
     );
   }
 }
-//// ENDCODE
+```
 
 Finally, we can make the function concatenate the current page with the new fetched page so that we have all the results in front of us:
-//// JSX
+``` JSX
   setSearchTopStories(result) {
     const { hits, page } = result; //first we get the new hits and the new page number
     const oldHits = page !== 0 ? this.state.result.hits : []; //then we get the old hits if there is any, or an empty array if there isn't any i.e. we're fetching the first page
@@ -1486,10 +1482,10 @@ Finally, we can make the function concatenate the current page with the new fetc
       result: { hits: updatedHits, page } //then we set the hits to our big array and we update the page number to the latest page fetched
     });
   }
-//// ENDCODE
+```
 
 Finally, we can modify our request to specify the number of hits each request fetches, we just add another parameter to our url:
-//// JSX
+``` JSX
 const DEFAULT_QUERY = "redux";
 const PATH_BASE = "https://hn.algolia.com/api/v1";
 const PATH_SEARCH = "/search";
@@ -1498,10 +1494,10 @@ const PARAM_PAGE = "page=";
 
 const PARAM_HPP  = "hitsPerPage="; //again, flexibility at its best B|
 const DEFAULT_HPP = 5; //an example
-//// ENDCODE
+```
 
 Then update the fetchSearchTopStories method:
-//// JSX
+``` JSX
   fetchSearchTopStories(searchTerm, page = 0) {
     fetch(
       `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`
@@ -1510,7 +1506,7 @@ Then update the fetchSearchTopStories method:
       .then(result => this.setSearchTopStories(result))
       .catch(error => error);
   }
-//// ENDCODE
+```
 
 Of course, we can add a hitsPerPage parameter to the function's argument and pass it, making it customizable.
 We're awesome, aren't we? B|
@@ -1523,16 +1519,16 @@ This requires us to store many 'results' in the internal state, not one 'result'
 
 To do this:
 - Step 1: rename 'result' to 'results' in the constructor and add another property to the local state called searchKey, this stores the last fetch result temporarily.
-//// JSX, constructor
+``` JSX, constructor
     this.state = {
       results: null,
       searchTerm: DEFAULT_QUERY,
       searchKey: null //we'll see what's that later
     };
-//// ENDCODE
+```
 
 - Step 2: modify componentDidMount and onSearchSubmit to set searchKey to searchTerm before the fetch is made, because searchTerm changes every time we type into the search field, but searchKey stores the SUBMITTED search term, it can be used to get the correct result from the map of results.
-//// JSX
+``` JSX
   onSearchSubmit(event) {
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm }); //here's the part we added
@@ -1545,10 +1541,10 @@ To do this:
     this.setState({ searchKey: searchTerm }); //here's the part we added
     this.fetchSearchTopStories(searchTerm);
   }
-//// ENDCODE
+```
 
 - Step 2: modify the function setSearchTopStories to store the result in the local state by key. 
-//// JSX
+``` JSX
   setSearchTopStories(result) {
     const { hits, page } = result;
     const { searchKey, results } = this.state;
@@ -1563,10 +1559,10 @@ To do this:
         [searchKey]: { hits: updatedHits, page }
       }
     });
-//// ENDCODE
+```
 
 - Step 4: modify the render function:
-//// JSX
+``` JSX
 render() {
     const { searchTerm, results, searchKey } = this.state;
     const page =
@@ -1597,11 +1593,11 @@ render() {
     ); //notice we removed the condition on Table, since the default is an empty list
   }
 }
-//// ENDCODE
+```
 
 - Step 5: add a check that if the search term is cached, do NOT make the request,
   we'll add a function that does that, needsToSearchTopStories(searchTerm), then we'll modify onSearchSubmit
-//// JSX
+``` JSX
 needsToSearchTopStories(searchTerm) {
   return !this.state.results[searchTerm];
 }
@@ -1614,11 +1610,11 @@ onSearchSubmit(event) {
     }
     event.preventDefault();
   }
-//// ENDCODE
+```
 Don't forget to bind the new function in the constructor.
 
 - Step 6: modify the onDismiss
-//// JSX
+``` JSX
 onDismiss(id) {
     const { searchKey, results } = this.state;
     const { hits, page } = results[searchKey];
@@ -1632,7 +1628,7 @@ onDismiss(id) {
       }
     });
   }
-//// ENDCODE
+```
 
 Now we have an efficient search and caching technique in React ^_^
 
@@ -1642,17 +1638,17 @@ We'll handle errors like an erroneous API request, etc.
 We already know two building blocks for error handling in React: local state, and conditional rendering.
 
 The concept is: error is part of the local state, if it happens we store it and render it, that's it ^_^
-//// JSX, App constructor
+``` JSX, App constructor
 this.state = {
       results: null,
       searchTerm: DEFAULT_QUERY,
       searchKey: '',
       error: null
     };
-//// ENDCODE
+```
 
 Now we'll modify the catch block in the fetch request to store the error in the local state:
-//// JSX
+``` JSX
   fetchSearchTopStories(searchTerm, page = 0) {
     const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`;
     fetch(url)
@@ -1661,10 +1657,10 @@ Now we'll modify the catch block in the fetch request to store the error in the 
       .catch(error => this.setState({error}));
     console.log(url);
   }
-//// ENDCODE
+```
 
 Then, we modify the render function to display ONLY the error (conditional rendering):
-//// JSX
+``` JSX
 render() {
     const { searchTerm, results, searchKey, error } = this.state;
     const page =
@@ -1694,10 +1690,10 @@ render() {
       </div>
     );
   }
-//// ENDCODE
+```
 In render, this approach will only display the error or the whole app, so it might not be the best UX.
 Let's change it a little:
-//// JSX
+``` JSX
 render() {
     const { searchTerm, results, searchKey, error } = this.state;
     const page =
@@ -1729,7 +1725,7 @@ render() {
       </div>
     );
   }
-//// ENDCODE
+```
 
 That's it ^_^ to test it, we can change PATH_BASE to 'https://hn.foo.bar.com/api/v1'.
 
@@ -1745,11 +1741,11 @@ How to use axios:
   >> npm install axios
 
 - Importing:
-  //// import axios from 'axios';
+  ``` import axios from 'axios';
 
 - Usage:
   It's very similar to Fetch, it returns a promise, you don't have to convert response to JSON, axios does that and returns a 'data' object.
-  //// JSX
+  ``` JSX
   fetchSearchTopStories(searchTerm, page = 0) {
     const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`;
     axios(url)
@@ -1757,7 +1753,7 @@ How to use axios:
       .catch(error => this.setState({ error }));
     console.log(url);
   }
-  //// ENDCODE
+  ```
 
   axios() uses an HTTP GET request, we can also use axios.get(), other requests are axios.post(), etc.
 
@@ -1769,7 +1765,7 @@ Declare a class variable (not in local state) which holds the lifecycle state of
 becomes true when component is mounted i.e. at componentDidMount
 becomes false when component is unmounted i.e. at componentWillUnmount
 use that to prevent steps when component is unmounted.
-//// JSX
+``` JSX
 class App extends Component {
   _isMounted = false; //here;s our new variable
   ....
@@ -1793,7 +1789,7 @@ class App extends Component {
     console.log(url);
   }
 }
-//// ENDCODE
+```
 
 End of chapter 2 ^_^
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1985,30 +1981,30 @@ They allow us to split code into files to make it more reusable and readible.
 
 So how do import/export work?
 - We can share variables:
-  //// sandbox file1.js
+  ``` sandbox file1.js
   const negan = 'Negan';
   const daryl = 'Daryl';
 
   export { negan, daryl };
 
-  //// sandbox file1.js >>>> sandbox file2.js
+  ``` sandbox file1.js >>>> sandbox file2.js
   import { negan, daryl } from './file1.js';
   console.log(negan);
   
-  //// sandbox file1.js >>>> sandbox file3.js
+  ``` sandbox file1.js >>>> sandbox file3.js
   import * as theWalkingDead from './file1.js'; //we can import all variables in one object and give it an alias.
   console.log(theWalkingDead.daryl);
   
-  //// sandbox file1.js >>>> sandbox file4.js
+  ``` sandbox file1.js >>>> sandbox file4.js
   import {negan as N, daryl as D} from './file1.js';
   console.log(N);
-  //// ENDCODE
+  ```
   Note: I'll reuse the filenames of any sandbox, that doesn't mean they are linked, sandbox is a code playground.
 
 - We can use the 'default' statement:
   - to export/import a single functionality.
   - to highlight the main functionality of th exported API of a module.
-  //// sandbox file1.js 
+  ``` sandbox file1.js 
   //reflecting the previous note, this file1.js has NOTHING to do with the previous file1.js
   const saviors = {
     negan: 'negan',
@@ -2017,10 +2013,10 @@ So how do import/export work?
 
   export default saviors;
   
-  //// sandbox file1.js >>>> sandbox file2.js
+  ``` sandbox file1.js >>>> sandbox file2.js
   import thatThing from './file1.js'; //without curly braces, it will import the default.
   console.log(thatThing); //Output: { negan: 'negan', dwight: 'dwight' } 
-  //// ENDCODE
+  ```
 
 Code organization with ES6 modules:
 -----------------------------------
@@ -2089,14 +2085,14 @@ src/
       index.css
 
   Note: From now on, we'll split our code into files, and in examples here we'll write the name of the file like this:
-    //// JSX App.js
+    ``` JSX App.js
     ...
-    //// ENDCODE
+    ```
   NOTE: WE WILL FOLLOW THIS STRUCTURE FROM NOW ON.
   
 
 Where the constants/index.js file would look like this:
-//// JSX src/constants/index.js
+``` JSX src/constants/index.js
 export const DEFAULT_QUERY = "redux";
 export const PATH_BASE = "https://hn.algolia.com/api/v1";
 export const PATH_SEARCH = "/search";
@@ -2104,10 +2100,10 @@ export const PARAM_SEARCH = "query=";
 export const PARAM_PAGE = "page=";
 export const PARAM_HPP = "hitsPerPage=";
 export const DEFAULT_HPP = 5;
-//// ENDCODE
+```
 
 And the App.js file  will be the index.js file and will contains this:
-//// JSX src/components/index.js
+``` JSX src/components/index.js
 import {
   DEFAULT_QUERY,
   DEFAULT_HPP,
@@ -2118,7 +2114,7 @@ import {
   PARAM_HPP,
 } from '../constants/index.js';
 ....
-//// ENDCODE
+```
 
 If the file you're importing is called 'index.js' for example App/index.js, you can omit the filename.
   import App from './components/App';
@@ -2155,7 +2151,7 @@ We will try using a library called Enzyme, and another framework called Jest, we
 Jest is a JS testing framework, used in React for react component tests, and is shipped with create-react-app.
 
 Let's open the file src/components/App/test.js (formerly src/App.test.js):
-//// Jest src/components/App/test.js
+``` Jest src/components/App/test.js
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './index';
@@ -2165,7 +2161,7 @@ it('renders without crashing', () => {
   ReactDOM.render(<App />, div);
   ReactDOM.unmountComponentAtNode(div);
 });
-//// ENDCODE
+```
 
 The 'it' block describes ONE test case, comes with a description.
 When it's tested, it either succeeds or fails.
@@ -2181,7 +2177,7 @@ Jest stores the snapshots in a folder, which can be shared across teams.
 How to write a snapshot test with Jest?
 - Step 1: >> npm install --save-dev react-test-renderer
 - Step 2: go to src/components/App/index.test.js
-  //// Jest src/components/App/index.test.js
+  ``` Jest src/components/App/index.test.js
   //first, import the new functionality:
   import React from 'react';
   import ReactDOM from 'react-dom';
@@ -2206,7 +2202,7 @@ How to write a snapshot test with Jest?
       expect(tree).toMatchSnapshot();
     });
   });
-  //// ENDCODE
+  ```
 
 If we run our tests again they will succeed, and the console will say '1 snapshot written' or something like that.
 The renderer.create() makes a snapshot of our App component i.e. it renders it then stores the resulting DOM in a snapshot.
@@ -2214,7 +2210,7 @@ The renderer.create() makes a snapshot of our App component i.e. it renders it t
 So, if we change the output of the render function in App i.e. the DOM generated, the test should fail.
 
 Let's add tests for Search and Table:
-//// Jest src/components/Search/index.test.js
+``` Jest src/components/Search/index.test.js
 import React from "react";
 import ReactDOM from "react-dom";
 import Search from "./index";
@@ -2235,7 +2231,7 @@ describe("Table", () => {
   });
 });
 
-//// Jest src/components/Search/index.test.js >>>> Jest src/components/Table/index.test.js
+``` Jest src/components/Search/index.test.js >>>> Jest src/components/Table/index.test.js
 import React from "react";
 import ReactDOM from "react-dom";
 import Table from "./index";
@@ -2260,7 +2256,7 @@ describe("Table", () => {
   });
 });
 
-//// ENDCODE
+```
 
 If you run the tests now, you should get all successful.
 Snapshot tests' purpose is to check if the component changes its output, if it does then we accept the change or reject it and fix the component.
@@ -2270,17 +2266,17 @@ Unit Tests with Enzyme:
 How to use this library?
 - Step 1: >> npm install --save-dev enzyme react-addons-test-utils enzyme-adapter-react-16
 - Step 2: include it in your test setup:
-  //// Enzyme anytestfile.test.js
+  ``` Enzyme anytestfile.test.js
   import Enzyme from 'enzyme';
   import Adapter from 'enzyme-adapter-react-16';
 
   ....
 
   Enzyme.configure({ adapter: new Adapter() });
-  //// ENDCODE
+  ```
   Now we can write our first unit test, we will write a unit test in the Table 'describe' block.
   We will use shallow() to render our component and assert that it has two items. (we pass two list items).
-  //// Enzyme src/components/Table/index.test.js
+  ``` Enzyme src/components/Table/index.test.js
   import {...}
   import Enzyme, { shallow } from 'enzyme';
   import Adapter from 'enzyme-adapter-react-16';
@@ -2305,7 +2301,7 @@ How to use this library?
     ....
 
   });
-  //// ENDCODE
+  ```
 
 shallow() renders a component without its children, so we can make tests dedicated to ONE component.
 Enzyme can render in three ways:
@@ -2332,7 +2328,7 @@ All props passed from a parent to a child get validated based on the Proptypes i
  - Step 2: import it in your react file e.g. App/index.js:
     import PropTypes from 'prop-types';
 - Step 3: let's assign a props interface to components:
-  //// JSX-PropTypes sandbox
+  ``` JSX-PropTypes sandbox
   //let's say we have a Button component as an FSC (FUnctional Stateless Component)
   const Button = ({ onClick, className = '', children }) => 
     <button
@@ -2348,7 +2344,7 @@ All props passed from a parent to a child get validated based on the Proptypes i
     className: PropTypes.string, //this means, a string is expected to be passed here.
     children: PropTypes.node //same concept
   }
-  //// ENDCODE
+  ```
 
 When you run, these types will get validated when the props are passed.
 The basic and complex types are:
@@ -2363,7 +2359,7 @@ PropTypes.element
 
 There's more, check the React documentation.
 If a property isn't passed a value it becomes undefined, if you want to ENFORCE giving a value to it you can do this:
-//// JSX-PropTypes sandbox
+``` JSX-PropTypes sandbox
 Button.propTypes = {
   onClick: PropTypes.func.isRequired,
   className: PropTypes.string,
@@ -2373,7 +2369,7 @@ Button.propTypes = {
 Button.defaultProps = { //this is a React feature, we can use it instead of ES6 default values to keep code clean
   className: ''
 }
-//// ENDCODE
+```
 And you can dive deep into properties of properties.
 
 End of chapter 3 ^_^
@@ -2394,7 +2390,7 @@ We'll try the 'ref' attribute on the Search component:
 (as an example, if you want to remove that later that's okay, 
   we don't really need it in our app and we'll revert things in our app after we finish):
 - Step 1: refactor the Search component into an ES6 class component.
-//// JSX src/components/Search/index.js
+``` JSX src/components/Search/index.js
 import React, { Component } from "react";
 
 class Search extends Component {
@@ -2412,10 +2408,10 @@ class Search extends Component {
 }
 
 export default Search;
-//// ENDCODE
+```
 
 - Step 2: use the ref attribute, the "this" object helps us reference the DOM node with 'ref'.
-//// JSX src/components/Search/index.js
+``` JSX src/components/Search/index.js
 class Search extends Component {
   render() {
     ...
@@ -2430,12 +2426,12 @@ class Search extends Component {
           ...
   }
 }
-//// ENDCODE
+```
 
 - Step 3: now we can focus the input field when the component is mounted using 
   "this" + DOM API + the appropriate lifecycle method
 
-//// JSX src/components/Search/index.js
+``` JSX src/components/Search/index.js
 class Search extends Component {
   componentDidMount() {
     if(this.input) {
@@ -2456,14 +2452,14 @@ class Search extends Component {
           ...
   }
 }
-//// ENDCODE
+```
 
 Now the input field will be focused when the app renders.
 That's how you can use ref.
 
 Can you use ref with an FSC?
 Yes, like this
-//// JSX src/components/Search/index.js
+``` JSX src/components/Search/index.js
 const Search = ({ value, onChange, onSubmit, children }) => {
   let input;
   return (
@@ -2479,7 +2475,7 @@ const Search = ({ value, onChange, onSubmit, children }) => {
   );
 };
 export default Search;
-//// ENDCODE
+```
 
 That isn't of much help, though, since we can't access lifecycle methods, we can't implement our focus thing.
 But you might come across use cases where an FSC with a ref attribute is useful, so now you know how to use it.
@@ -2490,14 +2486,14 @@ Loading...:
 -----------
 You might want to show a Loading indicator when you submit a search request:
 - Step 1: (in a file DOMconstants.js in src/constants)
-//// JSX src/constants/DOMconstants.js (Or you can put it in App/index.js directly without import and export)
+``` JSX src/constants/DOMconstants.js (Or you can put it in App/index.js directly without import and export)
 import React from 'react';
 const  Loading = () => <div>Loading...</div>;
 export default Loading;
-//// ENDCODE
+```
 
 - Step 2: modify the App component:
-//// JSX src/components/App/index.js
+``` JSX src/components/App/index.js
 import {...}
 import Loading from '../../constants/DOMconstants';
 
@@ -2513,10 +2509,10 @@ class App extends Component {
   }
   ....
 }
-//// ENDCODE
+```
 
 - Step 3: when you make a request, set the isLoading to true, when the results are fetched, set it to false:
-//// JSX src/components/App/index.js
+``` JSX src/components/App/index.js
 class App extends Component {
   ....
   fetchSearchTopStories(searchTerm, page = 0) {
@@ -2538,12 +2534,12 @@ class App extends Component {
   }
   ....
 }
-//// ENDCODE
+```
 
 - Step 4: conditional rendering of the Loading component in our App, in the render function:
-//// JSX src/components/App/index.json
+``` JSX src/components/App/index.json
 
-//// ENDCODE
+```
 
 Higher-order components:
 ------------------------
@@ -2557,7 +2553,7 @@ Why would we need such a thing?
 
 Let's make an HOC: (new file src/hoc/index.js) 
 NOTE: this is my (Moamen's) file structure, not sure if it's a best practice.
-//// JSX src/hoc/index.js
+``` JSX src/hoc/index.js
 import React from 'react';
 
 //it's a practice to prefix the name of a HOC with 'with'
@@ -2567,11 +2563,11 @@ function withFoo(Component) {
     }
 }
 // you can convert all of that into arrow functions.
-//// ENDCODE
+```
 
 Here, this HOC takes a component as input and returns it just as it is.
 Let's enhance it: a loading component shows until the component is rendered:
-//// JSX src/hoc/index.js
+``` JSX src/hoc/index.js
 ...
 import Loading from '../constants/DOMconstants/index.js';
 
@@ -2583,11 +2579,11 @@ function withLoading(Component) {
         ;
     };
 }
-//// ENDCODE
+```
 
 The spread operator makes it efficient not to write all props manually, but maybe the input component doesn't care about isLoading,
 so you can do this:
-//// JSX src/hoc/index.js
+``` JSX src/hoc/index.js
 ...
 import Loading from '../constants/DOMconstants/index.js';
 
@@ -2599,13 +2595,13 @@ function withLoading(Component) {
         ;
     };
 }
-//// ENDCODE
+```
 
 That way, we take one property out of the object before rendering the output component.
 Let's replace the Loading of the ...More button with the withLoading HOC.
 
 First we'll wrap the button into our own component Button:
-//// JSX src/components/myButton/index.js
+``` JSX src/components/myButton/index.js
 import React from "react";
 
 const myButton = ({ onClick, className = "", children }) => (
@@ -2615,10 +2611,10 @@ const myButton = ({ onClick, className = "", children }) => (
 );
 
 export default myButton;
-//// ENDCODE
+```
 
 Then we'll modify the render function in App/index.js:
-//// JSX src/components/App/index.js
+``` JSX src/components/App/index.js
 class App extends Component {
   ....
   render() {
@@ -2641,7 +2637,7 @@ class App extends Component {
   }
   ....
 }
-//// ENDCODE
+```
 
 Advanced Sorting and lodash:
 ----------------------------
@@ -2654,17 +2650,17 @@ Step 2: import it:
 Step 3:
   We have many columns in our table, we want to define sort functions where each function takes a list and returns it sorted by a specific property.
   Plus one default sort functions which returns the unsorted list, so let's make an object of functions:
-  //// JSX src/constants/index.js
+  ``` JSX src/constants/index.js
   export const SORTS = {
     NONE: list => list,
     TITLE: list => sortBy(list, 'title'),
     AUTHOR: list => sortBy(list, 'author')
   };
-  //// ENDCODE
+  ```
 
   The sort functions returns a reversed list.
   App component keeps which sort functionality is currently used in its local state:
-  //// JSX src/components/App/index.js
+  ``` JSX src/components/App/index.js
   ....
   class App extends Component {
     constructor(props) {
@@ -2677,11 +2673,11 @@ Step 3:
     }
     ....
   }
-  //// ENDCODE
+  ```
 
   So, whenever the sort key is changed, the table will be sorted with the appropriate sort function.
   Now we need to add a function:
-  //// JSX src/components/App/index.js
+  ``` JSX src/components/App/index.js
   ....
   class App extends Component {
     constructor(props) {
@@ -2696,11 +2692,11 @@ Step 3:
     }
     ....
   }
-  //// ENDCODE
+  ```
 
   Table is responsible for applying the sort, so we should pass the sortKey to Table and add the property.
   Also, we need to add a row of column headers so that when we click on one, the sortKey is set, otherwise it will remain 'NONE':
-  //// JSX src/components/Table/index.js  
+  ``` JSX src/components/Table/index.js  
   ....
   import { SORTS } from '../../constants';
 
@@ -2719,10 +2715,10 @@ Step 3:
       ))}
     </div>
   );
-  //// ENDCODE
+  ```
 
   This means, we need to make a Sort component, we'll just put in in Table/index.js:
-  //// JSX src/components/Table/index.js
+  ``` JSX src/components/Table/index.js
   ....
   import { SORTS } from '../../constants';
   import myButton from "../myButton"
@@ -2746,12 +2742,12 @@ Step 3:
       ))}
     </div>
   );
-  //// ENDCODE
+  ```
 
   Then include that in Table.
 
   Finally, modify the render function:
-  //// JSX src/components/App/index.js
+  ``` JSX src/components/App/index.js
   ....
   class App extends Component {
     ....
@@ -2776,7 +2772,7 @@ Step 3:
       );
     }
   }
-  //// ENDCODE
+  ```
 
   You should find the sort working ^_^
 
@@ -2799,7 +2795,7 @@ For example, the sort functionality, we can just move it to the Table component 
 When we decide to move part of a state from a component to another, this is called 'Lifting State'.
 In order to do this of course, we need to make Table an ES6 component, 
 then move sortKey, onSort, and any sorting-related thing to Table:
-//// JSX src/components/Table/index.js
+``` JSX src/components/Table/index.js
 import React, { Component } from "react";
 ....
 
@@ -2840,7 +2836,7 @@ class Table extends Component {
     );
   }
 }
-//// ENDCODE
+```
 
 In App component we remove everything we moved to Table, including the props passed to Table.
 We made App and Table both more lightweight, and more reusable since now Table can handle more use cases.
@@ -2851,22 +2847,22 @@ setState() revisited:
 ---------------------
 We've used setState a ton, we'll dig deeper into it.
 - setState can take a callback function that returns an object instead of an object, like this:
-//// JSX sandbox
+``` JSX sandbox
 this.setState((prevState, props) => {
   ...
 });
-//// ENDCODE
+```
 
 Why would we do that?
 - A crucial use case: when we update the state depending on the PREVIOUS state or props.
 For example, counting:
-//// JSX sandbox
+``` JSX sandbox
 const { fooCount } = this.state;
 const { barCount } = this.props;
 this.setState({
   count: fooCount + barCount
 });
-//// ENDCODE
+```
 
 setState is asynchronous, so what if fooCount and barCount change asynchronously?
 This could cause some errors and race conditions because some functions may execute depending on the NEW VALUE of count
@@ -2874,13 +2870,13 @@ while setState hasn't finished adding them because it's async, creating a race c
 
 When we pass a callback function, even if setState is async, the callback function executes synchronously.
 So the better approach would be:
-//// JSX sandbox
+``` JSX sandbox
 this.setState((prevState, props) => {
   const { fooCount } = this.state;
   const { barCount } = this.props;
   return { count: fooCount + barCount };
 });
-//// ENDCODE
+```
 
 In our app, where can that be found and fixed?
 i.e. is there any setState function that depends on previous state/props?
@@ -2888,7 +2884,7 @@ Yes, in App component, in setSearchTopStories().\
 
 We can move the whole block of code in the function except the first line, 
 inside a callback function inside setState:
-//// JSX src/components/App/index.js
+``` JSX src/components/App/index.js
 setSearchTopStories(result) {
     const { hits, page } = result;
 
@@ -2907,10 +2903,10 @@ setSearchTopStories(result) {
       };
     });
   }
-//// ENDCODE
+```
 
 This will fix the issue, we can even extract the function and pass its name for readibility:
-//// JSX src/components/App/index.js
+``` JSX src/components/App/index.js
 setSearchTopStories(result) {
     const { hits, page } = result;
 
@@ -2931,7 +2927,7 @@ setSearchTopStories(result) {
 
     this.setState(updateSearchTopStoriesState);
   }
-//// ENDCODE
+```
 
 You can extract the function outside App itself, for this you'll to pass hits & page since now 
 the function can't access them directly, so we'll need the function updateSearchTopStoriesState
@@ -2939,7 +2935,7 @@ to return the callback function we'll call from setState i.e. updateSearchTopSto
 that takes two arguments: hits, page, then it returns another function that takes prevState as argument.
 
 Like this:
-//// JSX src/components/App/index.js
+``` JSX src/components/App/index.js
 ....
 
 //the function is outside class App, and check its signature out:
@@ -2967,7 +2963,7 @@ class App extends Component {
   }
   ....
 }
-//// ENDCODE
+```
 
 As a bonus, the function is now testable outside App, we can export it and write unit tests for it.
 

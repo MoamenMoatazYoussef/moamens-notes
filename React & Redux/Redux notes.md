@@ -6,7 +6,7 @@ Tips:
     it's not an 'official' source, I'm willing to read the book 'Taming the state of react with redux' sometime in the future
     but I wanted to learn redux ASAP because I need it in my current task, that's why I picked freeCodeCamp and not a more detailed
     source, when I finish the book I'll make notes on it, maybe I'll add it here or make a separate note.
-- Anything between //// and //// is code in the language who's name is written after the first ////.
+- Anything between ``` and ``` is code in the language who's name is written after the first ```.
 - This notes assumes that you are familiar with React.
 - Anything after >> is a command in a command prompt, terminal, or bash.
 - Any ES6-related syntax will NOT be explained here, but the title will be enclosed by *** <title> ***
@@ -31,19 +31,19 @@ Now we'll cover how to create a store and put the state into it, how to read tha
 
 1) Creating a store:
 We need something called a 'reducer', we'll cover that later. 
-//// Redux
+``` JSX
 const reducer = (state = 5) => {
     return state;
 }
 
 const store = Redux.createStore(reducer);
-//// ENDCODE
+```
 
 2) Reading the state:
 Okay, now we have a store object with a state, we need to read the state from the store.
-//// Redux
+``` JSX
 let currentState = store.getState();
-//// ENDCODE
+```
 
 3) Updating the state:
 Here, we don't do something like this.setState, this is called mutating the state, we don't change the state directly like that.
@@ -69,11 +69,11 @@ A redux action is a JS object that has:
 - (Optional) It may carry data with it.
 
 How to declare an action:
-//// Redux
+``` JSX
 const action1 = {
   type: 'LOGIN'
 };
-//// ENDCODE
+```
 
 Now we have an action definition, when an event occurs that's related to that action definition, we want to create 
 an action object to be sent to the store.
@@ -81,11 +81,11 @@ an action object to be sent to the store.
 For that, we need a JS function called an 'actionCreator', it's a function that returns an action.
 
 Creating an actionCreator.
-//// Redux
+``` JSX
 function actionCreator() {
     return action;
 }
-//// ENDCODE
+```
 
 Now we have our action object, we are ready to send it to the store, this is called 'dispatch'.
 
@@ -93,7 +93,7 @@ A global method provided by Redux is used to do that.
 store.dispatch(action);
 
 Here's the usage:
-//// Redux
+``` JSX
 //Here's a store
 const store = Redux.createStore(
   (state = {login: false}) => state
@@ -108,7 +108,7 @@ const loginAction = () => {
 
 //and here's us creating an object and sending it to the store:
 store.dispatch(loginAction());
-//// ENDCODE
+```
 
 Action processing:
 ------------------
@@ -129,7 +129,7 @@ Reducers CREATE a new state out of the old one, and return it.
 But redux doesn't enforce this, it's your responsibility to enforce this as a developer.
 
 Example:
-//// Redux
+``` JSX
 const defaultState = {
   login: false
 };
@@ -152,7 +152,7 @@ const loginAction = () => {
     type: 'LOGIN'
   }
 };
-//// ENDCODE
+```
 
 To make a reducer that handles many actions, we use switch statement.
 In that case, Always have the default statement, it returns the current state.
@@ -162,7 +162,7 @@ Tip:
 - Also, use these values inside the reducer's switch statement.
 
 Example:
-//// Redux
+``` JSX
 const defaultState = {
   authenticated: false
 };
@@ -201,7 +201,7 @@ const logoutUser = () => {
     type: LOGOUT
   }
 };
-//// ENDCODE
+```
 
 
 Okay, now we covered how to:
@@ -221,7 +221,7 @@ listeners are functions that are called whenever an action is dispatched to the 
 They are callback functions.
 
 To make a function 'listen' to the state change in the store, they use the 'store.subscribe(listenerFunction)' method:
-//// Redux
+``` JSX
 const ADD = 'ADD';
 
 const reducer = (state = 0, action) => {
@@ -252,7 +252,7 @@ store.dispatch({type: ADD});
 console.log(count);
 store.dispatch({type: ADD});
 console.log(count);
-//// ENDCODE
+```
 
 Combining multiple reducers:
 ----------------------------
@@ -272,7 +272,7 @@ So, each reducer will modify that part of the state only.
 
 Here, we have two reducers, and we use combineReducers to combine them into a root reducer, then pass it to the store 
 when we create it:
-//// Redux
+``` JSX
 const INCREMENT = 'INCREMENT';
 const DECREMENT = 'DECREMENT';
 
@@ -311,11 +311,11 @@ const rootReducer = Redux.combineReducers({
 });
 
 const store = Redux.createStore(rootReducer);
-//// ENDCODE
+```
 
 Sending data to the store via actions:
 --------------------------------------
-//// Redux
+``` JSX
 const ADD_NOTE = 'ADD_NOTE';
 
 const notesReducer = (state = 'Initial State', action) => {
@@ -341,7 +341,7 @@ const store = Redux.createStore(notesReducer);
 console.log(store.getState());
 store.dispatch(addNoteText('Hello!'));
 console.log(store.getState());
-//// ENDCODE
+```
 
 Async processing in redux:
 --------------------------
@@ -350,12 +350,12 @@ Redux has a middleware called Thunk, designed for this purpose.
 
 To include it, we pass it as argument in the function Redux.applyMiddleware().
 Then, that statement is provided as a second argument to createStore().
-//// Redux
+``` JSX
 const store = Redux.createStore(
   asyncDataReducer,
   Redux.applyMiddleware(ReduxThunk.default)
 );
-//// ENDCODE
+```
 
 To create an async action, instead of creating it using a normal action creator, we make a function that RETURNS an 
 action creator function and pass it 'dispatch' as an argument.
@@ -366,7 +366,7 @@ Example:
 requested (so that it can display a loading icon for example).
 - Then, once the data is received, we dispatch another action which carries the data as payload along with info that 
 the action is completed.
-//// Redux
+``` JSX
 const handleAsync = () => {
     return function(dispatch) {
         //here we dispatch request actions.
@@ -379,11 +379,11 @@ const handleAsync = () => {
         }, 2500);
     }
 }
-//// ENDCODE
+```
 
 So now, we'll use that actionCreator to dispatch actions by passing them directly and the middleware takes care of the rest.
 
-//// Redux
+``` JSX
 const REQUESTING_DATA = 'REQUESTING_DATA'
 const RECEIVED_DATA = 'RECEIVED_DATA'
 
@@ -431,7 +431,7 @@ const store = Redux.createStore(
   asyncDataReducer,
   Redux.applyMiddleware(ReduxThunk.default)
 );
-//// ENDCODE
+```
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Redux with react:
 -----------------
@@ -448,7 +448,7 @@ To use react with redux, we need 'react-redux' package.
 This package gives us ways to pass state and dispatch to our React components as props.
 
 Let's assume we have a component like this:
-//// JSX
+``` JSX
 class DisplayMessages extends React.Component {
   constructor(props) {
     super(props);
@@ -501,7 +501,7 @@ class DisplayMessages extends React.Component {
     );
   }
 };
-//// ENDCODE
+```
 
 We want to change it, we want move the logic it's performing locally in its state to the redux state.
 Our app adds messages from the user to a list.
@@ -514,7 +514,7 @@ So, we'll need to:
 - Create a redux store and pass it the reducer we created.
 
 Doing all the steps:
-//// Redux
+``` JSX
 const ADD = 'ADD';
 
 const addMessage = (message) => {
@@ -533,7 +533,7 @@ function messageReducer(state = [], action) {
 }
 
 const store = Redux.createStore(messageReducer);
-//// ENDCODE
+```
 
 Now we need to give React access to the redux store and the actions.
 This is done by 'react-redux' package.
@@ -569,7 +569,7 @@ Behind the scenes, React Redux uses store.subscribe to implement mapStateToProps
 
 mapStateToProps:
 - returns object that represents state.
-//// Redux
+``` JSX
 const state = [];
 
 function mapStateToProps(state) {
@@ -577,14 +577,14 @@ function mapStateToProps(state) {
     messages: state
   }
 }
-//// ENDCODE
+```
 
 mapDispatchToProps:
 - takes a function 'dispatch' as argument.
 - returns object that has keys and values.
 - each key is mapped to a function that takes relevant data as arguments.
 - that function calls 'dispatch' and passes the appropriate action creator and data to it.
-//// Redux
+``` JSX
 const addMessage = (message) => {
   return {
     type: 'ADD',
@@ -598,7 +598,7 @@ function mapDispatchToProps(dispatch) {
       dispatch(addMessage(message))
   };
 }
-//// ENDCODE
+```
 
 2) connect:
 -----------
@@ -616,7 +616,7 @@ Syntax:
 
 It sort of returns a function that gets immediately called and passed our component as an argument.
 
-//// React-Redux
+``` React-Redux
 const addMessage = (message) => {
   ...
 };
@@ -640,13 +640,13 @@ class OurComponent extends React.Component {
 
 const connect = ReactRedux.connect;
 const ConnectedComponent = connect(mapStateToProps, mapDispatchToProps)(OurComponent);
-//// ENDCODE
+```
 
 Usually, components that are connected to Redux are not presentational components (components responsible only for UI).
 Components connected to Redux usually dispatch actions and pass store state to child components.
 
 Our example so far:
-//// React-Redux
+``` React-Redux
 // Redux:
 const ADD = 'ADD';
 
@@ -746,7 +746,7 @@ class AppWrapper extends React.Component {
     );
   }
 };
-//// ENDCODE
+```
 
 Extracting local state into Redux:
 ----------------------------------
@@ -757,7 +757,7 @@ From the last example, we'll:
 - modify submitMessage() so that it dispatches a new action submitNewMessage() from this.props.
 - modify the render() function so that it maps over the messages list from this.props, not from state.
 
-//// React-Redux
+``` React-Redux
 // Redux:
 const ADD = 'ADD';
 
@@ -857,7 +857,7 @@ class AppWrapper extends React.Component {
     );
   }
 };
-//// ENDCODE
+```
 
 And we're Done ^_^
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -485,9 +485,30 @@ public static void main(String[] args) {
                                 .addAnnotatedClass(Student.class)
                                 .buildSessionFactory();
     
+    // The config filename isn't required,
+    // we can just say .configure() because the name
+    // hibernate.cfg.xml is the default, and Hibernate
+    // will look for it in the classpath
+
     Session session = factory.getCurrentSession();
     try {
         // use session to save/retrieve data
+
+        // for example, 
+        // Saving:
+        Student tempStudent = new Student("M", "M", "M@m.com");
+        
+        // starting a transaction
+        session.beginTransaction();
+
+        // saving the tempStudent object to the DB
+        // Hibernate knows how to connect to DB and
+        // how to map tempStudent to the DB
+        session.save(tempStudent);
+
+        // commit the transaction
+        session.getTransaction().commit();
+
     } catch(...) {
         // your catch blocks here.
     } finally {

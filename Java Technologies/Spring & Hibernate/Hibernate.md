@@ -528,3 +528,702 @@ public static void main(String[] args) {
     }
 }
 ```
+
+**Let's try this in code**
+- Create a new class called "CreateStudentDemo" and in the package field, write "com.luv2code.hibernate.demo", a new package will be created with the class in it.
+- Make sure to import the4 Student class in the com.luv2code.hibernate.demo.entity package.
+- Create a session factory.
+- Use it to create a new session.
+- Inside a try catch finally block:
+    - Try: create a student, start a transaction, save the object, commit the transaction.
+    - Catch.
+    - Finally: Close the session factory.
+``` Java
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+import com.luv2code.hibernate.demo.entity.Student;
+
+public class CreateStudentDemo {
+
+	public static void main(String[] args) {
+		SessionFactory factory = new Configuration()
+				.configure("hibernate.cfg.xml")
+				.addAnnotatedClass(Student.class)
+				.buildSessionFactory();
+		
+		Session session = factory.getCurrentSession();
+		
+		try {
+			// "Creating student object..."
+			Student s = new Student("Moamen", "Moataz", "moamen.moataz.youssef@gmail.com");
+			
+			// "Starting transaction..."
+			session.beginTransaction();
+			
+			// "Saving the object..."
+			session.save(s);
+			
+			// "Commit the transaction..."
+			session.getTransaction().commit();
+			
+			// "Done."
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			factory.close();
+		}
+
+	}
+
+}
+```
+
+Now run that. <br/>
+Nice :) <br/>
+
+
+**Hibernate and Primary Keys**
+A primary key is a DBMS concept, basically it's a unique field that identifies each entry in a DB table.
+
+***Note:*** I won't cover SQL or DBMS concepts here.
+
+- @Id in Hibernate makes the annotated field a primary key.
+- We can explicitly specify how Hibernate generates the Primary Key or @Id.
+- @GeneratedValue(strategy=GenerationType.IDENTITY)
+    This means that the primary key column will be used to generate primary key i.e. Auto-incremenet.
+- Other strategies are:
+    - GenerationType.AUTO: Hibernate will choose.
+    - GenerationType.IDENTITY: the Identity col is the primary key. (most common)
+    - GenerationType.SEQUENCE: a certain sequence is used.
+    - GenerationType.TABLE: use another DB table to create primary keys.
+- Check out Hibernate docs and your DB's docs for more info.
+- We can make a custom generation strategy, how?
+    - Implement interface **org.hibernate.id.IdentifierGenerator**.
+    - Override the method **public Serializable generate(..)**.
+    - **BE CAREFUL**
+        1. It MUST create unique values.
+        2. It's thread-safe.
+        3. If it'll work on a cluster of servers, it will STILL generate unique values.
+
+**Let's do some programming**
+- Log into the MySQL workbench, right-click on your table, choose Alter Table.
+- We won't really alter it, but we'll look at its structure.
+    - PK: Primary key.
+    - NN: Not null.
+    - AI: Auto-increment.
+    - etc.
+- Now go to Eclipse.
+- Student class.
+- Add to the id field this annotation:
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+``` Java
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="id")
+	private int id;
+```
+
+Then:
+- Create a new class in com.luv2code.hibernate.demo package, called PrimaryKeyDemo.
+- Copy the main function from CreateStudentDemo to PrimaryKeyDemo.
+- Instead of one student, make many objects and commit them.
+``` Java
+
+public class PrimaryKeyDemo {
+	public static void main(String[] args) {
+		SessionFactory factory = new Configuration()
+				.configure("hibernate.cfg.xml")
+				.addAnnotatedClass(Student.class)
+				.buildSessionFactory();
+		
+		Session session = factory.getCurrentSession();
+		
+		try {
+			System.out.println("Creating student object...");
+			Student s1 = new Student("Moamen", "Moataz", "ko2keeen@largestep.com");
+			Student s2 = new Student("Atta", "Mostafa", "attaaa@largestep.com");
+			Student s3 = new Student("Salaaaaah", "Thalaaaah", "salo7tche@largestep.com");
+			
+			System.out.println("Starting transaction...");
+			session.beginTransaction();
+			
+			System.out.println("Saving the objects...");
+			session.save(s1);
+			session.save(s2);
+			session.save(s3);
+			
+			System.out.println("Commit the transaction...");
+			session.getTransaction().commit();
+			
+			System.out.println("Done.");
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			factory.close();
+		}
+	}
+}
+```
+
+**How to change the starting index**
+- In the workbench, open a new SQL tab and execute this SQL query:
+``` sql
+ALTER TABLE hb_student_tracker.student AUTO_INCREMENT=1000;
+```
+- Now all the new entries in the DB will start at 1000.
+- Back to Eclipse, Re-run the code in PrimaryKeyDemo.
+- Back to the workbench, check the table (by doing the query 
+``` sql
+SELECT * FROM hb_student_tracker.student;
+```
+).
+- Check the result :)
+
+**Empty the table**
+- In the workbench, execute:
+``` sql
+truncate hb_student_tracker.student;
+```
+
+### Reading Objects with Hibernate
+We retrieve objects from the DB using the primary key.
+***Note:*** For any update or read, you ALWAYS use transactions.
+
+**In code** <br/>
+- In eclipse, copy the CreateStudentDemo class, paste it in the same package, but rename it as ReadStudentDemo.
+- Open that new class.
+- The code was copied and will include creating a Student and saving it.
+- After the .commit() statement, get the primary key of the saved object by writing objectName.getId(). (Hibernate automatically updates a value when you save sth to the database, that value is returned by this function).
+- Now, start another session using the SessionFactory(return it in the old session variable or a new one if you want).
+- Begin a new transaction using the new session.
+- Retrieve the student object using session.get(), passing in the student *Class* instance (Student.class) and the primary key of the object.
+- If found, it'll be returned, else, null is returned.
+- Commit the transaction.
+``` java
+public class PrimaryKeyDemo {
+	public static void main(String[] args) {
+		SessionFactory factory = new Configuration()
+				.configure("hibernate.cfg.xml")
+				.addAnnotatedClass(Student.class)
+				.buildSessionFactory();
+		
+		Session session = factory.getCurrentSession();
+		
+		try {
+            // Old code of saving stuff to DB, but with Daffy Duck
+			Student daffyDuck = new Student("Daffy", "Duck", "daffy.duck@gmail.com");
+			session.beginTransaction();
+			session.save(daffyDuck);
+
+			session.getTransaction().commit();
+			
+            // Getting the primary key
+			System.out.println("Primary Key of daffy duck is: " + daffyDuck.getId());
+			
+            // new session
+			session = factory.getCurrentSession();
+			
+            // new transaction
+			session.beginTransaction();
+
+            // reading from DB
+			Student s = session.get(Student.class, daffyDuck.getId());
+		
+            // committing the transaction
+			session.getTransaction().commit();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			factory.close();
+		}
+	}
+}
+
+```
+
+### Hibernate Query Language HQL
+- A query langauge for retrieving objects in Hibernate.
+- Very similar to SQL.
+- For example, getting all students from the table:
+``` java
+List<Student> theStudents = 
+            session.createQuery("from Student")
+            .getResultList();
+```
+- getting all students where the last name is "Max":
+``` Java
+List<Student> theStudents = 
+            session.createQuery("from Student s where s.lastName='Max'")
+            .getResultList();
+```
+- getting all students where last name is "Max" or "Payne".
+``` Java
+List<Student> theStudents = 
+            session.createQuery("from Student s where s.lastName='Max'" + " OR s.lastName='Payne'")
+            .getResultList();
+```
+- getting the list of all students whose last name is LIKE "Max" with one character before it, like "CMax" or something.
+``` Java
+List<Student> theStudents = 
+            session.createQuery("from Student s where s.lastName LIKE '%Max'"
+            .getResultList();
+```
+
+As you can see, it's very similar toSQL.
+
+**Querying With Hibernate**
+- Copy and paste CreateStudentDemo class again, call the new one QueryStudentDemo.
+- Query all students, then display them.
+``` Java
+public class QueryStudentDemo {
+
+	public static void main(String[] args) {
+		SessionFactory factory = new Configuration()
+				.configure("hibernate.cfg.xml")
+				.addAnnotatedClass(Student.class)
+				.buildSessionFactory();
+		
+		Session session = factory.getCurrentSession();
+		
+		try {
+			session.beginTransaction();
+			
+			List<Student> listOfStudents = session.createQuery("from Student").getResultList();
+			
+			for(Student student: listOfStudents) {
+				System.out.println(student.toString());
+			}
+			
+			session.getTransaction().commit();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			factory.close();
+		}
+	}
+
+}
+```
+- Try specifying a last name, adding OR, adding LIKE, etc.
+***Note:*** Right-click on the for-loop that prints the students, choose Refactor -> Extract Method, give a Method name, click OK.
+Eclipse will extract that loop, put it in a method, and replace it with the method in the main function.
+**This is awesome :'D**
+``` Java
+public class QueryStudentDemo {
+
+	public static void main(String[] args) {
+		SessionFactory factory = new Configuration()
+				.configure("hibernate.cfg.xml")
+				.addAnnotatedClass(Student.class)
+				.buildSessionFactory();
+		
+		Session session = factory.getCurrentSession();
+		
+		try {
+			session.beginTransaction();
+			
+			List<Student> listOfStudents = session.createQuery("from Student").getResultList();
+			
+			printList(listOfStudents);
+			
+			session.getTransaction().commit();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			factory.close();
+		}
+	}
+
+	private static void printList(List<Student> listOfStudents) {
+		for(Student student: listOfStudents) {
+			System.out.println(student.toString());
+		}
+	}
+
+}
+
+```
+
+### Updating Objects using Hibernate
+- To update one object:
+    1. we retrieve an object,
+    2. we call the appropriate setters, 
+    3. then commit the transaction.
+ - To update a list of objects:
+    1. we create an UPDATE query that gets that list and updates it,
+    2. then we call .executeUpdate();
+
+**Let's see this in code**
+- Copy ReadStudentDemo class and create a new one "UpdateStudentDemo".
+- Remove creating and reading code lines.
+- Make an int variable that will hold a primary key that exists in the DB.
+- Get the object with the primary key.
+- Call setters on it.
+- Commit the transaction.
+``` Java
+public class UpdateStudentDemo {
+
+	public static void main(String[] args) {
+		SessionFactory factory = new Configuration()
+				.configure("hibernate.cfg.xml")
+				.addAnnotatedClass(Student.class)
+				.buildSessionFactory();
+		
+		Session session = factory.getCurrentSession();
+		
+		try {
+			int studentId = 1;
+			session.beginTransaction();
+			
+			// we get the object
+			Student myStudent = session.get(Student.class, studentId);
+			
+			// we call setters to update it, 
+			// because it's a persistent object so it can be updated this way
+			myStudent.setFirstName("Manuel");
+			myStudent.setLastName("Calavera");
+			myStudent.setEmail("manny.calavera@dod.com");
+
+			// Here it's actually committed in the database
+			session.getTransaction().commit();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			factory.close();
+		}
+	}
+
+}
+```
+
+Now run it, then check the Workbench, see the table. <br/>
+Real niiiiice :) <br/>
+
+Let's try updating many students
+- Use the session to create an update query to update records whose id is greater than 1.
+- Execute the update.
+- Commit the transaction.
+``` java
+		try {
+			// previous work
+			
+			session = factory.getCurrentSession();
+			session.beginTransaction();
+			
+            // Here's an update query with a where clause
+			session.createQuery(
+					"update Student"
+					+ " set lastName='Delirious'"
+					+ " where id > 1")
+				.executeUpdate();
+			
+			session.getTransaction().commit();
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			factory.close();
+		}
+```
+Run that piece of code, check that piece of workbench, refresh that piece of table.
+Nice that piece of work, yo! :) <br\>
+
+### Deleting Objects with Hibernate
+- Get the object using Primary key.
+- session.delete(the object)
+- Remember that any change in the DB never actually occurs in the DB unless we COMMIT, so:
+- Commit the transaction.
+
+Alternate way:
+- Create a delete query like
+``` sql
+DELETE FROM Student WHERE id=2;
+```
+- Execute the update.
+- Commit.
+
+***Code***
+- Same procedure, copy UpdateStudentDemo to a new class DeleteStudentDemo.
+- Remove all update lines.
+- Get student with id = 3.
+- Delete them.
+- Commit the transaction.
+- Create query to delete student with id = 2.
+- Commit.
+``` Java
+public class DeleteStudentDemo {
+
+	public static void main(String[] args) {
+		SessionFactory factory = new Configuration()
+				.configure("hibernate.cfg.xml")
+				.addAnnotatedClass(Student.class)
+				.buildSessionFactory();
+		
+		Session session = factory.getCurrentSession();
+		
+		try {
+			int studentId = 3;
+			session.beginTransaction();
+			
+			Student myStudent = session.get(Student.class, studentId);
+			session.delete(myStudent);
+			
+			session.getTransaction().commit();
+			
+			session = factory.getCurrentSession();
+			session.beginTransaction();
+			
+			session.createQuery(
+					"delete Student"
+					+ " where id = 2")
+				.executeUpdate();
+			
+			session.getTransaction().commit();
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			factory.close();
+		}
+	}
+
+}
+```
+Run that code, check the workbench, see the table, thank me later :P <br\>
+
+**Now, we've covered how to do the basic CRUD applications with Hibernate**
+
+## Hibernate Advanced Mappings
+We will most likely have many tables and relationships between them.
+And we'll need to model that in Hibernate, like:
+- 1-to-1.
+- 1-to-N, N-to-1.
+- N-to-M.
+
+### One-to-one mapping in Hibernate
+For example:
+- An instructor in an Instructor table, will have an instructor profile in another table.
+- This is a 1-to-1 unidirectional relationship.
+
+The instructorDetail table:
+- id: int, primary key, auto increment.
+- youtube_channel: varchar
+- hobby: varchar
+
+The instructor table:
+- id: int, primary key, auto increment.
+- first_name.
+- last_name.
+- email.
+- instructor_detail_id: foreign key pointing to instructorDetail table.
+
+
+#### Entity Lifecycle
+This is a concept in Hibernate, it's basically a set of states where a Hibernate entity goes through:
+- Detatched: entity is not linked to session.
+- Merge: if detatched then entity will be linked to session.
+- Persist: take new instance and save it to database on next flush/commit.
+- Remove: remove entity from DB on next flush/commit.
+- Refresh: sync data with DB.
+
+Steps:
+1. Define database tables and setting foreign key.
+2. Create InstructorDetail class.
+3. Create Instructor class.
+4. Create Main App.
+
+**Step 1: Define database tables and setting foreign key**
+In the workbench, execute these two queries:
+``` sql
+CREATE TABLE instructor_detail (
+    id int(11) NOT NULL AUTO_INCREMENT,
+	youtube_channel varchar(128) DEFAULT NULL,
+    hobby varchar(45) DEFAULT NULL,
+    PRIMARY KEY(id)
+);
+
+CREATE TABLE instructor (
+    id int(11) NOT NULL AUTO_INCREMENT,
+    first_name varchar(45) DEFAULT NULL,
+    last_name varchar(45) DEFAULT NULL,
+    email varchar(45) DEFAULT NULL,
+    instructor_detail_id int(45) DEFAULT NULL,
+    PRIMARY KEY(id),
+    CONSTRAINT FK_DETAIL FOREIGN KEY (instructor_detail_id) REFERENCES instructor_detail(id)
+);
+```
+
+**Step 2: Create InstructorDetail class**
+- Basically create this class, name it, map the fields, generate constructors, getters, and setters, put it in com.luv2code.hibernate.demo.entity package for example.
+``` Java
+package com.luv2code.hibernate.demo.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="instructor_detail")
+public class InstructorDetail {
+	
+	@Id
+	@Column(name="id")
+	private int id;
+	
+	@Column(name="youtube_channel")
+	private String youtubeChannel;
+	
+	@Column(name="hobby")
+	private String hobby;
+	
+	public InstructorDetail() {
+		
+	}
+
+	public InstructorDetail(int id, String youtubeChannel, String hobby) {
+		super();
+		this.id = id;
+		this.youtubeChannel = youtubeChannel;
+		this.hobby = hobby;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getYoutubeChannel() {
+		return youtubeChannel;
+	}
+
+	public void setYoutubeChannel(String youtubeChannel) {
+		this.youtubeChannel = youtubeChannel;
+	}
+
+	public String getHobby() {
+		return hobby;
+	}
+
+	public void setHobby(String hobby) {
+		this.hobby = hobby;
+	}
+
+}
+
+```
+
+**Step 3: Create Instructor class**
+- Same procedure, with some additional stuff:
+- First, add an InstructorDetail field.
+- Annotate the InstructorDetail field with @OneToOne.
+- Then, annotate it again with @JoinColumn, passing the name of the **other table** that's pointed to by the foreign key.
+- That way, When Hibernate loads, it joins them together, and when it saves, it saves in separate tables.
+``` Java
+
+@Entity
+@Table(name="instructor")
+public class Instructor {
+	
+	@Id
+	@Column(name="id")
+	private int id;
+
+	@Column(name="first_name")
+	private String firstName;
+	
+	@Column(name="last_name")
+	private String lastName;
+	
+	@Column(name="email")
+	private String email;
+	
+	@OneToOne
+	@JoinColumn(name="instructor_detail")
+	private InstructorDetail instructorDetail;
+	
+	public Instructor() {
+		
+	}
+
+	public Instructor(int id, String firstName, String lastName, String email, InstructorDetail instructorDetail) {
+		super();
+		this.id = id;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.email = email;
+		this.instructorDetail = instructorDetail;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public InstructorDetail getInstructorDetail() {
+		return instructorDetail;
+	}
+
+	public void setInstructorDetail(InstructorDetail instructorDetail) {
+		this.instructorDetail = instructorDetail;
+	}
+	
+}
+```
+
+**Step 4: Create Main App**
+Cascading operations: perform an operation on an entity AND entities that are linked to it.
+For example, if we save an instructor, we'll save its detail too, same with delete.
+We can specify which operations to be cascaded through cascade Types:
+- Persist: if entity is saved, related will be saved.
+- Remove: if entity is deleted, related will be deleted.
+- Refresh.
+- Detatch.
+- Merge.
+- All: All of the above.
+
+We pass the cascade type (or types in an array {t1, t2, t3 ...}) to the @OneToOne annotation.
+***Note:*** By default, operations are **NOT cascaded**, if you don't specify cascading, there will be NO cascading.
+
+Before the main app:
+- Set cascade type to All in the instructor for the InstructorDetail field.
+
+Creating the main app:
+- Make an new main class.
+- Make an Instructor object and an InstructorDetail object.
+- set the Instructor object's detail to InstructorDetail.
+- Begin a transaction.
+- Save the instructor object.
+- Commit the transaction.

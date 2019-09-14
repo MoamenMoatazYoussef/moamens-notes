@@ -1728,7 +1728,7 @@ public class Instructor {
 }
 ```
 
-**Step 4: Create Main App**
+**Step 4: Create Main App** <br/>
 We'll create FOUR apps:
 1. CreateInstructorDemo: this adds some instructors to the DB.
 Run this one, then go to the next one.
@@ -1924,4 +1924,726 @@ Run that, then check the DB in the workbench.
 Also, run the GetInstructorCoursesDemo app for the instructor that had the deleted course, and see the result.
 
 Awesome :) <br/>
+
+## Fetch Types
+There are two types of fetching data:
+- Eager: Gets everything.
+- Lazy: Only on request.
+
+**Eager loading:**
+- In our example, loading an instructor will load ALL their courses at once
+- Loading a course and all students assigned to that course.
+As you can see, performance may be a nightmare.
+
+**Lazy loading:**
+- Loading an instructor will load it only, if we request a course, it will be loaded.
+- Loading a course won't load the students assigned to it, they will be loaded if they are requested.
+- Problem is, this requires an open session to be performed.
+- If we retrieve lazy data without an open session, an exception will be thrown.
+
+How to retrieve lazy data:
++ Option 1: session.get().
++ Option 2: a query useing HQL.
+
+
+As a best practice, Lazy Loading is preferred. <br/>
+
+**Real-World use case** <br/>
+Searching for instructors:
+	- The user searches in a textbox, according to the search we load the instructors ONLY.
+	- Then, if they click on an instructor, we open another view, in it we load the instructor AND their list of courses.
+
+**What does have to do with Hibernate?** <br/>
+When we define a mapping relationship, we can specify the fetch type as Eager or Lazy, this is specified as an argument in the mapping annotation, for example:
+``` Java
+@OneToMany(fetch=FetchType.LAZY)
+```
+
+Each mapping type has a default fetch type:
+- @OneToOne and @ManyToOne: Eager.
+- @OneToMany and @ManyToMany: Lazy.
+
+Of course, we can override it by writing it explicitly in the annotation.
+
+**Let's see that in code** <br/>
+- Copy hb-03-one-to-many project and call the new one hb-eager-vs-lazy-demo.
+- In that, copy the GetInstructorCoursesDemo class to a new class, calling it EagerLazyDemo.
+- Go to the instructor, modify the fetch type of the instructorDetail field to be Eager:
+``` Java
+@OneToOne(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+@JoinColumn(name="instructor_detail_id")
+private InstructorDetail instructorDetail;
+```
+- Back in EagerLazyDemo, Set a breakpoint just after you read the instructor.
+- Run in debug mode: right-click -> Debug as -> Java app.
+- Hit OK to switch to Debug perspective.
+- Step over the code and notice what's printed when you print out the instructor.
+
+**Handling the exception thrown if we call lazy data without an open session** <br/>
+- If we try to request lazy data while the session is closed, a LazyInitializationException exception will be thrown.
+So, if we do something like this:
+``` Java
+session.close();
+
+System.out.println("Courses for i1: " + i1.getCourses());
+```
+That exception will be thrown.
+
+
+**Solutions** <br/>
+1. Call another getter before the session closes, so that when we actually call the getter after the session closes, the data is already loaded in.
+2. Using HQL Queries:
+- Copy the app and paste it, call the new one FetchJoinDemo.
+- Add a Query object, where you create a query but not executed yet.
+- Pass a parameter to the query.
+- Then execute the query and retrieve an Instructor object.
+``` Java
+
+public class EagerLazyDemo {
+
+	public static void main(String[] args) {
+
+		// create session factory
+		SessionFactory factory = new Configuration()
+								.configure("hibernate.cfg.xml")
+								.addAnnotatedClass(Instructor.class)
+								.addAnnotatedClass(InstructorDetail.class)
+								.addAnnotatedClass(Course.class)
+								.buildSessionFactory();
+		
+		// create session
+		Session session = factory.getCurrentSession();
+		
+		try {
+			
+			int theId = 2;
+			
+			session.beginTransaction();
+			
+			Query<Instructor> query = session
+					.createQuery("Select i from Instructor i "
+							+ "JOIN FETCH i.courses "
+							+ "WHERE i.id=:theInstructorId"
+						, Instructor.class);
+			
+			query.setParameter("theInstructorId", theId);
+
+			Instructor i1 = query.getSingleResult();
+				
+			session.getTransaction().commit();
+		}
+		finally {
+			
+			// add clean up code
+			session.close();
+			
+			factory.close();
+		}
+	}
+
+}
+```
+Run that, see the awesome output :) <br/>
+
+## Uni-directional One-to-many with Hibernate
+In our example, a course has many reviews.
+Real-world use case requirements:
+- Deleting a course deletes the reviews.
+- But deleting a review does NOT delete the course.
+
+**Alright, so our project is growing** <br/>
+- We have four tables:
+	- Instructor.
+	- InstructorDetail
+	- Course.
+	- Review.
+- Three mapping:
+	- 1-to-1: instructor to detail.
+	- 1-to-many: instructor to course.
+	- many-to-1: course to instructor.
+	- 1-to-many: course to review.
+That is awesome :)
+
+Steps:
+1. Define database tables.
+2. Create Review class.
+3. Update course class.
+4. Create main app.
+
+Here, we'll add @OneToMany to course, but we won't add @ManyToOne to Review class, because we want it unidirectional.
+**More about @JoinColumn** <br/>
+- Review table will have a foreign key referencing Course.
+- Column class will have a private list of Reviews.
+- So we'll annotate the list of reviews with @JoinColumn. 
+- It tells Hibernate: look at the course_id column and use it to get the associated course
+
+**Step 1: Define database tables** <br/>
+Run this in the workbench:
+``` sql
+DROP SCHEMA IF EXISTS `hb-04-one-to-many-uni`;
+
+CREATE SCHEMA `hb-04-one-to-many-uni`;
+
+use `hb-04-one-to-many-uni`;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS `instructor_detail`;
+
+CREATE TABLE `instructor_detail` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `youtube_channel` varchar(128) DEFAULT NULL,
+  `hobby` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+
+DROP TABLE IF EXISTS `instructor`;
+
+CREATE TABLE `instructor` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(45) DEFAULT NULL,
+  `last_name` varchar(45) DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  `instructor_detail_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_DETAIL_idx` (`instructor_detail_id`),
+  CONSTRAINT `FK_DETAIL` FOREIGN KEY (`instructor_detail_id`) 
+  REFERENCES `instructor_detail` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `course`;
+
+CREATE TABLE `course` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(128) DEFAULT NULL,
+  `instructor_id` int(11) DEFAULT NULL,
+  
+  PRIMARY KEY (`id`),
+  
+  UNIQUE KEY `TITLE_UNIQUE` (`title`),
+  
+  KEY `FK_INSTRUCTOR_idx` (`instructor_id`),
+  
+  CONSTRAINT `FK_INSTRUCTOR` 
+  FOREIGN KEY (`instructor_id`) 
+  REFERENCES `instructor` (`id`) 
+  
+  ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+
+
+DROP TABLE IF EXISTS `review`;
+
+CREATE TABLE `review` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `comment` varchar(256) DEFAULT NULL,
+  `course_id` int(11) DEFAULT NULL,
+
+  PRIMARY KEY (`id`),
+
+  KEY `FK_COURSE_ID_idx` (`course_id`),
+
+  CONSTRAINT `FK_COURSE` 
+  FOREIGN KEY (`course_id`) 
+  REFERENCES `course` (`id`) 
+
+  ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+
+SET FOREIGN_KEY_CHECKS = 1;
+```
+
+**Step 2: Create Review class**
+- A very simple class, with int id, String comment, getters and setters, constructor, and is mapped by Hibernate annotations.
+``` Java
+@Entity
+@Table(name="review")
+public class Review {
+	
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="id")
+	private int id;
+	
+	@Column(name="comment")
+	private String comment;
+	
+	public Review() {
+		
+	}
+
+	public Review(String comment) {
+		super();
+		this.comment = comment;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
+	@Override
+	public String toString() {
+		return "Review [id=" + id + ", comment=" + comment+ "]";
+	}
+}
+```
+
+**Step 3: Update Course class** <br/>
+- By adding a list of reviews and mapping it to course_id column in review table.
+- Also, add getters and setters, and addReview method:
+``` Java
+@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL)
+@JoinColumn(name="course_id")
+private List<Review> reviews;
+
+public void addReview(Review r) {
+	if(reviews == null) {
+		reviews = new ArrayList<Review>();
+	}
+	reviews.add(r);
+}
+```
+
+**Step 4: Create Main App** <br/>
+- Create an app to add a course, add reviews to the course, then save the course.
+- Because cascade save, reviews will also be saved.
+
+
+**Summary of relationships so far** <br/>
+1. One-to-one uni:
+	- The one that has instance of the other gets:
+		- @OneToOne
+		- @JoinColumn(name=<foreign key column>)
+2. One-to-one bi:
+	- Both get @OneToOne
+	- Without foreign key gets mappedBy=<field mapping it in the other class>
+	- With foreign key gets @JoinColumn(name=<foreign key column>)
+3. One-to-many-uni:
+	- One gets @OneToMany
+	and gets @JoinColumn(name=<foreign key column>)
+4. One-to-many-bi: 
+	- One gets @OneToMany, 
+	- the other gets @ManyToOne,
+	- the one without foreign key gets mappedBy=<field mapping it in the other class> arg,
+	- the one with foreign key gets @JoinColumn(name=<foreign key column>) annotation.
+
+## Many-to-many in Hibernate
+- A course can have many students.
+- A student can have many courses.
+- No cascade delete for both.
+
+- We need to keep track of which student s assigned to which course.
+- We can do that using a JOIN TABLE.
+- A special table that maintains the relation between both, basically a table for the mapping alone.
+- That table's primary key is made of the combination of primary keys of both tables.
+
+**Example:** <br/>
+We have three courses: Pacman(10), Rubik's cube(11), Atari(12).
+We also have two students: John(1), Mary(2).
+John is assigned to Pacman.
+Mary is assigned to all three, including Pacman.
+
+Representation in database:
+1. course
+	- 10-Pacman.
+	- 11-Rubik's cube.
+	- 12-Atari.
+2. student:
+	- 1-John.
+	- 2-Mary.
+3. course_student:
+	+ course_id: 10, student_id: 1
+	+ course_id: 10, student_id: 2
+	+ course_id: 11, student_id: 2
+	+ course_id: 12, student_id: 2
+
+We'll use @JoinTable, it tells Hibernate:
+- Look at course_id in the course_student table.
+- For the other side, look at student_id column in the course_student table.
+- Use these to find relationships between course and students.
+- "inverse" is the other side of the relationship from where we are now. (i.e. the collection we're referring to)
+Steps:
+1. Define database tables.
+2. Update Course class.
+	- Add a list of students.
+	- Annotate it with @ManyToMany.
+	- Annotate it with @JoinTable, passing the join table name, join column of Course, and join column of Student (inverse join column).
+3. Update Student class.
+	- Add a list of courses.
+	- Annotate it with @ManyToMany
+	- Annotate it with @JoinTable, passing the join table name, join column of Student, and join column of Course (inverse join column)
+4. Create Main app.
+
+**Step 1: Define database tables** <br/>
+```sql
+DROP SCHEMA IF EXISTS `hb-05-many-to-many`;
+
+CREATE SCHEMA `hb-05-many-to-many`;
+
+use `hb-05-many-to-many`;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS `instructor_detail`;
+
+CREATE TABLE `instructor_detail` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `youtube_channel` varchar(128) DEFAULT NULL,
+  `hobby` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+
+DROP TABLE IF EXISTS `instructor`;
+
+CREATE TABLE `instructor` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(45) DEFAULT NULL,
+  `last_name` varchar(45) DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  `instructor_detail_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_DETAIL_idx` (`instructor_detail_id`),
+  CONSTRAINT `FK_DETAIL` FOREIGN KEY (`instructor_detail_id`) 
+  REFERENCES `instructor_detail` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `course`;
+
+CREATE TABLE `course` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(128) DEFAULT NULL,
+  `instructor_id` int(11) DEFAULT NULL,
+  
+  PRIMARY KEY (`id`),
+  
+  UNIQUE KEY `TITLE_UNIQUE` (`title`),
+  
+  KEY `FK_INSTRUCTOR_idx` (`instructor_id`),
+  
+  CONSTRAINT `FK_INSTRUCTOR` 
+  FOREIGN KEY (`instructor_id`) 
+  REFERENCES `instructor` (`id`) 
+  
+  ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+
+
+DROP TABLE IF EXISTS `review`;
+
+CREATE TABLE `review` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `comment` varchar(256) DEFAULT NULL,
+  `course_id` int(11) DEFAULT NULL,
+
+  PRIMARY KEY (`id`),
+
+  KEY `FK_COURSE_ID_idx` (`course_id`),
+
+  CONSTRAINT `FK_COURSE` 
+  FOREIGN KEY (`course_id`) 
+  REFERENCES `course` (`id`) 
+
+  ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `student`;
+
+CREATE TABLE `student` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(45) DEFAULT NULL,
+  `last_name` varchar(45) DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `course_student`;
+
+CREATE TABLE `course_student` (
+  `course_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  
+  PRIMARY KEY (`course_id`,`student_id`),
+  
+  KEY `FK_STUDENT_idx` (`student_id`),
+  
+  CONSTRAINT `FK_COURSE_05` FOREIGN KEY (`course_id`) 
+  REFERENCES `course` (`id`) 
+  ON DELETE NO ACTION ON UPDATE NO ACTION,
+  
+  CONSTRAINT `FK_STUDENT` FOREIGN KEY (`student_id`) 
+  REFERENCES `student` (`id`) 
+  ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+SET FOREIGN_KEY_CHECKS = 1;
+```
+
+**Step 2: Update Course Class**
+- Add a list of students.
+- Add getters, setters, and a method addStudent.
+- Annotate the list with @ManyToMany, set the fetch type to lazy, and cascade to everything without deletion.
+- Annotate the list with @JoinTable, giving it the join table name, the primary key column of Course, and the primary key column of Student (inverse column)
+``` Java
+@Entity
+@Table(name="course")
+public class Course {
+	...
+	
+	@ManyToMany(fetch=FetchType.LAZY, cascade={CascadeType.MERGE,
+			CascadeType.PERSIST,
+			CascadeType.REFRESH,
+			CascadeType.DETACH})
+	@JoinTable(name="course_student",
+		joinColumns=@JoinColumn(name="course_id"),
+		inverseJoinColumns=@JoinColumn(name="student_id"))
+	private List<Student> students;
+	
+	...
+	
+	public List<Student> getStudents() {
+		return students;
+	}
+
+	public void setStudents(List<Student> students) {
+		this.students = students;
+	}
+	
+	public void addStudent(Student s) {
+		if(students == null) {
+			students = new ArrayList<Student>();
+		}
+		
+		students.add(s);
+	}
+
+	@Override
+	public String toString() {
+		return "Course [id=" + id + ", title=" + title + "]";
+	}
+}
+
+```
+**Step 3: Update Student Class**
+- Add a list of courses.
+- Add getters, setters, and a method addCourse.
+- Annotate the list with @ManyToMany, set the fetch type to lazy, and cascade to everything without deletion.
+- Annotate the list with @JoinTable, giving it the join table name, the primary key column of Student, and the primary key column of Course (inverse column)
+``` Java
+
+```
+**Step 4: Create Main App**
+First, create an app that adds three courses, two students, and assigns them as the example we discussed earlier:
+``` Java
+public class CreateCourseAndStudentsDemo {
+
+	public static void main(String[] args) {
+
+		// create session factory
+		SessionFactory factory = new Configuration()
+								.configure("hibernate.cfg.xml")
+								.addAnnotatedClass(Instructor.class)
+								.addAnnotatedClass(InstructorDetail.class)
+								.addAnnotatedClass(Course.class)
+								.addAnnotatedClass(Review.class)
+								.addAnnotatedClass(Student.class)
+								.buildSessionFactory();
+		
+		// create session
+		Session session = factory.getCurrentSession();
+		
+		try {			
+			
+			// start a transaction
+			session.beginTransaction();
+			
+			// create a course
+			Course PacmanCourse = new Course("Pacman");
+			Course RubikCourse = new Course("Rubik");
+			Course AtariCourse = new Course("Atari");
+			
+			session.save(PacmanCourse);
+			session.save(RubikCourse);
+			session.save(AtariCourse);
+			
+			Student JohnStudent = new Student("John", "Doe", "johndoe@a.com");
+			Student MaryStudent = new Student("Mary", "Public", "marypublic@a.com");
+			
+			PacmanCourse.addStudent(JohnStudent);
+			PacmanCourse.addStudent(MaryStudent);
+			
+			RubikCourse.addStudent(MaryStudent);
+			AtariCourse.addStudent(MaryStudent);
+			
+			session.save(JohnStudent);
+			session.save(MaryStudent);
+			
+			// commit transaction
+			session.getTransaction().commit();
+			
+			System.out.println("Done!");
+		}
+		finally {
+			
+			// add clean up code
+			session.close();
+			
+			factory.close();
+		}
+	}
+
+}
+```
+Run that and check the workbench.
+Also check the course_student table, you'll find that Hibernate did inserts in it based on the students we added to each course.
+
+Through our example, we managed to:
+- Add many students to one course.
+- Add many courses to one student.
+
+Let's try to verify that courses and students are added to each other's lists:
+``` Java
+public class GetCourseAndStudentsDemo {
+
+	public static void main(String[] args) {
+
+		// create session factory
+		SessionFactory factory = new Configuration()
+								.configure("hibernate.cfg.xml")
+								.addAnnotatedClass(Instructor.class)
+								.addAnnotatedClass(InstructorDetail.class)
+								.addAnnotatedClass(Course.class)
+								.addAnnotatedClass(Review.class)
+								.addAnnotatedClass(Student.class)
+								.buildSessionFactory();
+		
+		// create session
+		Session session = factory.getCurrentSession();
+		
+		try {			
+			
+			// start a transaction
+			session.beginTransaction();
+			
+			// create a course
+			Course PacmanCourse = session.get(Course.class, 10);
+			Course RubikCourse = session.get(Course.class, 11);
+			Course AtariCourse = session.get(Course.class, 12);
+			
+			Student JohnStudent = session.get(Student.class, 1);
+			Student MaryStudent = session.get(Student.class, 2);
+			
+			System.out.println("\n\n\n");
+			
+			System.out.println(PacmanCourse.getStudents().toString());
+			System.out.println(RubikCourse.getStudents().toString());
+			System.out.println(AtariCourse.getStudents().toString());
+			
+			System.out.println(JohnStudent.getCourses().toString());
+			System.out.println(MaryStudent.getCourses().toString());
+
+			System.out.println("\n\n\n");
+			
+			// commit transaction
+			session.getTransaction().commit();
+			
+			System.out.println("Done!");
+		}
+		finally {
+			
+			// add clean up code
+			session.close();
+			
+			factory.close();
+		}
+	}
+
+}
+```
+
+Run that code, check the result :) <br/>
+
+Finally, let's try deleting a student and a course to test that cascade delete is not enabled.
+``` java
+package com.luv2code.hibernate.demo;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+import com.luv2code.hibernate.demo.entity.Course;
+import com.luv2code.hibernate.demo.entity.Instructor;
+import com.luv2code.hibernate.demo.entity.InstructorDetail;
+import com.luv2code.hibernate.demo.entity.Review;
+import com.luv2code.hibernate.demo.entity.Student;
+
+public class DeleteCourseAndStudentsDemo {
+
+	public static void main(String[] args) {
+
+		// create session factory
+		SessionFactory factory = new Configuration()
+								.configure("hibernate.cfg.xml")
+								.addAnnotatedClass(Instructor.class)
+								.addAnnotatedClass(InstructorDetail.class)
+								.addAnnotatedClass(Course.class)
+								.addAnnotatedClass(Review.class)
+								.addAnnotatedClass(Student.class)
+								.buildSessionFactory();
+		
+		// create session
+		Session session = factory.getCurrentSession();
+		
+		try {			
+			
+			// start a transaction
+			session.beginTransaction();
+			
+			// create a course
+			Course PacmanCourse = session.get(Course.class, 10);
+			
+			Student MaryStudent = session.get(Student.class, 2);
+			
+			System.out.println("\n\n\n");
+			
+			session.delete(PacmanCourse);
+			session.delete(MaryStudent);
+
+			System.out.println("\n\n\n");
+			
+			// commit transaction
+			session.getTransaction().commit();
+			
+			System.out.println("Done!");
+		}
+		finally {
+			
+			// add clean up code
+			session.close();
+			
+			factory.close();
+		}
+	}
+
+}
+```
+Run that and move to the workbench.
+- In the course table, the entry Pacman should be deleted. In the student table, John should NOT be deleted since he had Pacman in his list, cascade delete is NOT enabled.
+- In the student table, the entry Mary should be deleted. In the course table, Rubik and Atari should NOT be deleted since they had Mary in their lists, cascade delete is NOT enabled.
+- Now look at the course_student table, the entries of John and the other course should only be visible since this table is made of joining the two other tables.
+In our case, it should be empty I think? (I didn't test that).
 

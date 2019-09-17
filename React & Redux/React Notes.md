@@ -56,7 +56,6 @@
 - This notes assumes that you are familiar with HTML, CSS, JS ES5 at least, npm, and git.
 - This note assumes that you are familiar with JS topics like: IIFEs, modules, scope, closure.
 - Anything after >> is a command in a command prompt, terminal, or bash.
-- Any ES6-related syntax will NOT be explained here, but the title will be enclosed by *** <title> ***
 
 ## Introduction
 Why react?
@@ -288,8 +287,6 @@ class App extends Component {
 
 Make sure that the key attribute is a STABLE IDENTIFIER i.e. will stay unique no matter how the array changes, do not use the index of the item in the array.
 
-*** Arrow Functions ***
-*** Classes ***
 
 ### How classes are used in React
 The App class extends Component.
@@ -327,8 +324,6 @@ We always have to call super() in any React Component's constructor (or construc
 Of course, we can access the local state using "this" e.g. we can use it in render().
 Now the list resides in the internal component state, we can add, change, and remove items from it, every time the state is changed, the render() method runs again.
 BUT DO NOT CHANGE THE STATE DIRECTLY, use setState() instead.
-
-*** ES6 object initializer ***
 
 ### Uniditectional Data Flow
 We will make some components interact with each other so that we can try to change the internal state through components.
@@ -624,10 +619,8 @@ const isSearched = searchTerm => item => item.title.toLowerCase().includes(searc
 export default App;
 ```
 
-*** Destructing ***
-
 ### Controlled Components
-Form elements like <input>, <textarea>, <select> hold their own state in plain HTML e.g. the value attribute.
+Form elements like <input/>, <textarea/>, <select/> hold their own state in plain HTML e.g. the value attribute.
 They modify that value internally if someone changes it from the outside, this is called an Uncontrolled Component, becuase it handles its own state. <br/>
 
 In React, we need our elements to be Controlled Components.
@@ -1267,14 +1260,13 @@ But also, if you notice, there are some bugs in the app now:
 
 These bugs are called Regression Bugs (features that stop functioning properly after a certain event e.g. system upgrade, change in daylight saving time, system patching, etc.).
 
-**** Spread operators ****
 
 Bug 1: the Dismiss button.
   What happened?
     the onDismiss method isn't aware of the complex result object, it only knows a list in the local state.
   Solution?
     Make it operate on the result object itself, 
-    ``` const updatedHits = this.state.result.hits.filter(isNotId); ```
+       const updatedHits = this.state.result.hits.filter(isNotId); 
     but now setState is only aware of result.hits and doesn't change local list except if result object is changed.
     We can mutate the result.hits list, but this is not recommended since React embraces immutable data structs.
     We can generate a new object based on the info we have, we can use Object.assign(target, ...sources) 

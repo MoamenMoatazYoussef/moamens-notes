@@ -1,0 +1,66 @@
+# Spring and Hibernate Project 1
+We'll create a CRUD app that displays a list of customers.
+
+***Note:*** In this notes, I'll only write anything that's new or important, but I won't go through the process of developing the project itself because it's a practice on all we've learned so far in Spring and Hibernate.
+
+## New annotations added to Spring
+- In the previous forms we wrote method="GET", that invokes an HTTP GET request.
+- @RequestMapping: we used that to map ALL requests to a specific method.
+
+If we want to constrain the request mapping, we can do one of two things:
+- In @RequestMapping, pass the attribute method=RequestMethod.GET for example.
+- Or, use the new annotations @GetMapping and @PostMapping
+
+The new annotations are more constrained forms of @RequestMapping:
+- @GetMapping: only maps GET requests.
+- @PostMapping: only maps POST requests.
+
+## The Service Layer and @Service Annotation
+We'll put a layer between the Controller and the DAO.
+
+Why? <br/>
+- Actually, it's an implementation of the Service Facade design pattern.
+- An intermediate layer that can be used to integrate data from different DAOs, this is useful for bigger apps.
+
+@Service: a Spring annotation for services, also inherits from @Component, so will be found in component-scanning.
+
+Steps:
+1. Define a Service interface.
+2. Define a Service implementation, in it we'll Inject the CustomerDAO.
+    - Also, make the service have the @Transactional layer, and remove it from the DAO.
+
+## Adding Custmers
+Steps:
+1. Update list-customers.jsp, add a button.
+    - Add a button, set onClick="window.location.href = 'showFormForAdd'".
+    - Go to the controller, add a function showFormForAdd(), annotate it with @GetMapping, return the form jsp name.
+2. Create HTML for new customer with form.
+    - To bind the form data, we need to make a new Customer object and add it to the model, the key will be used to bind data from the HTML form.
+    - Now make the form.
+3. Process form data and send it to service -> DAO -> save to DB.
+
+4. Service, implement saveCustomer @Transactional.
+
+5. DAO, implement saveCustomer.
+
+## Updating Customers
+Each row will have an Update link, when the link is clicked, we need to:
+- Load that customer from DB.
+- Prepopulate the form for the user.
+
+Steps:
+1. Update list-customers.jsp to have link.
+2. Create customer-form and prepopulate it.
+3. Process form data -> Controller -> Service -> DAO.
+4. Implement getCustomer in Service and DAO.
+5. Save the customer in the model in Controller so that form is populated with its data.
+6. In the form jsp, add a <form:hidden path="id"> line.
+7. So that when we submit, instead of adding a new customer, we use that to track the customer just so that the backend knows which customer to update.
+8. In Controller, no change.
+9. In DAO, we'll make a change:
+- In hibernate, there's two ways to add data to database:
+    - session.save: INSERT operation.
+    - session.update: UPDATE operation.
+    - we'll use another method: saveOrUpdate() which does INSERT if no id exists, or UPDATE if id exists.
+    - This saves us a lot of low-level coding :)
+

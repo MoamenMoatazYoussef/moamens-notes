@@ -1,7 +1,22 @@
-Redux notes:
-============
-Tips:
------
+# Redux notes
+## Table of Contents
+- [Tips](#tips)
+- [Introduction](#introduction)
+  * [What is redux](#what-is-redux)
+  * [Why redux?](#why-redux-)
+  * [Action processing](#action-processing)
+  * [Listeners](#listeners)
+  * [Combining multiple reducers](#combining-multiple-reducers)
+  * [Sending data to the store via actions](#sending-data-to-the-store-via-actions)
+  * [Async processing in redux](#async-processing-in-redux)
+- [Redux with react](#redux-with-react)
+  * [1)Provider](#1-provider)
+  * [2) connect](#2--connect)
+  * [Extracting local state into Redux](#extracting-local-state-into-redux)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+## Tips
 - This note is compiled from my completing the challenges of Redux and React-Redux on freeCodeCamp, 
     it's not an 'official' source, I'm willing to read the book 'Taming the state of react with redux' sometime in the future
     but I wanted to learn redux ASAP because I need it in my current task, that's why I picked freeCodeCamp and not a more detailed
@@ -10,11 +25,9 @@ Tips:
 - This notes assumes that you are familiar with React.
 - Anything after >> is a command in a command prompt, terminal, or bash.
 - Any ES6-related syntax will NOT be explained here, but the title will be enclosed by *** <title> ***
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Introduction:
--------------
-What is redux?
---------------
+
+## Introduction
+### What is redux
 Redux is a state management framework, in it there's a single state object responsible for the entire state of your app.
 For example if we have a react app with 10 components each with its local state, the entire state of the app would be defined by ONE object.
 
@@ -23,8 +36,7 @@ So, the store is the single source of truth when it comes to application state.
 
 So, any component that wishes to update the state, it will need to do that through the store.
 
-Why redux?
-----------
+### Why redux?
 This makes it much easier to track the state of your app.
 
 Now we'll cover how to create a store and put the state into it, how to read that state, and how to update it.
@@ -110,8 +122,7 @@ const loginAction = () => {
 store.dispatch(loginAction());
 ```
 
-Action processing:
-------------------
+### Action processing
 But how will the store respond to that action?
 It should respond by changing the state in some way.
 If we have a lot of actions, we have a lot of ways to change the state.
@@ -212,8 +223,7 @@ Okay, now we covered how to:
 - dispatch the action to the store.
 - define a reducer that changes the state according to the action.
 
-Listeners:
-----------
+### Listeners
 When the state changes, some components might be interested in that change. 
 These are called 'listeners'.
 
@@ -254,8 +264,7 @@ store.dispatch({type: ADD});
 console.log(count);
 ```
 
-Combining multiple reducers:
-----------------------------
+### Combining multiple reducers
 When the app gets bigger, it's tempting to divide the state into smaller pieces.
 But, that violates the Redux concept.
 So, instead we can divide the reducer into many smaller reducers, each handles a different piece of the state.
@@ -313,8 +322,7 @@ const rootReducer = Redux.combineReducers({
 const store = Redux.createStore(rootReducer);
 ```
 
-Sending data to the store via actions:
---------------------------------------
+### Sending data to the store via actions
 ``` JSX
 const ADD_NOTE = 'ADD_NOTE';
 
@@ -343,8 +351,7 @@ store.dispatch(addNoteText('Hello!'));
 console.log(store.getState());
 ```
 
-Async processing in redux:
---------------------------
+### Async processing in redux
 At some point we'll need to handle async stuff, how do we handle that in Redux?
 Redux has a middleware called Thunk, designed for this purpose.
 
@@ -432,9 +439,8 @@ const store = Redux.createStore(
   Redux.applyMiddleware(ReduxThunk.default)
 );
 ```
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Redux with react:
------------------
+
+## Redux with react
 React and Redux are separate technologies.
 
 To use react with redux, we create a single store for the entire app.
@@ -539,8 +545,7 @@ Now we need to give React access to the redux store and the actions.
 This is done by 'react-redux' package.
 Mainly we have two key features: 'provider' and 'connect'.
 
-1)Provider: 
------------
+### 1)Provider
 This is a wrapper component that wraps our entire react app, this gives us access to 'store' and 'dispatch' throughout 
 our component tree.
 It takes two props: the store, and child components of our app.
@@ -600,8 +605,7 @@ function mapDispatchToProps(dispatch) {
 }
 ```
 
-2) connect:
------------
+### 2) connect
 So now we made our React component, Redux store, actions, creators, reducers, wrapper component i.e. provider, 
 and the two functions we need to connect React to Redux.
 So, we'll connect React to Redux.
@@ -748,8 +752,7 @@ class AppWrapper extends React.Component {
 };
 ```
 
-Extracting local state into Redux:
-----------------------------------
+### Extracting local state into Redux
 The final step is extracting the local state out of our components into Redux.
 
 From the last example, we'll:
@@ -860,6 +863,3 @@ class AppWrapper extends React.Component {
 ```
 
 And we're Done ^_^
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------

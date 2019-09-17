@@ -84,4 +84,151 @@ What does AOP help us achieve?
     - These are the AOP code.
     - This means, we don't have to worry about AOP at all while writing our business logic code.
 
-**What does AOP have to do with Spring?** <br/>
+
+## Practical Stuff
+**AOP Terminology** <br/>
+- Aspect: module of code for a cruss-cutting logic.
+- Aspect: what action is taken, when should it be applied.
+- Join point: points where we apply AOP code.
+- Pointcut: expressions for where advices should be applied.
+- Advising an object: it means applying AOP code (aspects) on target objects (business classes, etc.), when that happens, the target object is called "Advised object".
+- Weaving: Connecting Aspects to target objects to create an "advised" object, an object that's layered with AOP code .
+    - Compile-time weaving.
+    - Load-time weaving.
+    - Run-time weaving.
+
+**Advice types** <br/>
+- Before advice: run before the AOP method.
+- After finally advice: in the finally block.
+- After returning: run after successful execution of a method.
+- After throwing: run after failed execution of a method (exception thrown).
+- Around: before and after execution of a method.
+
+**AOP Frameworks for Java** <br/>
+- AspectJ: 
+    - The OG(original gangsta) of AOP.
+    - Provides complete AOP support.
+    - Supports join points at class level, method level, constructor level, and field level.
+    - Supports the three types of code weaving.
+    - Works with any POJO (Plain Old Java Object).
+    
+- Spring AOP: 
+    - Spring uses AOP in the background.
+    - Supports user-defined AOP stuff.
+    - Uses Proxy pattern.
+    - Supports method-level join points only.
+    - Uses run-time weaving only, which causes a small performance cost.
+
+**Comparison between the two** <br/>
+- AspectJ is much more complex than Spring AOP.
+- But AspectJ is very fast and more powerful.
+- AspectJ supports full AOP.
+- Spring supports most of AOP's features.
+
+**So what do I choose?** <br/>
+- Start with Spring AOP.
+- If things require really complex AOP programming, move to AspectJ.
+
+**Resources** <br/>
+- Spring AOP: www.spring.io, the documentation of Spring.
+- AspectJ: "AspectJ in Action" Book.
+- AOP as a concept and its use cases: "Aspect-Oriented Development with Use Cases" Book.
+
+**What will we do here?** <br/>
+- We'll cover Spring AOP.
+- Create aspects.
+- Develop Advices with all their types.
+- Create pointcut expressions.
+- Apply this to our Spring + Hibernate CRM project.
+
+## AOP Programming Overview
+### Advices
+**@BeforeAdvice** <br/>
+- The Before advices is code that runs before a certain method runs.
+- So, our main app will call a method.
+- We want our own custom code execute BEFORE it.
+
+**When and why do we use this? Use cases** <br/>
+- Logging, security, transactions (for example the @Transactional spring annotation we used before).
+- Audit logging
+- API management, for example Who called a method, How many times was it called, what is the peak time of calling this method, etc.
+
+**How do we do that?** <br/>
+We'll have a main app, this main app will use a DAO to call a method.
+We'll inject some AOP before the method executes.
+
+Steps:
+1. Create target object, the DAO.
+2. Create a Spring Java Config class.
+3. Create main app.
+4. Create an aspect using an @Before annotation.
+
+**Best Practices with AOP** <br/>
+That code will execute EVERY TIME this method is called, so:
+- Keep the code small and fast.
+- Do not perform slow operations.
+- Get in and get out as quickly as possible.
+
+### The worst part of any framework - Setting Up Spring AOP 
+Eclipse:
+- Remember spring-demo-one or spring-demo-annotations? Copy one of them, paste it, call it "spring-demo-aop".
+- Delete all src files and all packages.
+- We need the AspectJ jar files since Spring AOP uses it, download it:
+    + don't choose the beta version, choose the latest stable version
+    + in the next screen download the JAR file from the Files tab:
+    + www.luv2code.com/download-aspectjweaver
+- Copy it into your lib directory.
+- Add all JARS in the lib directory (spring JARs and the AspectJ JAR) to the build path of the project.
+
+Done baby B) <br/>
+
+### Now, to write some CODE!
+**Step 1: Create the target object** <br/>
+- Create a new package: com.luv2code.aopdemo
+- Create another package: com.luv2code.aopdemo.dao
+- Create the target object, the DAO class, annotate it with @Component, add one method, inside it sysout anything.
+``` java
+@Component
+public class AccountDAO {
+	public void addAccount() {
+		System.out.println();
+	}
+}
+```
+
+**Step 2: Create the Spring Config class** <br/>
+- Create a Spring Confige java class.
+- Annotate it with @Configuration and @ComponentScan, passing in the package.
+- Annotate it with @EnableAspectJAutoProxy, the new component that enables AOP to execute in a proxy design pattern manner.
+``` Java
+@Configuration
+@EnableAspectJAutoProxy
+@ComponentScan("com.luv2code.aopdemo")
+public class DemoConfig {
+
+}
+```
+
+**Step 3: Create the main app** <br/>
+- We did that before xD
+``` Java
+public class MainDemoApp {
+
+	public static void main(String[] args) {
+		AnnotationConfigApplicationContext context = 
+				new AnnotationConfigApplicationContext(DemoConfig.class);
+		
+		AccountDAO theAccountDAO = context.getBean("accountDAO", AccountDAO.class);
+		
+		theAccountDAO.addAccount();
+		
+		context.close();
+	}
+
+}
+```
+
+**Step 4: Create the AOP code** <br/>
+- The AOP code is called an "Aspect",
+- Create a new package: com.luv2code.aopdemo.aspect
+- 

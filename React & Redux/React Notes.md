@@ -620,7 +620,7 @@ export default App;
 ```
 
 ### Controlled Components
-Form elements like <input/>, <textarea/>, <select/> hold their own state in plain HTML e.g. the value attribute.
+Form elements like input, textarea, select hold their own state in plain HTML e.g. the value attribute.
 They modify that value internally if someone changes it from the outside, this is called an Uncontrolled Component, becuase it handles its own state. <br/>
 
 In React, we need our elements to be Controlled Components.

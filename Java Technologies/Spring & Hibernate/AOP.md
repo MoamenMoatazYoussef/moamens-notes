@@ -398,12 +398,13 @@ In the previous code, this is our pointcut expression:
 **Case 6 output:** the AOP code will execute before both method calls, because it will match any method whose name has "add" in its start, regardless of what follows, the modifier, or the return type.
 
 ### Pointcut Expressions: Parameter Matching
-We can specify specific parameters to match, we can use some wildcards like:
+We can specify specific parameters to match.
+**Case 1:** we can use some wildcards like:
 - (): match method with no arguments.
 - (*): match method with *one* or more arguments.
 - (..): match method with *zero* or more arguments. (i.e. anything)
 
-Or, we can specify arguments by passing the Fully Qualified Name of the parameter type, for example:
+**Case 2:** we can specify arguments by passing the Fully Qualified Name of the parameter type, for example:
 ``` Java
 @Before("execution(* * addAccount(com.luv2code.aopdemo.Account))")
 ```
@@ -414,3 +415,414 @@ This means, match with:
 - which takes one parameter of type Account
 
 Notice that we wrote the FQN of the parameter type.
+
+**Case 3:** we can match with more than one parameters:
+``` Java
+@Before("execution(* * addAccount(com.luv2code.aopdemo.Account, ..))")
+```
+This means, match with:
+- a method of any return type,
+- and any modifier,
+- whose name is addAccount,
+- which takes one parameter of type Account, 
+- and any number of arguments following it (the wildcard).
+
+Of course, we don't have to only use wildcards, we can specify two parameters, three, four, etc.
+
+### Pointcut Expressions: Package Matching
+
+**Our Case** we can match with any method in a given package:
+``` Java
+@Before("execution(* * com.luv2code.aopdemo.dao.*(..))")
+```
+This means, match with:
+- a method of any return type,
+- and any modifier,
+- which is in the package com.luv2code.aopdemo.dao
+- of any name,
+- which takes any number of arguments following it.
+
+## Pointcut Declarations
+Pointcut expressions are awesome, but..do we really have to rewrite an expression if we want to reuse it with many methods?
+
+Well, we could copy and paste it, but hey we're developers, we know the dangers of copy & paste xD
+
+So, the solution is to create the expression once, then apply it to multiple devices.
+
+This is called Pointcut Declaration, and it's done using a very nice annotation @Pointcut, to do this, we do some steps. <br/>
+
+Steps:
+1. Create the annotation and inside it write your pointcut expression.
+2. Write an empty private void method under it, no args, no body.
+``` Java
+@Pointcut("execution(* * com.luv2code.aopdemo.dao.*(..))")
+private void ourPointcutExpression() {}
+```
+That method under it, this isn't really a "business method", it's just a method defined under the annotation so that we can use it to Reference the expression.
+
+How can we use this?
+``` Java
+@Aspect
+@Component
+public class MyDemoLoggingAspect {
+    @Pointcut("execution(* * com.luv2code.aopdemo.dao.*(..))")
+    private void ourPointcutExpression() {}
+
+    @Before("ourPointcutExpression()")
+	public void MyAdvice() {
+		System.out.println("I'm in the Advice now.");
+	}
+
+    @Before("ourPointcutExpression()")
+    public void anotherAdvice() {
+        // stuff
+    }
+}
+```
+See, we can reuse expressions and we don't have to modify lots of things every time we reuse the expression :) <br/>
+
+Also, we can SHARE and COMBINE pointcut expressions, we'll see that later.
+
+### Combining Pointcuts
+What if we want to apply multiple pointcuts on a single advice?
+What if we want to execute and advice ONLY if certain pointcuts are met?
+- For example, running an AOP if a method meets TWO conditions or more.
+
+Well. we can COMBINE pointcut expressions :o
+It works like an if statement, we use Logical operators(AND: &&, OR: ||, NOT: !) to combine pointcuts.
+
+For example:
+``` Java
+@Before("expression1() && expression2()")
+@Before("expression1() || expression2()")
+@Before("expression1() && !expression2()")
+```
+
+So, we can create very generic atomic pointcuts, then reuse them to construct more complicated pointcuts that we apply to methods according to what we want.
+
+**In Code** <br/>
+Let's say we want two pointcuts in a class, and we want the AOP code to run before any method call from this class EXCEPT getters and setters.
+
+In the previous code, we already have a pointcut, leave it and then modify the code:
+- Add two fields: name and age.
+- Generate getters and setters for them, put some sysouts so you can identify them in the output.
+
+Now, in the AOP class:
+- Add a new pointcut that matches a method:
+    - of any return type,
+    - any modifier,
+    - any parameters,
+    - whose name starts with "get"
+    - and in the package com.luv2code.aopdemo.dao.
+- Add another pointcut that matches a method:
+    - of any return type,
+    - any modifier,
+    - any parameters,
+    - whose name starts with "set"
+    - and in the package com.luv2code.aopdemo.dao.
+- Combine those three pointcuts to achieve the condition: advices execute before any method EXCEPT getters or setters.
+``` Java
+@Aspect
+@Component
+public class MyDemoLoggingAspect {
+    @Pointcut("execution(* * com.luv2code.aopdemo.dao.*(..))")
+    private void ourPointcutExpression() {}
+
+    @Pointcut("execution(* * com.luv2code.aopdemo.dao.*.get*(..))")
+    private void getter() {}
+
+    @Pointcut("execution(* * com.luv2code.aopdemo.dao.*.set*(..))")
+    private void setter() {}
+
+
+    // here we are combining them:
+    @Before("ourPointcutExpression() && !getter() && !setter()")
+	public void MyAdvice() {
+		System.out.println("I'm in the Advice now.");
+	}
+}
+```
+In the main app:
+- Call getters and setters.
+- Call normal methods.
+- Run the code and see when does the advices run.
+- Pat yourself on the back :)
+
+## AOP Ordering Aspects
+How do we control the order of advices applied if they all match the same condition?
+
+Well, the order of advices is, by default, undefined. Spring wil call them in any order.
+
+**How do we control the order, then?** <br/>
+Steps:
+1. Refactor the code, place the advices in separate aspects.
+2. Control the order of Aspects using @Order annotation, it acts like Priority.
+
+**In Code** <br/>
+- Create two aspect classes, one called FirstAspect, one called SecondAspect (or anything), annotate them with @Aspect and @Component.
+- In each one, define an advice method.
+- In each one, annotate the advices with @Before and give them the same pointcut (declare the pointcut and reuse it).
+- Annotate each aspect with @Order, and pass in numbers 1 and 2 for FirstAspect and SecondAspect, respectively. (Lower numbers = higher precedence)
+FirstAspect:
+``` Java
+@Aspect
+@Component
+@Order(1)
+public class FirstAspect {
+
+	@Before("execution(public void addAccount())")
+	public void MyAdvice() {
+		System.out.println("I'm in the Advice of FirstAspect.");
+	}
+}
+```
+
+SecondAspect:
+``` Java
+@Aspect
+@Component
+@Order(2)
+public class SecondAspect {
+
+	@Before("execution(public void addAccount())")
+	public void MyAdvice() {
+		System.out.println("I'm in the Advice of SecondAspect.");
+	}
+}
+```
+- [Optional] Then, in the target class, create a method that matches the pointcut defined in both aspects.
+- Call that method in the main app and run it, see in the output the order of advices.
+
+***Note:*** The range of numbers that can be passed to @Order are Integer.MIN_VALUE to Integer.MAX_VALUE.
+This means that negative numbers are allowed.
+Also, we don't have to be consecutive, we could pass numbers 1 and 17, they'll order. 
+
+***Note:*** What if two aspects have the same order, or two advices in the same ordered aspect? <br/>
+This makes the order of these advices undefined.
+They will still be in order relative to OTHER aspects of DIFFERENT order, but the order of the two relative to themselves is undefined.
+i.e. if we have aspects of order 4, 6, 6, 8.
+The two aspects ordered 6 will run after the aspect ordered 4 and before the one ordered 8,  but which one of them will execute first is undefined.
+
+## AOP JoinPoints
+When we're in an aspect, how can we access the advised method's parameters?
+
+Advised method: method on which an advice is applied on. <br/>
+
+Steps:
+1. Access the advised method's signature.
+    - This is done by adding an argument to the advice of type JoinPoint.
+    - This gives us access to info about the advice, like using .getSignature() for example.
+2. Access the advised method's arguments.
+    - We can use the JoinPoint parameter to get the method's arguments as an array of Object, we do that using .getArgs().
+    - So we can read the values passed to the arguments.
+
+**In Code** <br/>
+- Go to any aspect.
+- Add a JoinPoint argument.
+- Use it to get the signature.
+- Use it to get the arguments, loop through them.
+- Print them, and detect if one of them is of type "Account", then cast that account to something different (here we'll just cast it to Account).
+``` Java
+@Aspect
+@Component
+@Order(1)
+public class FirstAspect {
+
+	@Before("execution(public void addAccount(..))")
+	public void MyAdvice(JoinPoint jp) {
+		System.out.println("I'm in the Advice of FirstAspect.");
+		
+		// getting the signature of the function being called
+		MethodSignature sig = (MethodSignature) jp.getSignature();
+		System.out.println("Method: " + sig);
+		
+
+        // getting the args
+		Object[] args = jp.getArgs();
+		
+        // looping through the args
+		for(Object tempArg: args) {
+			System.out.println(tempArg);
+			
+            // checking if tempArg is an Account
+			if(tempArg instanceof Account) {
+				Account theAccount = (Account) tempArg;
+			}
+		}
+	}
+}
+```
+Now run the code, and see the awesomeness :) <br/>
+
+## More Advice Types
+### @AfterReturning Advice Type
+This advice runs after the method has completed successfully.
+
+Here's the sequence:
+- The main app calls a method that is advised using an @AfterReturning advice.
+- The method executes to the end without exceptions, then it returns.
+- At this point, the advice executes.
+
+Use cases i.e. Why would we use this?
+- Logging, security, Audit logging, the normal stuff.
+- Post-processing data: format it, enrich it, etc. (A really cool feature, but use it wisely).
+
+So, we can post-process the return type using an @AfterReturning aspect:
+- To do that, we'll need to access the return value inside the advice.
+- We can do that using a new parameter in the @PointCut annotation, called "returning".
+- Then, we add a parameter to the advice of the SAME type as the return type, and the name is the SAME name as the one we passed to the "returning" argument in the @PointCut annotation.
+- The return type will be injected in that new parameter.
+
+**In Code:** <br/>
+**Step 1** <br/>
+First, we'll create an Account class:
+- Two fields, string name, string level.
+- no arg constructor, constructor with fields.
+- getters, setters.
+- toString.
+``` Java
+public class Account {
+	private String accountName;
+	private String level;
+	
+	public Account() {
+		
+	}
+	
+	public Account(String accountName, String level) {
+		this.accountName = accountName;
+		this.level = level;
+	}
+
+	public String getAccountName() {
+		return accountName;
+	}
+
+	public void setAccountName(String accountName) {
+		this.accountName = accountName;
+	}
+
+	public String getLevel() {
+		return level;
+	}
+
+	public void setLevel(String level) {
+		this.level = level;
+	}
+
+	@Override
+	public String toString() {
+		return "Account [accountName=" + accountName + ", level=" + level + "]";
+	}
+}
+```
+
+**Step 2** <br/>
+In AccountDAO, add a new method findAccounts(), returns a List of accounts.
+``` Java
+@Component
+public class AccountDAO {
+	public void addAccount(Account t, int j) {
+		System.out.println("Now, I'm in the main function");
+	}
+	
+	public List<Account> findAccounts() {
+		List<Account> accounts = new ArrayList<>();
+		
+		// this is some sample code, we'll just add some accounts
+		accounts.add(new Account("Bugs Bunny", "1"));
+		accounts.add(new Account("Daffy Duck", "2"));
+		accounts.add(new Account("Mickey Mouse", "3"));
+		accounts.add(new Account("Donald Duck", "4"));
+		
+		return accounts;
+	}
+}
+```
+
+**Step 3** <br/>
+- In the main app, call the new method.
+
+**Step 4** <br/>
+- Create a new aspect class (or use an old one).
+- Add a new method, annotate it with @AfterReturing.
+- Pass two arguments to the annotation:
+    - pointcut="": write the expression.
+    - returning="": write any name.
+- Add an argument of the same return type to the advice, and of the same name as the "returning" parameter in the annotation.
+- Inside the method, add some stuff like:
+    - Getting the method signature.
+    - Print the result.
+``` Java
+@Aspect
+@Component
+@Order(1)
+public class MyNewAspect {
+
+	@Pointcut("execution(* com.luv2code.aopdemo.dao.AccountDAO.findAccounts(..))")
+	public void myPointcut() {}
+	
+	@AfterReturning(
+			pointcut="myPointcut()",
+			returning="result")
+	public void afterReturningAdvice(JoinPoint jp, List<Account> result) {
+		String sig = jp.getSignature().toShortString();
+		System.out.println("Method: " + sig);
+		System.out.println("Result: " + result);
+	}
+}
+```
+Now run the method, and see the results :) <br/>
+
+**How to modify the return value** <br/>
+Remember the post-processing data we talked about earlier?
+We can actually do that, in our example in the returning list, we can add items, remove items, update existing items.
+
+BUT, **be careful**, if a developer who doesn't know AOP works on the code, they'll think that the code is broken somehow.
+So, be VERY transparent with your team when you do that, tell them EVERY update, and make sure that all of them KNOW and UNDERSTAND the concepts of AOP.
+
+**In Code** <br/>
+- Go into your aspect, modify the "result" parameter, for example convert all of the accounts' names to uppercase or something:
+``` Java
+@Aspect
+@Component
+@Order(1)
+public class MyNewAspect {
+
+	@Pointcut("execution(* com.luv2code.aopdemo.dao.AccountDAO.findAccounts(..))")
+	public void myPointcut() {}
+	
+	@AfterReturning(
+			pointcut="myPointcut()",
+			returning="result")
+	public void afterReturningAdvice(JoinPoint jp, List<Account> result) {
+		System.out.println("Original Result: " + result);
+		
+		convertAccountNamesToUppercase(result);
+		
+		System.out.println("Modified Result: " + result);
+	}
+
+	private void convertAccountNamesToUppercase(List<Account> result) {
+		for(Account a: result) {
+			a.setAccountName(a.getAccountName().toUpperCase());
+		}
+	}
+}
+```
+Run the main app :) <br/>
+
+### @AfterThrowing Advice Type
+
+**In Code:** <br/>
+**Step 4** <br/>
+
+### @After Advice Type
+
+**In Code:** <br/>
+**Step 4** <br/>
+
+### @Around Advice Type
+
+**In Code:** <br/>
+**Step 4** <br/>

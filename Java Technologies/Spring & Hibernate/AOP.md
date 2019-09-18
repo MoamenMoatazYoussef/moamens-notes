@@ -3,6 +3,8 @@ Or, AOP
 ## Table of Contents
 
 ## Tips
+- sysout means System.out.print, I'm lazy.
+- Check out Spring and Hibernate notes before this one.
 
 ## Let's get the show on the road
 Remember the DAO we made in the last project?
@@ -87,22 +89,24 @@ What does AOP help us achieve?
 
 ## Practical Stuff
 **AOP Terminology** <br/>
-- Aspect: module of code for a cruss-cutting logic.
-- Aspect: what action is taken, when should it be applied.
-- Join point: points where we apply AOP code.
+- Aspect: A class that contains this cross-cutting logic.
+- Advice: A method inside an aspect that has some cross-cutting logic and executes at specific points of the program, an aspect is a class that contains methods, these methods are "Advices".
+- Join point: points where we run the AOP code.
 - Pointcut: expressions for where advices should be applied.
-- Advising an object: it means applying AOP code (aspects) on target objects (business classes, etc.), when that happens, the target object is called "Advised object".
+- Advising an object: it means assigning AOP code (methods inside aspects i.e. advices) on target objects (other classes and methods) so that advices run at some time relative to target objects (Before them, after them, etc.), when that happens, the target object is called "Advised object".
 - Weaving: Connecting Aspects to target objects to create an "advised" object, an object that's layered with AOP code .
     - Compile-time weaving.
     - Load-time weaving.
     - Run-time weaving.
 
 **Advice types** <br/>
-- Before advice: run before the AOP method.
-- After finally advice: in the finally block.
-- After returning: run after successful execution of a method.
-- After throwing: run after failed execution of a method (exception thrown).
-- Around: before and after execution of a method.
+An advice is a method inside an Aspect(A class used for AOP).
+Since we can make these methods -these advices- run at a time relative to other classes and methods, we can classify these methods according to when do they run:
+- Before advice: an advice method that runs before the target object (method or class) runs.
+- After finally advice: an advice method that runs in the finally block.
+- After returning: an advice method that runs after successful execution of a method.
+- After throwing: an advice method that runs after failed execution of a method (exception thrown).
+- Around: an advice method that runs before and after execution of a method.
 
 **AOP Frameworks for Java** <br/>
 - AspectJ: 
@@ -191,7 +195,7 @@ Done baby B) <br/>
 @Component
 public class AccountDAO {
 	public void addAccount() {
-		System.out.println();
+		System.out.println("I'm in the main method.");
 	}
 }
 ```
@@ -231,4 +235,182 @@ public class MainDemoApp {
 **Step 4: Create the AOP code** <br/>
 - The AOP code is called an "Aspect",
 - Create a new package: com.luv2code.aopdemo.aspect
-- 
+- In it, create a new class: MyDemoLoggingAspect.
+- Annotate it with @Aspect and @Component (So that Spring can pick it up during component-scanning).
+- Inside the class, write a method, inside it write a sysout or something.
+- Annotate that method with @Before("execution(public void addAccount())"):
+    + Before: means that this method will run Before a specific event. That event is what we pass as argument.
+    + The word "Execution" means: execute the method Before any execution of what we'll pass inside.
+    + Then, we pass the name of our method.
+    + So, this annotation means: Execute this function Before every time the function addAccount executes.
+    + That function, is called an "Advice".
+``` java
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.springframework.stereotype.Component;
+
+@Aspect
+@Component
+public class MyDemoLoggingAspect {
+
+	@Before("execution(public void addAccount())")
+	public void MyAdvice() {
+		System.out.println("I'm in the Advice now.");
+	}
+}
+```
+
+Now, run the main app, observe the output.
+Now this is spying on the code :) <br/>
+Try calling the method many times in the main app, see the output and watch the advice method run every time the main method is called, but before it.
+
+## AOP Pointcut Expressions
+Remember when we wrote that @Before annotation, and inside it we wrote some stuff that defined WHEN the advice method is applied?
+This stuff is an expression called a Pointcut Expression, it's like a condition that, when met, the advice method is applied.
+
+Pointcut Expressions are a language specific to AspectJ, and Spring AOP uses it.
+
+### Pointcut Expressions: basic Method Matching
+**How do we write Pointcut Expressions** <br/>
+Pointcut Expressions have a specific syntax that consists of Patterns.
+All of the patterns must be matched for the aspect to run. 
+For example we have the Execution expression:
+```
+execution(modifiers-pattern? return-type-pattern declaring-type-pattern? method-name-pattern(param-pattern) throws-pattern?)
+```
+All patterns that have "?" are optional.
+What do those patterns mean?
+- modifiers-pattern: match on a specific modifier (if we have two methods of the same name and everything but one is public the other is private, whatever is specified in the modifiers pattern will ONLY have the aspect run before it(or after or whatever, according to the type of aspect))
+- return-type-pattern: what's the return type to match?
+- declaring-type-pattern: what's the class name of the type to match?
+- method-name-pattern: what's the name of the method?
+- param-pattern: what are the parameters that should be there for the AOP to execute?
+- throws-pattern: does the method throw a given exception?
+
+Patterns can get wildcards * i.e. that pattern matches with everything.
+
+**Some Examples** <br/>
+Example:
+``` Java
+@Before("execution(public void com.luv2code.aopdemo.dao.AccountDAO.addAccount())")
+```
+- Modifiers pattern: public
+- Return type pattern: void
+- Declaring type: com.luv2code.aopdemo.dao.AccountDAO.
+- Name: addAccount.
+- parameters and throws patterns: nothing.
+
+This means:
+Execute this aspect before every execution of:
+- the public function 
+- called "addAccount"
+- that returns void
+- that's declared inside com.luv2code.aopdemo.dao.AccountDAO
+- that takes NO parameters
+- and throws NO expressions.
+
+Example:
+``` Java
+@Before("execution(public void addAccount())")
+```
+- Modifiers pattern: public
+- Return type pattern: void
+- Declaring type: nothing (it's an optional pattern)
+- Name: addAccount.
+- parameters and throws patterns: nothing.
+
+This means:
+Execute this aspect before every execution of:
+- the public function 
+- called "addAccount"
+- that returns void
+- that's declared inside ANY CLASS (see the difference here?)
+- that takes NO parameters
+- and throws NO expressions.
+
+Example:
+``` Java
+@Before("execution(public void add*())")
+```
+- Modifiers pattern: public
+- Return type pattern: void
+- Declaring type: nothing (it's an optional pattern)
+- Name: any name that starts with "add" (interesting..)
+- parameters and throws patterns: nothing.
+
+This means:
+Execute this aspect before every execution of:
+- the public function
+- whose name starts with "add" (add, addAccount, addThisNumber, addBlaBla, etc.)
+- that returns void
+- that's declared inside ANY CLASS
+- that takes NO parameters
+- and throws NO expressions.
+
+Example:
+``` Java
+@Before("execution(* * add*())")
+```
+- Modifiers pattern: any modifier
+- Return type pattern: any return type
+- Declaring type: nothing (it's an optional pattern)
+- Name any name that starts with "add"
+- parameters and throws patterns: nothing.
+
+This means:
+Execute this aspect before every execution of:
+- any function
+- whose name starts with "add"
+- with any return type
+- that's declared inside ANY CLASS
+- that takes NO parameters
+- and throws NO expressions.
+
+**Let's apply that in code** <br/>
+In the previous code, this is our pointcut expression:
+``` Java
+@Before("execution(public void addAccount())")
+```
+**In the code, try these** <br/>
++ **Case 1:** In the expression, change the name of the method from addAccount to updateAccout (a method we don't have).
++ **Case 2:** Create a new class MembershipDAO, and inside it define a method: public void addAccount(), then call it and the old addAccount method in the main app.
++ **Case 3:** add a declaration type in the pointcut expression i.e. change it to this:
+``` Java
+@Before("execution(public void com.luv2code.aopdemo.dao.AccountDAO.addAccount())")
+``` 
+**Hint:** select the class name AccountDAO, choose Copy Qualified Name, paste it before the method name and add a dot after it.
++ **Case 4:** use the wildcard, change the name of the method to "add*" (don't forget to remove the FQN of the class name), and change the name of the addAccountin MembershipDAO to "addSillyMember" for example.
++ **Case 5:** change the membershipDAO method's modifier to default, then in the expression, change the modifier to the wildcard * i.e. do this:
+``` Java
+@Before("execution(* void add*())")
+```
++ **Case 6:** change the return type from void to the wildcard "*" i.e.
+``` Java
+@Before("execution(* * add*())")
+```
+
+**Run the code each time and observe the output** <br/>
++ **Case 1 output:** the AOP code won't execute ever, because the method updateAccount doesn't exist in our code.
++ **Case 2 output:** the AOP code will execute before both method calls, because we don't define a declaration type for our method.
++ **Case 3 output:** the AOP code will execute only before the first method call (the old addAccount), because this is the one declared in the declaration type we specified, the other is in MembershipDAO.
++ **Case 4 output:** the AOP code will execute before both method calls, because it will match any method whose name has "add" in its start, regardless of what follows.
++ **Case 5 output:** the AOP code will execute before both method calls, because it will match any method whose name has "add" in its start, regardless of what follows or what's the modifier of the method.
+**Case 6 output:** the AOP code will execute before both method calls, because it will match any method whose name has "add" in its start, regardless of what follows, the modifier, or the return type.
+
+### Pointcut Expressions: Parameter Matching
+We can specify specific parameters to match, we can use some wildcards like:
+- (): match method with no arguments.
+- (*): match method with *one* or more arguments.
+- (..): match method with *zero* or more arguments. (i.e. anything)
+
+Or, we can specify arguments by passing the Fully Qualified Name of the parameter type, for example:
+``` Java
+@Before("execution(* * addAccount(com.luv2code.aopdemo.Account))")
+```
+This means, match with:
+- a method of any return type,
+- and any modifier,
+- whose name is addAccount,
+- which takes one parameter of type Account
+
+Notice that we wrote the FQN of the parameter type.

@@ -42,8 +42,9 @@ This repo contains all the notes & scripts that I ever wrote, my purpose is to c
         - C basics.
         - General information about computers.
 
-Enjoy, I appreciate any feedback, and if you want to contribute:
+## Contribution
+If you want to contribute:
 1. Thank you for helping to build this library.
 2. Fork the repo, add the contributions or modifications to existing notes, commit your changes, and create a pull request.
 
-Thank you.
+## Thank you

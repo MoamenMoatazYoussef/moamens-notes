@@ -27,10 +27,13 @@ Enjoy :smile:
         - Hibernate.
         - Spring AOP.
         - Spring Boot.
+        - Spring REST. (In progress...)
+        - Spring Security. (In progress...)
+        - Microservices with Spring Boot (In progress...)
         - Maven.
     + Source: Udemy's courses:
-        - Learn Spring & Hibernate For Beginners. (Not finished yet)
-        - Master Microservices With Spring Boot & Spring Cloud. (Not finished yet)
+        - Learn Spring & Hibernate For Beginners. (In progress...)
+        - Master Microservices With Spring Boot & Spring Cloud. (In progress...)
 - **Maven**, included in Spring scripts.
 - **ReactJS & Redux**, Sources:
     + Book: The Road To Learn React.

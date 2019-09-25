@@ -3,11 +3,15 @@
 Hello :raising_hand: 
 My name is Moamen Moataz, I'm a full-stack web developer at ITWorx Egypt. I specialize in ReactJs, Bootstrap, Spring Framework, and Hibernate.
 
-I've struggled a lot with training courses, books, and learning material that is hard to understand, or uses too many technical words, at the same time I need to write notes in order to concentrate and fully understand what I'm learning.
+I've struggled a lot with training courses, books, and learning material that is hard to understand, or uses too many technical words.
 
-All software developers go through the same problem, therefore I decided that instead of notes, **I'll write full scripts in the easiest, most organized way possible**, using basic everyday terms and examples whenever I can, and including as much details as possible.
+All developers go through the same problem, therefore I decided that **I'll write full scripts in the easiest, most organized way possible**, using basic everyday terms and examples whenever I can, and including as much details as possible.
 
-This repo contains **all the notes & scripts that I ever wrote**, my purpose is to *create a library of scripts that helps beginner and intermediate software developers learn things more easily and efficiently*, enjoy :smile:
+This repo contains **all the notes & scripts that I ever wrote**.
+
+My purpose is to *create a library of scripts that helps software developers learn things more easily and efficiently*.
+
+Enjoy :smile:
 
 ## List of scripts and their sources
 - **Jave Programming Language**, Source: Pluralsight courses:

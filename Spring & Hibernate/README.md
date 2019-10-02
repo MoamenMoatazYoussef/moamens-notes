@@ -23,5 +23,12 @@ Microservices:
 - JPA and CRUD methods.
 
 ## Leftover Actions
+Learning Spring & Hibernate For Beginners:
+- Highlight the development processes steps.
+
 Microservices:
 - An easier explanation.
+- Organizing development processes into steps.
+
+General leftovers:
+- Make a file with only the development processes' steps for quick reference.

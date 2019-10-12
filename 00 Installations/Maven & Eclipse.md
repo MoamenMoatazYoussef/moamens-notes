@@ -1,0 +1,11 @@
+# Installing Maven Plugin in Eclipse
+- Open eclipse.
+- Open the menu Help -> Install New Software... -> what is already installed? 
+    - if the list contains m2e and m2e-wtp, we're good to go, skip the next sub-steps.
+    - If not, go to the previous screen (install new software...).
+    - Click Add...
+    - In the Name, enter "m2e update site"
+    - Check the box next to "Maven Integration for Eclipse".
+    - Next, Next, Accept license agreement, Finish.
+    - Restart Eclipse.
+    - Check the "already installed" list for the m2e and m2e-wtp to verify installation.

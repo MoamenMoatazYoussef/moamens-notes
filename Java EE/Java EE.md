@@ -168,11 +168,64 @@ Before we start learning Java EE, we'll need to set up our environment with some
 - Git.
 - Insomnia REST client (it's simplar to Postman).
 - MySql Database Installed
-- 
 
 ***Note from Moamen:***
+- Google Java JDK 8 and install it, it's really easy.
 - Check out the Maven tutorial here:
 http://bit.ly/2VGT7Gj
 - Check out the MySql installation instructions here:
+http://bit.ly/2q0jnQ6
 
-- 
+### Installing NetBeans IDE
+- Go to http://netbeans.org/downloads
+- Choose the latest version and the OS version (windows or linux), and download it.
+- For windows, for NetBeans 11 (latest version as of the time of writing this), use this link:
+https://www.apache.org/dyn/closer.cgi/netbeans/netbeans/11.1/Apache-NetBeans-11.1-bin-windows-x64.exe
+- Once it's downloaded run the file, make sure that Glassfish is not selected, next, next until you finish the installation. (leave the installation path as it is)
+
+***Note:*** We'll use both NetBeans and IntelliJ, you're not required to use IntelliJ.
+
+***Note:*** If you want to use Eclipse, you can use it, just make sure you have Eclipse IDE for Java EE Developers version.
+
+***Note from Moamen:*** Check out Eclipse installation instructions here:
+http://bit.ly/2OHaF3v
+
+### Installing Git on Windows
+- Go to https://git-scm.com
+- Download for windows, it will download a binary file or an .exe file.
+- Open the file and install it like anything we've ever installed in our lives: *next, next, next, next, install, finish, tada!* :smile:
+
+***Note from Moamen:***
+I'll add a Git tutorial in the future :smile:
+
+### Installing Insomnia REST client
+- Go to https://insomnia.rest/
+- Download for windows.
+- That's it, you don't need to install it :smile:
+
+### Installing Maven on Windows
+Maven is weird to install because we don't really "install" it, we download an already compiled version for our respective platform, then make it available on the java classpath.
+- Go to this link:
+https://maven.apache.org/download.cgi
+- Go to the Files section, download the version that's compatible for your environment, for windows it's the one ending with "bin.zip".
+- It's an 8 MB zip file so it won't take long.
+- Extract it, and copy the folder to a path you like, the path used in the course is: "C:/Users/<your user name>/mvn", but I'll use "D:/dev_stuff".
+- Now, open the start menu and search for env, open "Edit the system Environment Variables".
+- Click "Environment Variables..."
+- Add the JAVA_HOME system variable:
+    + In the lower section, click New, give a variable name of "JAVA_HOME", 
+    + give the path of the JDK main folder, for example C:/Program Files/Java/jdk-version", select this, don't select the bin folder.
+- Then, go to the PATH variable in both sections (wherever you find it):
+    + Add to it the path to the maven folder we extracted/bin, in the *bin* folder, not the external folder.
+- Finally, close this and open a command prompt.
+- Type mvn -v, see if it'll display the version, if it does then you've successfully set up maven.
+
+### Installing Payara Server
+- Go to https://www.payara.fish
+- Choose the Payara Micro variant, this is a variant designed for a modern software architecture used in Enterprise apps, called the Microservices architecture.
+
+***Note from Moamen:*** Check out the Microservices using Spring Boot & Spring Cloud script to learn more about microservices here:
+http://bit.ly/32bPfzv <br/>
+In the future, I will develop a standalone Microservices script, containing an explanation of Microservices and their design patterns from microservices.io.
+
+- Download it, it's a JAR file that we'll put in our classpath, that's it :smile:

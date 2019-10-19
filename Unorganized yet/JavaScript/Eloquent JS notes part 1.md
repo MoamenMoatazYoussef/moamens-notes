@@ -1,18 +1,8 @@
-﻿Eloquent JS notes part 1:
-=========================
-Tips:
------
-- anything between //// and //// is code.
-- notes will be divided according to projects in the book, so:
-    - part 1: chapters 1 until 6.
-    - part 2: chapters 8 until 11.
-    - part 3: chapters 13, 14, 15 (we read these before).
-    - part 4: chapters 17 until 20.
-- chapters 7, 12, 16, 21 are projects, I'm not sure if there will be time to do them honestly so I don't know if I'll include them :'D
+﻿# JavaScript Level 1 - Welcome To Hell
+## Table of Contents
+## Tips
 - I assume that you're not a noob at programming so some stuff is skipped e.g. what are loops, etc., not that being a noob is bad or anything, we've all been noobs xD
--------------------------------------------------------------------------------------------------------------------------------
-Chapter 1: values, types, operators:
-------------------------------------
+## The Weirdest Language Ever
 - number: 64-bit numbers. Overflow is considered only if you're dealing with truly astronomical numbers.
 - (Infinity, -Infinity, NaN): Special numbers, NaN is when we divide 0/0, Infinity - Infinity, etc. undefined numbers.
 - the condition (NaN == NaN) returns FALSE, and that's the only number that's not equal to itself, because it really is a result of nonsensical computation.
@@ -23,7 +13,7 @@ Chapter 1: values, types, operators:
 - Both operators are efficient in some cases:
     - if the left operand of the || is true, JS doesn't compute the right one because the result is certainly True.
     - Same for && but false.
--------------------------------------------------------------------------------------------------------------------------------
+    
 Chapter 2: Program Structure:
 -----------------------------
 Nothing special, if you're not a noob at programming you know everything here.

@@ -1,85 +1,77 @@
-YDKJS Book 2:
-============
-Tips:
------
-- Anything between //// and //// is code.
-- I skipped YDKJS Book 1 for now, I don't think it has major details that are new to us, but I may get back to it later.
-- This does NOT cover appendix A, B, or C.
-------------------------------------------------------------------------------------------------------------------------------------------------
-Chapter 1: What is scope?
-------------------------------------
-Compiler of JS:
---------------------
-- JS is a COMPILED language, not interpreted, compiler is a Just-In-Time compiler or JIT, it performs many of compiler's steps.
+# JavaScript Level 2 - How JavaScript Words
+## Table of Contents
+- [JavaScript Level 2](#javascript-level-2)
+  * [Scope](#scope)
+    + [How Scope Works](#how-scope-works)
+    + [Errors with scopes](#errors-with-scopes)
+  * [Lexical Scope](#lexical-scope)
+    + [How to make JS developers pissed off by cheating the lexical scope](#how-to-make-js-developers-pissed-off-by-cheating-the-lexical-scope)
+      - [eval()](#eval--)
+      - [with](#with)
+  * [Function and Block Scopes](#function-and-block-scopes)
+    + [Function scopes](#function-scopes)
+    + [Variable collision](#variable-collision)
+    + [Global namespaces](#global-namespaces)
+    + [Functions as scopes](#functions-as-scopes)
+    + [Blocks as scopes](#blocks-as-scopes)
+    + [Garbage collection](#garbage-collection)
+    + [let in loops](#let-in-loops)
+    + [const](#const)
+  * [Hoisting](#hoisting)
+    + [Wait what? what's going on here?](#wait-what--what-s-going-on-here-)
+    + [Functions are hoisted first](#functions-are-hoisted-first)
+  * [Closure](#closure)
+    + [Loops and Closure](#loops-and-closure)
+  * [Modules](#modules)
 
-Normal compiler:
-1. Tokenizing.
-2. Parsing the tokens to make a syntax tree.
-3. Using the tree to generate executable code.
-Note: there are some sub-steps in the middle that perform compiler optimizations, intermediate language generation, etc.
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
-JS engine uses tricks to make compiling as fast as possible, like using JITs, hot re-compiles, etc.
+## Scope
+JS is a COMPILED language, not interpreted, compiler is a Just-In-Time compiler or JIT, it performs many of compiler's steps.
 
-Scopes:
------------
-We have many things "talking" to each other in JS:
-1. Engine: responsible for compilation and execution.
-2. Compiler: does the compiling steps in the engine.
-3. Scope: collects and maintains a lookup list of all declared variables, and enforces rules about how to access them.
+When JS code runs, we have many things *talking* to each other:
+1. *Engine*: responsible for compilation and execution.
+2. *Compiler*: does the compiling steps in the engine.
+3. *Scope*: collects and maintains a list of all declared variables, and enforces rules about how to access them.
 
-Remember that any code is translated to simple assembly instructions, so:
-////
-var a = 2;
-////
-May actually be like this:
-//// Assembly
-LOAD A, 0x1000
-MOVE A, 2
-STR A, 0x1000
-////
-
-We're not diving into assembly of course, but the concept is similar, when we run JS code:
+### How Scope Works
+When we run JS code:
 - Compiler sees var a.
 - Compiler asks scope: "Is variable a already declared in this scope?"
     - If yes, compiler ignores declaration.
     - If no, compiler asks Scope to declare a new variable a.
 - Compiler generates code for Engine to execute the 'a = 2' part, then when the code is run, engine asks scope if there's a variable 'a' in this scope, if not it looks elsewhere.
 
-The compiler performs what's know as LHS lookup: it looks for the variable container, THEN assigns the value to it, as we've seen.
+The compiler performs what's know as *Left-Hand-Side **LHS** lookup*: it looks for the variable container, THEN assigns the value to it, so the variable is the *target* of the operation.
 
-Sometimes, it's RHS lookup, which means the compiler gets the value of the variable then uses it or manipulates it e.g. console.log(x);
+Sometimes, it's RHS lookup, which means the compiler gets the value of the variable then uses it or manipulates it, so the variable is a *source* for the operation, for example console.log(x);
 
 LHS: who's the target of assignment?
-RHS: who's the source of assignment?
+RHS: who's the source of assignmen
 
-////
+``` js
 function whatever(a) {
     console.log(a);
 }
 
 whatever(2); //here, an RHS call to the function, and an LHS assignment a = 2;
-////
+```
 
 As we can see, the compiler does the assignments of functions and whatever so that Engine can only look them up and use them.
 
 Scopes are nested, Engine looks at the immediate scope, if not found then looks at next outer scope, and so on until global scope.
 
-Errors with scopes:
---------------------------
+### Errors with scopes
 - in an RHS assignment or statement, if engine doesn't find the variable, this will be an "ReferenceError: Undeclared identifier", a ReferenceError is thrown by the engine.
-
 - in an LHS lookup, if you're not using strict mode, the engine WILL DECLARE a global variable and assign it.
-
 - but if in strict mode, it will throw a ReferenceError.
 - if the variable WAS FOUND, but you're trying to use it as function, or reference a property that is null or undefined, it will throw a TypeError.
 
---------------------------------------------------------------------------------------------------------------------------------------------------------
-Chapter 2: Lexical Scope:
------------------------------------
+## Lexical Scope
 There are two models of how scope works, one of them is the Lexical scope, the other is the Dynamic scope, used in Bash, perl, etc., JS uses the Lexical scope.
 
 Lexical scope is the scope that is defined when the compiler is tokenizing, or lexing, the string of code, it's based on the blocks of scope WE wrote.
-////
+``` js
 //outer scope
 function foo(a) {
   //inner scope 1
@@ -91,7 +83,7 @@ function foo(a) {
   bar(b * 3);
 }
 foo(2);
-////
+```
 The function bar is contained inside foo just because we defined it there.
 
 The Engine now understands all the places it needs to look for any identifier.
@@ -109,14 +101,12 @@ Note: the scope of a function is defined where it's declared, without dependency
 
 Note: lexical scope lookup (i.e. this process), only looks for first-class identifiers, so it can't lookup object1.attribute1 even if object1 is defined in the scope.
 
-How to make JS developers pissed off by cheating the lexical scope:
---------------------------------------------------------------------
+### How to make JS developers pissed off by cheating the lexical scope
 You can cheat on the lexical scope using two statements in JS: eval, and with.
 - Both are frowned upon.
 - This process slows down performance.
 
-eval():
--------
+#### eval()
 It takes a string argument, and treats it as a JS code, and runs it.
 
 Lines after eval() will suffer because the Engine doesn't know if the code inputted to eval() has changed the lexical scope or not!
@@ -128,11 +118,10 @@ Also don't use 'new Function(...)', even if it's safer than eval, don't use it.
 
 Dynamically generating code use cases are very rare anyways.
 
-with:
------
+#### with
 - This is deprecated anyway.
 - with is used to make many references to properties of an object without writing the object many times:
-////
+``` js
 var o = {
 	a: 1,
 	b: 2,
@@ -150,7 +139,7 @@ with(o) {
 	b = 6;
 	c = 7;
 }
-////
+```
 It takes an object and treats it as if it's a wholly separated lexical scope, so things inside that scope may vanish with it!
 
 In trict mode, you CANNOT use with.
@@ -159,14 +148,12 @@ Both eval and with affect performance:
 - Engine optimizes by being able to analyze the code as it lexes,
 - but if it finds eval or with, it assumes that all previous analysis is invalid, so it has to wait.
 
-In short: DO NOT USE with OR eval().
---------------------------------------------------------------------------------------------------------------------------------------------------------
-Chapter 3: Function VS Block Scope:
---------------------------------------------------
-Function scopes:
-----------------
+In short: ***DO NOT USE*** with OR eval().
+
+## Function and Block Scopes
+### Function scopes
 Each function creates a scope for itself.
-////
+``` js
 function foo(a) {
     var b = 2;
     function bar() {
@@ -174,7 +161,7 @@ function foo(a) {
     }
     var c = 3;
 }
-////
+```
 From the global scope, we can't call bar or access b or c, because they're local to foo.
 
 We can extract a section of our code and hide it in a function, this adds a local scope to them.
@@ -182,10 +169,9 @@ This helps first of all in good design, as you only expose what is needed to exp
 When doing this, it's better to keep any declarations of variable inside the function also inside it i.e. make variables local to the function.
 Why? in order to avoid these variables changing outside the function, thereby introducing different values than expected.
 
-Variable collision:
--------------------
+### Variable collision
 Look at this:
-////
+``` js
 function foo() {
     function bar(a) {
         i = 3;
@@ -197,40 +183,38 @@ function foo() {
     }
 }
 foo();
-////
+```
 This is called collision.
 How to avoid collision?
 1) Declare i as local variable for bar.
-////
+``` js
 var i = 3;
-////
+```
 2) Just use another name for this variable, similar names are bad coding anyways.
 
-Global namespaces:
-------------------
+### Global namespaces
 Collision is likely to occur if you're using many libraries, they can collide with ech other if they don't properly hide their private variables and functions.
 Usually to solve this they make an object which we declare it, and any functions/vars/etc. are accessed as properties of that object.
 As if it's a namespace for that library.
 So we can get something like this:
-////
+``` js
 Object1.printMessage(Object1.a);
 Object2.printMessage(Object2.a);
-////
+```
 Even if the variables and functions have similar names, we access them using their objects so they are easily differentiated.
 
-Functions as scopes:
---------------------
+### Functions as scopes
 We can do the function trick as we said above i.e. wrapping blocks of code into functions.
 BUT, now we have ANOTHER name in the global scope.
 What if we remove that name or at least not let it be in the global scope?
-////
+``` js
 var a = 2;
 (function foo() {
     var a = 3;
     console.log(a);
 })();
 console.log(a);
-////
+```
 When we wrote '(function)()' this means we treat this like a function EXPRESSION, not as a standard declaration.
 This makes the function hide its name to its scope, it's hidden to itself!
 This achieves our goal it doesn't pollute the global scope, but how do we use such a thing?
@@ -247,15 +231,15 @@ We can use IIFEs in:
 
 Check out IIFE's styles because it has a lot of styles of writing in the code ('styles' here don't refer to html or whatever).
 
-Blocks as scopes:
------------------
+### Blocks as scopes
 What the block is a block scope?
 It's declaring variables as local as possible, like in a for loop:
-////
+``` js
 for(var i = 0 ; i < 10 ; i++) {
     //bla bla
 }
-//// We declare the i INSIDE the loop's head, it's ONLY local to the loop.
+``` 
+We declare the i INSIDE the loop's head, it's ONLY local to the loop.
 
 When we declare variables using 'var', they are local to the enclosing scope.
 But you know what the problem is?
@@ -268,7 +252,7 @@ But, not all hope is lost, we have:
 
 3) let:
     this keyword attaches the variable declaration to the enclosing block.
-    ////
+    ``` js
     var foo = true;
     if(foo) {
         var bar1 = 7;
@@ -276,10 +260,10 @@ But, not all hope is lost, we have:
     }
     console.log(bar1); //output: 7
     console.log(bar2); //ReferenceError, that's what we need, now block scope is achieved ^_^
-    ////
+    ```
     because it does this implicitly, some people may not notice it when working on the project,
     so it's better to do this:
-    ////
+    ``` js
     var foo = true;
     if(foo) {
         {
@@ -289,11 +273,10 @@ But, not all hope is lost, we have:
     }
     console.log(bar1); //output: 7
     console.log(bar2);
-    //// 
+    ``` 
 
-Garbage collection:
--------------------
-////
+### Garbage collection
+``` js
 function foo(data) {
     //do stuff
 }
@@ -301,9 +284,9 @@ function foo(data) {
 var aLotOfData = {...}; //a big data structure or whatever
 foo(aLotOfData);
 //Then, we don't need the aLotOfData variable anymore, but it still is kept in JS Engine!
-////
+```
 To solve this, we can use let:
-////
+``` js
 function foo(data) {
     //do stuff
 }
@@ -311,47 +294,42 @@ function foo(data) {
     let aLotOfData = {...};
     foo(aLotOfData);
 }
-////
+```
 That will erase aLotOfData after the block finishes ^_^
 
-let in loops:
--------------
-////
+### let in loops
+``` js
 for (let i=0; i<10; i++) {
 	console.log( i );
 } //Not only is it local to the loop, it's actually ERASED and created every iteration with the new value, this will be important later but it's a good thing.
-////
+```
 
 Note: Refactoring your code using let instead of var would expose any unwanted dependencies and pollutions between scopes.
 
-const:
-------
+### const
 Same as let, but fixed value.
 
---------------------------------------------------------------------------------------------------------------------------------------------------------
-Chapter 4: Hoisting:
---------------------
+## Hoisting
 First of all, what is the output of this:
-////
+``` js
 a = 2;
 var a;
 console.log( a );
-////
+```
 - Undefined because we declared a variable then printed it? No.
 - Syntax error because a is not defined? No.
 - The answer is 2? YES!
 
 What is the output of this:
-////
+``` js
 console.log(a);
 var a = 2;
-////
+```
 - ReferenceError, because we're printing an undeclared variable? No.
 - The answer is 2? No.
 - Undefined? yes!
 
-Wait what? what's going on here?
---------------------------------
+### Wait what? what's going on here?
 Well... 
 When JS compiles, there are TWO rounds:
 Round 1: all declarations (Variables and functions, except function expressions and some other things) are processed first.
@@ -366,11 +344,11 @@ Is processed twice:
     - var a is declared in round 1.
     - a is assigned 2 in round 2.
 So, back to the first example:
-////
+``` js
 a = 2;
 var a;
 console.log(a);
-////
+```
 Round 1: 
     - 1st statement: NOT declaration, skipped.   
     - 2nd statement: declaration, a is defined in current scope (which is the global scope).
@@ -393,10 +371,10 @@ Round 2:
 //now the value of a, which is 2, is printed.
 
 Second example:
-////
+``` js
 console.log(a);
 var a = 2;
-////
+```
 Round 1:
     - 1st statement: NOT declaration, skipped.
     - 2nd statement: declaration AND assignment:
@@ -423,7 +401,7 @@ Round 2:
 
 Because declarations (variables and functions) are processed first, it's as if they are all declared at the top of the program BEFORE any execution statements.
 i.e. THIS
-////
+``` js
 console.log(a);
 var a = 2;
 
@@ -439,10 +417,10 @@ var c;
 function addSeventen(num) {
     return num + 17;
 }
-////
+```
 
 is equivalent to this:
-////
+``` js
 var a;
 var b;
 var c;
@@ -456,12 +434,12 @@ b = 3;
 console.log(b);
 c = addSeventeen(a);
 console.log(c);
-////
+```
 That, is called 'Hoisting'.
 
 Hoisting is like lifting all declarations up to the top of the current scope.
 Hoisting is per-scope, so variables defined in a function will be hoisted to the top of THAT function.
-////
+``` js
 c = addSeventeen(3);
 var c;
 console.log(c);
@@ -473,9 +451,9 @@ function addSeventeen(num) {
     var seventeen;
     return num;
 }
-////
+```
 Is equivalent to this:
-////
+``` js
 var c;
 function addSeventeen(num) {
     var seventeen; //note that this is hoisted to the top of THIS SCOPE only.
@@ -487,10 +465,10 @@ function addSeventeen(num) {
 
 c = addSeventeen(3);
 console.log(c);
-////
+```
 
 THIS DOES NOT APPLY ON FUNCTION EXPRESSIONS!
-////
+``` js
 var c = 2;
 addSeventeen(c); //executes normally;
 add18(c); //TypeError.
@@ -503,10 +481,9 @@ function addSeventeen(num) {
 var add18 = function addEighteen(num) {
     return num + 18;
 }
-////
+```
 
-Why?
-----
+**Why?** <br/>
 Round 1:
     1st statement: declaration and assignment, skip assignment, declare c in global scope.
     2nd->5th statements: not declarations, skipped.
@@ -530,11 +507,10 @@ Round 2:
 So, functions are hoisted.
 function EXPRESSIONS are NOT hoisted.
 
-Functions are hoisted first:
-----------------------------
+### Functions are hoisted first
 If something is declared more than once, the duplicate declarations are ignored.
 A very small detail in hoisting, functions are hoisted FIRST.
-////
+``` js
 foo();
 
 var foo;
@@ -546,7 +522,7 @@ function foo() {
 foo = function() {
 	console.log( 2 );
 }
-////
+```
 Round 1:
     - 1st statement: skipped.
     - 2nd statement: skipped for now :o.
@@ -565,21 +541,20 @@ So, the declaration of foo as a FUNCTION is hoisted first, the the var foo is ig
 Duplicate declarations are a bad coding style anyway so don't do it.
 
 Also, function declarations that appear inside of normal blocks e.g. if conditions, are hoisted to the enclosing scope.
-////
+``` js
 if(some_condition) {
     function foo() {    //this function is hoisted to the global scope, not the block scope.
         //bla bla bla
     }
 }
-////
+```
 BUT, JS's behavior is likely to be changed in the future, so avoid declaring functions inside blocks,
 the use cases of that are few anyway (I think), so don't do that.
---------------------------------------------------------------------------------------------------------------------------------------------------------
-Chapter 5: Scope Closure:
--------------------------
+
+## Closure
 Closure is: when a function can access its lexical scope(bucket) even if it's executing outside that bucket.
 What?
-////
+``` js
 function foo() {
 	var a = 2;
 
@@ -591,12 +566,12 @@ function foo() {
 }
 
 foo();
-////
+```
 foo() can access a.
 bar() can also access a by looking in the scope one level up, which is the scope of foo().
 The ability of bar() to access a, is part of what closure is.
 Consider this example:
-////
+``` js
 function foo() {
 	var a = 2;
 
@@ -610,14 +585,14 @@ function foo() {
 var c = foo();
 
 c();
-////
+```
 foo() can see a.
 bar() can see a;
 but foo can return the REFERENCE to bar().
 so when we execute the statement:
-////
+``` js
 var c = foo();
-////
+```
 foo() is executed and returns bar, a reference to bar().
 now c holds that value.
 
@@ -630,7 +605,7 @@ bar STILL can reference this scope, and that is called Closure ;)
 
 So, when we execute c(), this internally executes bar(), which has access to foo()'s scope i.e. author-time scope.
 
-////
+``` js
 var fn;
 function foo() {
     var a = 2;
@@ -646,7 +621,7 @@ function bar() {
 
 foo();
 bar();
-////
+```
 
 Round 1:
     foo, sup, bar, fn, a are declared.
@@ -663,9 +638,8 @@ Round 2:
 
 O.M.G. dude!
 
-Now let's play around:
-----------------------
-////
+**Now let's play around** <br/>
+``` js
 function wait(message) {
 
 	setTimeout( function timer(){
@@ -675,7 +649,7 @@ function wait(message) {
 }
 
 wait( "slim shady" );
-////
+```
 Round 1:
     wait is declared.
     message, the local variable made as argument, is also declared.
@@ -691,7 +665,7 @@ Round 2:
             logs "slim shady".
 
 A jQuery example:
-//// html
+``` html
 <html>
 
 <head>
@@ -706,8 +680,8 @@ A jQuery example:
 </body>
 
 </html>
-////
-//// jQuery
+```
+``` js
 $(document).ready(function() {
     function setupButton(name, selector) {
         $(selector).click(function() {
@@ -719,7 +693,7 @@ $(document).ready(function() {
     setupButton("Marshall Mathers", '#button2');
     setupButton("Eminem", '#button3');
 });
-////
+```
 Round 1:
     setupButton is declared.
     name, selector, the local variables made as arguments, are also declared.
@@ -749,20 +723,18 @@ Generally, when you deal with:
 then closure is involved.
 So yeah, it's really important to understand it xD
 
-Loops + Closure:
-----------------
-////
+### Loops and Closure
+``` js
 for (var i=1; i<=5; i++) {
 	setTimeout( function timer(){
 		console.log( i );
 	}, i*1000 );
 }
-////
+```
 We would expect that we get 1, 2, 3, 4, 5 printed.
 But the output would be 6, 6, 6, 6, 6 :o
 
-Wait whaaaaat?
---------------
+**Wait whaaaaat?** <br/>
 First, when the last loop executes, the engine goes back to the loop's head to check the condition,
 it increments i to 6, then sees that conditoon is false, that's why i = 6;
 
@@ -774,7 +746,7 @@ THE MAIN PROBLEM is:
 That is why they all print 6 not 5!
 How can we fix that?
 Well, we could try to do this:
-////
+``` js
 for (var i=1; i<=5; i++) {
 	(function(){
 		setTimeout( function timer(){
@@ -782,11 +754,11 @@ for (var i=1; i<=5; i++) {
 		}, i*1000 );
 	})();
 }
-////
+```
 We used an IIFE to create a new scope each iteration in order to let each timer close over a new scope.
 But that's not going to work, even if the function closes over it's own scope.
 We need a copy of i at EACH ITERATION:
-////
+``` js
 for(var i = 1 ; i <= 5 ; i++) {
     (function() {
         var j = i;
@@ -795,24 +767,23 @@ for(var i = 1 ; i <= 5 ; i++) {
         }, j*1000);
     })();
 }
-////
+```
 NOW, that works and it prints 1, 2, 3, 4, 5 ^_^
 
 Making a scope each iteration is called a per-iteration block scope.
 But remember, we can already do this by the keyword 'let':
-////
+``` js
 for(var i = 1 ; i <= 5 ; i++) {
     let j = i; //now j is per-iteration ^_^
     setTimeout(function timer() {
         console.log(j);
     }, j*1000);
 }
-////
+```
 'let' means that the variable will be declared at EACH iteration.
 
-Modules:
---------
-////
+## Modules
+``` js
 function cool() {
     var a = 2;
     var b = 3;
@@ -825,11 +796,11 @@ function cool() {
         console.log(b);
     }
 }
-////
+```
 This is a normal function with private variables to it, and functions closing over the bigger function.
 
 But now consider this:
-////
+``` js
 function cool() {
     var a = 2;
     var b = 3;
@@ -850,7 +821,7 @@ function cool() {
 var foo = cool();
 foo.doThis(); //output: 2
 foo.doThat(); //output: 3
-////
+```
 
 This style of writing functions is called "modules".
 First, it's just a function.
@@ -869,7 +840,7 @@ To make a module:
 1. There must be an outer enclosing function and invoked to return an object.
 2. The enclosing function must return at least ONE inner function so that it has closure over the private scope and can access it.
 
-////
+``` js
 var foo = (function cool() {
     var a = 2;
     var b = 3;
@@ -889,14 +860,14 @@ var foo = (function cool() {
 
 foo.doThis(); //output: 2
 foo.doThat(); //output: 3
-////
+```
 We just made it into an IIFE and the return value is returned into foo immediately.
 This variation only creates ONE instance of that module to be used.
 (Kinda like the singleton pattern)
 
 Modules are just functions, you can send them arguments if the object created depend on them, which is powerful.
 A more powerful variation:
-////
+``` js
 var foo = (function cool() {
     var a = 2;
     var b = 3;
@@ -919,11 +890,11 @@ var foo = (function cool() {
 
 foo.doThis(); //output: 2
 foo.doThat(); //output: 3
-////
+```
 By retaining an inner refernce to that public API, you can modify it from inside, you can add/remove/update methods, props, values, etc.
 
 Look at this too:
-////
+``` js
 var foo = (function moduleManager() {
     var modules = {};
 
@@ -945,28 +916,28 @@ var foo = (function moduleManager() {
 
     return publicAPI;
 })();
-////
+```
 This is an illustration example, you can use this module to make many instances and track them by name from the arrays inside here!
 You can define them using the function 'define', and you can get them by 'get'.
 You pass in a name, dependencies if any, and an implementation of that module.
 
 i.e. instead of doing this to make an instance:
-////
+``` js
 var foo = (function cool() {
     ...
 })();
-////
+```
 You can do this:
-////
+``` js
 moduleManager.define("instance1", [], function cool() {
     ...
 });
-////
+```
 
 Then, you can access this module like this:
-////
+``` js
 var instanceOne = moduleManager.get("instance1");
-////
+```
 
 All of that uses the power of closure, and what this means, essentially, is that
 we can make modules as plugins without DEPENDENCIES.
@@ -977,6 +948,3 @@ Note: ES6's modules are static, they can't be modified at runtime.
 
 ES6 Modules have to be defined in separate files, one per module.
 
-DONEEEEEE
-Note: Read the appendices.
---------------------------------------------------------------------------------------------------------------------------------------------------------

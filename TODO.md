@@ -1,7 +1,10 @@
 # TODO
-- General
-    + Remove practice guides for now.
-    + Installation.md in one file AND split into smaller files.
+- Even more general stuff
+    + Plan moamens-courses
+    + Split moamens-courses
+    + Re-evaluate b-plan.
+
+- General stuff
     + Add Roadmaps in README.
     + Create a Course Template.
     + Modify README.

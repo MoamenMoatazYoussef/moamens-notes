@@ -7,7 +7,7 @@ I've struggled a lot with training courses, books, and learning material that is
 
 All developers go through the same problem, therefore I decided that **I will develop *free* written courses in the easiest, most organized way possible**, using basic everyday terms and examples whenever I can, and including as much details as possible.
 
-These courses are:
+**These courses are:**
 1. Free.
 2. Constantly updated with new releases.
 3. Are compiled from all the sources that I use. 
@@ -20,12 +20,11 @@ In the next few months, I will:
 2. Add one or two projects for each course to practice.
 3. Organize the courses in roadmaps: *Frontned*, *Backend*, *Fullstack*, *Cloud Computing in AWmazon Web Services*, and *Theoretical* roadmap. 
 
-
-Long-term plans:
+**Long-term plans:**
 1. Build a team to cover more technologies and more material.
 2. This is my ultimate purpose, to *create a library of scripts that helps software developers learn things more easily and efficiently*.
 
-This repo contains **all the courses that I ever wrote**.
+This repo contains **All the courses**.
 
 Enjoy :smile:
 

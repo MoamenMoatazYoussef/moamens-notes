@@ -1,7 +1,7 @@
 # Moamen's Notes
 
 Hello :raising_hand: 
-My name is Moamen Moataz, I'm a full-stack web developer at ITWorx Egypt. I specialize in ReactJs, Bootstrap, Spring Framework, and Hibernate.
+My name is Moamen Moataz, I'm a full-stack web developer at ITWorx Egypt. I specialize in ReactJs and Spring Framework.
 
 I've struggled a lot with training courses, books, and learning material that is hard to understand, or uses too many technical words.
 

@@ -30,8 +30,9 @@ Enjoy :smile:
 
 ## List of Courses
 - **Jave Programming Language**, Source: Pluralsight courses:
-    + Java Fundamentals.
+    + Java Fundamentals. (Being Refactored)
     + Java Core Platform.
+    + Java Collections Framework. (In Progress)
 - **JavaScript**, Source: Books: 
     + Eloquent JavaScript.
     + You Don't Know JavaScript. (In Progress)
@@ -56,13 +57,13 @@ Enjoy :smile:
     + Courses:
         - React JS.
         - React & Redux.
-        - Test-Driven Development in React.
+        - Test-Driven Development in React. (In Progress)
     + Sources:
         - Book: The Road To Learn React.
         - Website: FreeCodeCamp.
-        - Pluralsight course: Test-Driven Development in React. (In Progress)
-- **Algorithms & Data Structures**, Sources:
-    + Book: Introduction to Algorithms (also known as *CLRS book*). (In Progress)
-    + Youtube series created by CS Professor *Dr. Hazem Said, PhD*. (In Progress)
+        - Pluralsight course: Test-Driven Development in React.
+- **Algorithms & Data Structures**, Sources: (In Progress)
+    + Book: Introduction to Algorithms (also known as *CLRS book*).
+    + Youtube series created by CS Professor *Dr. Hazem Said, PhD*.
 
 ## Thank you :smile:

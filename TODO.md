@@ -1,5 +1,7 @@
 # TODO
 - Even more general stuff
+    + Sort courses by priority (Spring, Java, React, HTML/CSS, JS, Advanced).
+    + Complete the How to become a Software Engineer guide.
     + Plan moamens-courses
     + Split moamens-courses
     + Re-evaluate b-plan.

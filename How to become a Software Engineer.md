@@ -54,7 +54,7 @@ The process of telling robots to follow some programs is called *Programming* or
 
 So, the people who can use these *Programming Languages* to make the robots do stuff help the society (or the kingdom in the game) lower its costs, therefore helping the economy and the people by making food cheaper.
 
-**This is how Programming helps community.** <br/>
+**This is how Programming helps the community.** <br/>
 Programming in real-life is telling computers to follow instructions to achieve some goals to help the society and the economy.
 
 But, as time passed and a lot of programs were written, people discovered that writing programs is like writing books, it's an art form, a mix of art and science, and it should be done correctly.
@@ -79,7 +79,7 @@ Other problems appeared and software artists began designing art to solve these 
 
 Then, creative programmers began using software to make new art, some created games, some created programs on a computer, some created programs that communicate across computers and the internet, some even created programs on mobile phones.
 
-And thus, this gigantic software world that includes all of these art and science breakthrough, is collectively called ***Software Engineering.***
+And thus, this gigantic software world that includes all of these art and science breakthroughs, is collectively called ***Software Engineering.***
 
 This is what Software Engineering is, and as you can see, I love it :heart:
 

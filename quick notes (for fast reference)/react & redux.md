@@ -306,3 +306,84 @@ How to pass actions using mapDispatchToProps?
   ```
   Binding is also done, and it's much easier.
 
+## async activities in react redux
+
+### Mock APIs
+An api that you create to develop upon, without waiting for backend.
+We'll use JSON server for that.
+Then add this script to package.json:
+``` json
+"prestart:api" : "node tools/createMockDb.js"
+```
+Note: any npm script prefixed with **pre** will run BEFORE the npm start.
+
+## Middleware in redux
+It runs between action dispatching, and the moment it reaches the reducer.
+It can:
+- handle async API calls.
+- logging
+- reporting crashes
+- routing
+- etc.
+Basically cross-cutting concerns are handled by middleware.
+We can write our own middleware, or use middlewares provided by the redux community.
+
+Actions are sync objects, so how do we handle async calls?
+We can use libraries like:
+- redux-thunk
+- redux-promise
+- redux-saga
+and others.
+
+We'll use thunk.
+
+### Redux Thunk
+"Thunk": in CS, it means a function that wraps an expression in order to delay its evaluation.
+Redux thunks, from an action creator, it returns a function instead of an object.
+
+btw, redux thunk is 14 lines of code.
+
+How to use thunks:
+- in configureStore.js, import Thunk from "redux-thunk".
+- add "Thunk" to applyMiddleware.
+
+Then,
+- open courseActions.js, import courseApi.
+- write a function (and export it) that returns "a function that accepts dispatch as argument".
+- inside it, return the async call itself.
+``` js
+export function loadCourses() {
+    return function (dispatch) {
+        return courseApi.getCourses()
+            .then(courses => {
+                dispatch(loadCoursesSuccess(courses))
+            })
+            .catch(error => {
+                throw error;
+            })
+    }
+}
+```
+- then add this new action: (for our app, not to create a thunk, that previous function is a thunk)
+``` js
+export const loadCoursesSuccess = (courses) => ({
+    type: actions.LOAD_COURSES_SUCCESS,
+    courses
+});
+```
+- add the new reducer part:
+``` js
+        case actions.LOAD_COURSES_SUCCESS:
+            return actions.courses;
+```
+That's it, because whatever will be returned from our API will replace the state's corresponding values, we don't have to merge the state here. (It won't harm, but we don't have to)
+
+Then, we'll call that API when the courses page is opened.
+- in coursesPage, declare the componentDidMount functions, then call the action loadCourses() i.e. call the THUNK, not the direct ACTION.
+
+
+## When to use react state
+Don't use Redux state on ALL state.
+Only use react state when the data inside that state is used by one or few components.
+Redux state for more global data.
+

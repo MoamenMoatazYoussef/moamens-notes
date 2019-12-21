@@ -387,3 +387,256 @@ Don't use Redux state on ALL state.
 Only use react state when the data inside that state is used by one or few components.
 Redux state for more global data.
 
+## Testing React
+React relies on: "Components produce HTML based on Props and State".
+This makes frontend easier to test in React than normal.
+
+There are several JS testing frameworks, like:
+- Jest: easy to set up, most popular for React.
+- Mocha: highly configurable.
+- Jasmine: similar to Mocha.
+- Tape: the leanest and simplest of all of them.
+- AVA.
+
+We'll use Jest.
+
+Helper libraries:
+- React Test Utils: specifically to test react components, a very verbose API, it offers:
+	- shallowRender: just rendering a single component without children, no DOM required, fast & simple.
+	- renderIntoDocument: renders component and children, DOM required.
+		- Libraries like JSDOM helps us use DOM without a browser.
+		- Simulating clicks, keypresses, etc.
+	Check its documentation.
+
+- Enzyme: using react test utils & JSDom behind the scenes, it's basically the jQuery of React Test Utils.
+	- Also, provides jQuery-style selectors using a library called *Cheerio*.
+- React Testing Library: alternative to Enzyme, simpler than Enzyme.
+
+We'll explore Enzyme and React Testing Library.
+
+### Jest
+Jest have a feature *Snapshot Testing*, this can help with regression testing.
+
+#### Configuring Jest
+- Add a script:
+``` json
+"test": "jest"
+```
+- Add a section to the main JSON object, "jest".
+``` json
+"jest": {
+	// here, you put configurations, check the docs for that
+},
+```
+
+
+#### Testing
+Let's start a simple test:
+- Create src/index.test.js.
+``` js
+it('should pass', () => {
+	expect(true).toEqual(true);
+});
+```
+- Run the app ```npm test``` or ```npm run test```, these commands both run any file ending with .test.js or .spec.js.
+- It should succeed.
+- Change one of the true to false, re-run the test.
+- It should fail.
+
+We don't need to run the script for every change we do, so change the test script to
+``` sh
+"test": "jest --watch"
+```
+
+#### Snapshot Testing
+This records a component's output, and tests against it.
+Useful for regression testing.
+- Create CourseForm.Snapshots.test.js:
+	- Import React, the component to test, *renderer*, and the mock data you need.
+``` js
+import React from "react";
+import CourseForm from "./CourseForm";
+import renderer from "react-test-renderer";
+import { courses, authors } from "path/to/mockData";
+
+// now, let's test that the label on the Save Button in the form 
+// is properly set when we set the save prop to true.
+
+// all snapshot tests start with the it keyword.
+// takes two args:
+// 1. a description for the test, just a string.
+// 2. a function that contains the test case.
+it("sets submit button to 'Saving...' when saving is true", () => {
+	
+	// we'll use renderer to simulate rendering of the CourseForm 
+	const tree = renderer.create( 
+		<CourseForm 
+			course={courses[0]}
+			authors={authors}
+			onSave={jest.fn()}
+			onChange={jest.fn()}
+			saving
+		/> 
+	);
+	// when passing the props, we'll use jest.fn()
+	// this is an empty mock function so that we don't have to declare
+	// our own for the test
+	
+	// we'll use expect() function to assert the expected behavior
+	// we use it, pass a variable to it, then chain other functions to
+	// test specific things
+	
+	// we'll use toMatchSnapshot()
+	expect(tree).toMatchSnapshot();
+});
+```
+- Run the test script.
+- The test should pass, and it should say that it has written a new snapshot, this will later be used for testing.
+- Snapshots are saved in a directory __snapshots___.
+- Inside it, you'll find HTML of the output of the component.
+
+Let's create another test, to test if the button label stays the same if we set Saving to false:
+``` js
+it("doesn't change when saving is false", () => {
+	const tree = renderer.create(
+		<CourseForm 
+			course={courses[0]}
+			authors={authors}
+			onSave={jest.fn()}
+			onChange={jest.fn()}
+			saving={false}
+		/> 
+	);
+	expect(tree).toMatchSnapshot();
+});
+```
+- Run the test, it should also pass.
+
+If you change the component later, the tests will fail, but press U after running the tests, this makes Jest update the snapshots based on your new changes, now the test should pass.
+
+### Enzyme
+#### Configuration
+- Add a new file tools/testSetup.js
+	- Import an Adapter for the version of react you're using
+``` js
+import { configure } from "enzyme";
+import Adapter from "enzyme-adapter-react-16";
+
+configure({ adapter: new Adapter() });
+```
+- Add this to the package.json in tje Jest section:
+	- Jest will run any items we declare under setupFiles array, so add the new testSetup.js file to that.
+``` json
+"jest": {
+	"setupFiles" : [
+		"./tools/testSetup.js"
+	]
+}
+```
+
+#### Testing with Enzyme
+- Add CourseForm.Enzyme.test.js
+- Import React, the component to be tested, the functions from enzyme to test stuff, we'll use "shallow" which does shallow rendering (another option is "mount" which does deep rendering).
+- Make a function that's a *factory function*, this calls your react component with some default values, to avoid repeating that in each test.
+``` js
+function renderCourseForm(args) {
+	const defaultProps = {
+		authors: [],
+		course: {},
+		saving: false,
+		errors: {},
+		onSave: () => {},
+		onChange: () => {}
+	};
+	
+	const props = { ...defaultProps, ...args };
+	return shallow(<CourseForm {...props} />);
+}
+```
+- Now let's add a test that tests if the CourseForm component renders a form and a header.
+	- Declare a variable and assign it to the return of the factory function.
+	- Use the .find() function from *enzyme* to get specific element from the component using CSS selectors (Like jQuery), use it to get "form" and "h2" since these are the ones we want to test.
+	- we need to test that the wrapper contains only one element of Form.
+	- the same for h2.
+``` js
+it('renders form and header', () => {
+	const wrapper = renderCourseForm();
+	expect(wrapper.find('form').length).toBe(1);
+	expect(wrapper.find('h2').length).toBe(1);
+});
+```
+- Run the test, it should pass.
+
+Let's add another test, remember the snapshot test on the save button's label? The same test, in another way:
+``` js
+it('labels save button as "Saving..." if saving is true', () => {
+	const wrapper = renderCourseForm({ saving: true });
+	expect(wrapper.find("button").text()).toBe("Saving...");
+});
+```
+- Run the test, it should pass.
+
+When using Shallow rendering, use component "names" in find().
+When using mount rendering, use HTML component's names, like **a** for refs and links, in find().
+And import and use MemoryRouter for mount rendering.
+
+### React Testing Library
+This relies on writing tests based on what the user sees, so it's more realistic.
+
+#### Testing
+We'll test that Add Course header is rendered successfully.
+- create CourseForm.ReactTestingLibrary.test.js:
+``` js
+import React from "react";
+import { cleanup, render } from "react-testing-library";
+import CourseForm from "";
+
+// we'll use cleanup to clean after each one of the tests
+afterEach(cleanup);
+
+// here, add the same factory we used, but instead of shallow()
+// use render()
+
+it("should render Add Course header", () => {
+
+	// the render() function returns an object with some methods inside
+	// it that are used for testing different stuff,
+	// we'll get the getByText function because we're looking for a
+	// text header
+	const { getByText } = renderCourseForm();
+	
+	// then we'll use that function to run the test
+	// note that we don't need to use expect(), the methods from render()
+	// has internal assertion
+	getByText("Add Course");
+});
+
+// another two tests, testing the Save button's label as usual
+it("labels as Save when not saving", () => {
+	const { getByText } = renderCourseForm({ saving: false });
+	getByText("Save");
+});
+
+it("labels as Saving... when saving", () => {
+	const { getByText } = renderCourseForm({ saving: true });
+	getByText("Saving...");
+});
+```
+- Run the tests, they should pass.
+
+React Testing Library's main concern is testing based on what the user sees, so there is no shallow rendering, it's all Mount rendering.
+
+Check the docs for Jest, Enzyme, and RTL for a large collection of testing functions and API.
+
+## Testing Redux
+
+
+
+
+
+
+## Production Builds and Deployment
+
+
+
+

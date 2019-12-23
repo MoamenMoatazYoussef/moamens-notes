@@ -629,10 +629,163 @@ React Testing Library's main concern is testing based on what the user sees, so 
 Check the docs for Jest, Enzyme, and RTL for a large collection of testing functions and API.
 
 ## Testing Redux
+When testing components, we usually test two things:
+- Markup: the component should produce a certain output for a certain set of props. (Presentation components mainly)
+- Behavior: given a user event, we get some expected behavior.
 
+### Testing Connected Components
+The problem is that they're wrapped in connect, so they're not exported, they're wrapped in connect THEN exported.
+To test them, we need to do one of these:
+- Wrap the component with <Provider> within our test, to be able to pass the store and stuff.
+- Export the un-connected component (useful when testing local state and behavior)
 
+Let's try it:
+- Create ManageCoursePage.test.js.
+- Get the imports: React, mount from enzyme, data from mockData, the component.
+- Make a factory function to render your component, like before. 
+	- Pass all the props the component needs, including the props injected from redux. 
+	- Use mount rendering here. (We need to test the component's interaction with its children and others)
+- Write a test that ensures that the form displays a validation error if no course title was passed.
+``` js
+it("displays validation error", () => {
+	const wrapper = render(); //this is the factory function
+	wrapper.find("form").simulate("submit"); //a function to simulate user events
+	const error = wrapper.find(".alert").first();
+	expect(error.text()).toBe("Title is required");
+});
+```
+- Run the test.
+- An error will happen, because we need to wrap the component in Provider, or export the normal component.
+- Go to the factory function, and wrap it in <Provider/>
+	- Or go to the ManageCoursePage.js and just export the component normally, don't remove the connect() export.
+- In your test, import the normal plain component.
+- Re-run the test.
+- It should pass :)
 
+#### Testing Action Creators
+ActionCreators return an object, we just need to assert that it returns the expected object.
+- Create courseActions.test.js
+``` js
+import * as courseActions from './courseActions';
+import * types from './actionTypes';
+import { courses } from '../../../tools/mockData';
 
+describe("createCourseSuccess", () => {
+	it("should create CREATE_COURSE_SUCCESS action", () => {
+		const course = courses[0];
+		const expectedAction = {
+			type: types.CREATE_COURSE_SUCCESS,
+			course
+		};
+		
+		const action = courseActions.createCourseSuccess(course);
+		expect(action).toEqual(expectedAction);
+	});
+	
+	// do the same for the rest of the actions
+})
+```
+
+#### Testing Thunks
+Thunks do two things:
+- Dispatch some actions.
+- Deal with APIs.
+
+To test them, we need to mock some things:
+- Store: using redux-mock-store
+- API calls: using fetch-mock
+
+Let's do that:
+- In courseACtions.text.js:
+``` js
+// previous imports here
+import thunk from "redux-thunk";
+import fetchMock from "fetch-mock";
+import configureMockStore from "redux-mock-store";
+
+const middleware = [thunk];
+const mockStore = configureMockStore(middleware);
+
+describe("async actions", () => {
+	afterEach(() => {
+		fetchMock.restore(); 
+		//this is to restart the store after each test here
+	});
+	
+	it("should create BEGIN_API_CALL and LOAD_COURSES_SUCCESS", () => {
+		//we tell it to capture any fetch calls nad return the body passed
+		// as a 2nd argument 
+		fetchMock.mock("*", { 
+			body: courses,
+			headers: {
+				"content-type": "application/json"
+			}
+		});
+		
+		const expectedActions = [
+			// build your actions here
+		]
+		
+		// create a mock redux store and initialize it
+		const store = mockStore({ courses: [] });
+		
+		return store.dispatch(courseActions.loadCourses()).then(() => {
+			//write the expect line here
+		});
+	});
+});
+```
+
+#### Testing Reducers
+Reducers are pure functions, they are so easy to test :)
+No mocking or simulating anything, data comes in as an action, so we just call the reducer with a state and an action, and asset the outputs for certain actions.
+
+Let's try it:
+- create courseReducer.test.js
+- import the reducer and courseActions
+``` js
+it("should add a course when it's passed CREATE_COURSE_SUCCESS", () => {
+	const initialState = [
+		{
+			title: 'A'
+		},
+		{
+			title: 'B'
+		}
+	];
+	
+	const newCourse = {
+		title: "C"
+	};
+	
+	const action = actions.createCourseSuccess(newCourse);
+	
+	const newState = courseReducer(initialState, action);
+	
+	expect(newState.length).toEqual(3);
+	expect(newState.length[0].title).toEqual('A');
+	expect(newState.length[1].title).toEqual('B');
+	expect(newState.length[2].title).toEqual('C');
+});
+```
+- Create another similar test for UPDATE_COURSE_SUCCESS.
+- Run both tests.
+
+Nice :)
+
+#### Testing The Store
+Testing the store means testing that actions, reducers, and the store are all interacting property together.
+
+So, this is kind of an integration test.
+- Create redux/store.test.js.
+- Import createStore, rootReducer, initialState, and courseActions.
+- Write a test to test that the store creates courses.
+	- Create a new store using createStore, pass the rootReducer and initialState.
+	- Make a dummy course.
+	- Make a dummy action using createCourseSuccess, pass the dummy course.
+	- Dispatch that action using the store.dispatch()
+	- Get the new course like this: ```store.getState().course[0];```.
+	- Expect the created course to equal the dummy course.
 
 
 ## Production Builds and Deployment

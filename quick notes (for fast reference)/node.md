@@ -2134,3 +2134,139 @@ const courseSchema = new mongoose.Schema({
   // rest of the schema
 });
 ```
+
+## Relations between entities in MongoDB
+In relational databases i.e. SQL databases, there is the relations concept that enforces data integrity, but in MongoDB, there's no such thing.
+We need to establish these ourselves.
+
+There are two ways:
+- Using references (Normalization):
+  - We have a separate collection for authors, and a separate collection for course, like this:
+  ``` js
+  let author = {
+    name: "Moamen"
+  }
+
+  let course = {
+    author: <id_of_author/>
+  }
+  ```
+  As we said, MongoDB doesn't enforce data integrity i.e. we can set the *author* field in a course document to invalid IDs, an array of IDs, null, etc.
+
+- Embedded documents (Denormalization):
+  - We embed an author document inside of a course document, like that:
+  ``` js
+  let author = {
+    name: "Moamen"
+  }
+
+  let course = {
+    author: {
+      name: "Moamen"
+    }
+  }
+  ```
+
+Each approach has its pros and cons, we choose between them based on the app's query requiremenets.
+- Normalization:
+  - High Consistency: If we want to update the author, we only need to do that one place.
+  - Low Performance: we need additional queries to load related objects.
+- Denormalization: 
+  - Low Consistency: If we want to update the author, we need to update it in all the referencing courses. If that doesn't work, we need to rollback to ensure data consistency.
+  - High Performance: Only one query to get an object and its related objects.
+
+Hybrid approach:
+  - Instead of embedding the WHOLE author in the course, we only embed the interesting properties e.g. id referencing the real author, name, etc.
+  - This is useful if we want to take snapshots of our database at any time.
+  - This may help if you're building something like e-commerce.
+
+### Methods to establish relations - Referencing / Normalization
+We add this part to the course schema, that doesn't restrict us from making it null, but it helps us reference authors by enabling us to pass an authorId
+``` js
+const authorSchema = new mongoose.Schema({
+  name: String,
+  bio: String,
+  website: String
+});
+
+const Author = mongoose.model('Author', authorSchema);
+
+// Check here
+const Course = mongoose.model('Course', new mongoose.Schema({
+  name: String,
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Author'
+  }
+}));
+```
+
+To get the objects that are referenced by author, we do use the method .populate() and pass to it the name of the field that contains the referencing id i.e. *'author'*, look at what we're doing when we get all the courses:
+``` js
+async function listCourses() { 
+  const courses = await Course
+    .find()
+    .populate('author')
+    .select('name author');
+  console.log(courses);
+}
+```
+This method loads the courses, uses the author field to load the referenced authors from Author, then displays them.
+
+### Methods to establish relations - Embedding / Denormalization
+``` js
+const Course = mongoose.model('Course', new mongoose.Schema({
+  name: String,
+  author: authorSchema 
+}));
+// Notice that we're setting the type to the Schema of the author
+// because this field will have actual authors as values
+
+// Then, when we create the course, we do this:
+createCourse('Node Course', new Author({ name: "Moamen" }));
+```
+
+The author document inside the course is a sub-document, which is like a real document i.e. we can implement validation, etc.
+
+But they can't be saved on their own, they need to be saved in the context of their parent document.
+e.g. if we want to change the name of the embedded author in a certain course, we need to:
+  - get the course.
+  - modify its author.
+  - save that course.
+``` js
+async function updateAuthor(courseId, authorData) {
+  const course = await Course.findById(courseId);
+  course.author = { ...author, ...authorData };
+  await course.save();
+}
+```
+So it's basically updating the course but passing an author object i.e. we can use update(), findByIdAndUpdate(), etc.
+
+To remove a sub-document (I'll call them *subdoc* from now on), use the $unset operator.
+
+### Embedding an array of subdocs
+You can easily do this:
+``` js
+createCourse('Node Course', [
+  new Author({ name: "Moamen"}),
+  new Author({ name: "Moataz"})
+]);
+
+// to add an author to the array of authors of an existing course,
+// we do it by updating the parent course, like we discussed earlier
+// here's the function:
+async function addAuthor(courseId, author) {
+  const course = await Course.findById(courseId);
+  course.authors.push(author);
+  course.save();
+}
+
+// Removing an author:
+async function removeAuthor(courseId, authorId) {
+  const course = await Course.findById(courseId);
+  const author = course.authors.id(authorId);
+  author.remove();
+  course.save();
+}
+```
+

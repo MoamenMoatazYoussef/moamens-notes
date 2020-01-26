@@ -525,3 +525,319 @@ for(let key in c1) {
 }
 c1.hasOwnProperty('draw'); //output: false
 ```
+
+**Note:** Avoid extending built-in objects e.g. Array, String, etc.
+
+## Prototypical Inheritance
+``` js
+function Circle(r) {
+	this.r = r;
+}
+
+Circle.prototype.draw = function() {
+	//code of the draw method.
+};
+
+Circle.prototype.duplicate = function() {
+	//code of the duplicate method.
+};
+```
+
+What if we want to create an object Square, having the same method ```duplicate``` having the same implementation?
+
+We'll make an object ```Shape```, define the method ```duplicate``` there, then INHERIT IT by Circle and Square.
+``` js
+// here's the Shape constructor
+function Shape() {
+
+}
+
+// now we define the method "duplicate" in the Shape prototype
+Shape.prototype.duplicate = function () {
+	console.log("duplicate");
+}
+
+// here's the Circle constructor
+function Circle(r) {
+	this.r = r;
+}
+
+// so far, Circle inherits from Circle.prototype, which inherits from Object.prototype
+// and Shape inherits from Shape.prototype, which inherits from Object.prototype
+
+// so, to set up inheritance here, we need Circle.prototype inherit from Shape.prototype
+// we'll use Object.create:
+// Object.create(Shape.prototype);
+// this method creates an object whose prototype is whatever we pass as argument.
+// so, to make Circle.prototype inherit from Shape.prototype, we need to assign the
+// return value of this function to Circle.prototype, like this:
+
+Circle.prototype = Object.create(Shape.prototype);
+
+// now let's try it:
+const c = new Circle(7);
+c.duplicate(); // Output: duplicate
+```
+This is how we inherit using prototypes. <br/>
+
+### Constructor resetting problem
+
+...but, there's a problem, this method erases the Circle constructor function, we no longer can create Circles dynamically using the constructor.
+
+If we do this like that:
+``` js
+new Circle.prototype.constructor(67); // This will return a SHAPE
+```
+
+So, we need to reset our constructor again (reset as in re-set):
+``` js
+Circle.prototype = Object.create(Shape.prototype);
+Circle.prototype.constructor = Circle;
+```
+
+This is a best practice, and it's strongly recommended to do this everytime we re-set the prototype of any object.
+
+### Calling the super constructor
+How do we call the Shape constructor from the Circle object?
+This will NOT work:
+``` js
+function Circle(radius, color) {
+	Shape(color);
+	this.radius = radius;
+}
+```
+Because, remember how the ```new``` keyword works:
+- Creates a new object,
+- Binds *this* to that object,
+- returns this object, or *this*.
+
+Here, calling the Shape constructor will also have *this*, but we didn't call it using new (and we don't want to, because now there's a new object other than the object returned from the Circle operator), so that means the color property is set on the GLOBAL object, the *window*.
+
+To solve this, we use the .call method:
+``` js
+function Circle(radius, color) {
+	Shape.call(this, color);
+	this.radius = radius;
+}
+```
+the .call method takes a reference to an object on which to call the function, which is the Shape constructor, so now the color property is created in that object passed (As reference), which is *this*, which is THE new object created by the keyword ```new```.
+
+i.e. now we are setting radius and color on the same object and returning it.
+
+### Can we get a little cleaner?
+Do we really have to do this everytime?
+``` js
+Circle.prototype = Object.create(Shape.prototype);
+Circle.prototype.constructor = Circle;
+```
+
+Can we do this:
+``` js
+function extend(Child, Parent) {
+	Child.prototype = Object.create(Parent.prototype);
+	Child.prototype.constructor = Child;
+}
+
+extend(Circle, Shape);
+```
+
+Yes, we can do that :)
+
+### Overriding
+``` js
+function extend(Child, Parent) {
+	Child.prototype = Object.create(Parent.prototype);
+	Child.prototype.constructor = Child;
+}
+
+function Shape() {}
+
+Shape.prototype.duplicate = function() {
+	console.log("duplicate shape");
+}
+
+function Circle(radius) {
+	this.radius = radius;
+}
+
+extend(Circle, Shape);
+
+// overriding
+Circle.prototype.duplicate = function() {
+	console.log("duplicate circle");
+}
+```
+Why does this work? <br/>
+Because of how prototypical inheritance works in JS:
+- Walks up the prototype chain.
+- Picks the first implementation found for a function.
+So, the Circle's duplicate will be found first if we're executing it using a Circle object.
+
+What if we want to call the original implementation using the overriding implementation?
+``` js
+Circle.prototype.duplicate = function() {
+	Shape.prototype.duplicate.call(this);
+	console.log("duplicate circle");
+}
+```
+
+### Polymorphism
+``` js
+function extend(Child, Parent) {
+	Child.prototype = Object.create(Parent.prototype);
+	Child.prototype.constructor = Child;
+}
+
+// Shape
+function Shape() {}
+
+Shape.prototype.duplicate = function() {
+	console.log("duplicate shape");
+}
+
+// Circle
+function Circle(radius) {
+	this.radius = radius;
+}
+
+extend(Circle, Shape);
+
+Circle.prototype.duplicate = function() {
+	console.log("duplicate circle");
+}
+
+
+// Square
+function Square(sideLength) {
+	this.sideLength = sideLength;
+}
+
+extend(Square, Shape);
+
+Square.prototype.duplicate = function() {
+	console.log("duplicate square");
+}
+
+const c1 = new Circle(7);
+const s1 = new Square(8);
+const o1 = new Shape();
+
+const shapes = [
+	c1,
+	s1,
+	o1
+];
+
+// this will call the implementation
+// 
+for(let shape of shapes) {
+	shape.duplicate();
+}
+```
+Now THAT is awesome :)
+
+### When to use prototypical inheritance
+Imagine we create Animal which has eat() and walk(), from it we inherit by Person and Dog.
+If we create Shark (baby shark do doo do do do do), we can't inherit from Animal because fish can't walk.
+
+A solution may be to create Animal, then inherit by Mammel and Fish, then inherit Person and Dog from Mammel, then inherit Shark from Fish.
+
+That means we changed our entire hierarchy.
+
+So, as a rule of thumb:
+- Don't create inheritance for more than *one* level.
+
+Another solution: ***Composition*** <br/>, define the features as independent objects:
+- Define canWalk, canEat, canSwim as Objects containing the respective features.
+- Define Person, this person contains the three objects.
+- Define Shark(do doo do do do do), that shark contains only canEat and canSwim.
+
+How?
+``` js
+const canEat = {
+	eat: function() {
+		this.hunger--;
+		console.log("eating");
+	}
+}
+
+const canWalk = {
+	walk: function() {
+		console.log("walking");
+	}
+}
+
+// now, we'll use Object.assign, a method that copy the properties of 
+// a certain object to another object.
+// for example, let's try this with an empty object.
+const person = Object.assign({}, canEat, canWalk);
+```
+Now, person has both methods defined in canEat and canWalk i.e. eat and walk
+
+We can do that using a constructor too by assigning the PROTOTYPE of Person, so whenever we create a person object, it has the methods already:
+``` js
+function Person() {}
+Object.assign(Person.prototype, canEat, canWalk);
+
+const person1 = new Person();
+```
+
+Let's define canSwim and Shark:
+``` js
+const canEat = {
+	eat: function() {
+		this.hunger--;
+		console.log("eating");
+	}
+}
+
+const canWalk = {
+	walk: function() {
+		console.log("walking");
+	}
+}
+
+const canSwim = {
+	swim: function() {
+		console.log("swimming");
+	}
+}
+
+function Person() {}
+Object.assign(Person.prototype, canEat, canWalk);
+
+function Shark() {}
+Shark.prototype.sing = function() {
+	console.log("Baby shark do doo do do do do");
+}
+Object.assign(Shark.prototype, canEat, canSwim);
+
+const person = new Person();
+const shark = new Shark();
+
+// now, person has the methods eat and walk, 
+// and shark has the methods eat and swim
+```
+
+We can extract the Object.assign in a function called *mixin*:
+``` js
+function mixin(target, ...mixin) {
+	Object.assign(target, ...sources);
+}
+```
+This is called a Mixin.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

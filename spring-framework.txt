@@ -686,8 +686,8 @@ Very easy:
 private String secretField;
 ```
 ====================================================================================================================================================================================================================================================================
-Summary so far:
----------------
+Summary of Spring intro:
+------------------------
 - Spring: a framework for developing web apps in java in a faster and better way than java EE.
 - Spring emphasizes:
 	- Dependency injection: we don't wire things together, we specify what goes where and Spring wires things accordingly.
@@ -1172,8 +1172,8 @@ Now, requests will be prefixed with /main e.g. localhost:8002/spring-mvc-demo/ma
 
 Don't forget to update the links in the view files and config.
 ====================================================================================================================================================================================================================================================================
-Summary so far:
----------------
+Summary of Spring MVC:
+----------------------
 
 ====================================================================================================================================================================================================================================================================
 Hibernate:
@@ -1236,5 +1236,486 @@ CREATE TABLE `student` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 ```
 
+Setting up hibernate:
+- Create a new java project.
+- Make a folder called Lib inside it.
+- [optional] add the spring JAR files to it.
+- Get hibernate JARs:
+	- www.hibernate.org > Hibernate ORM > Download > Download the latest stable version.
+	- Extract the archive > lib > required
+	- Add those JARs to your project's lib
+- Get hibernate JDBC driver:
+	- dev.mysql.com/downloads
+	- Download Connector/J:
+		- OS: Platform independent
+	- Unzip the archive and add the jar file to lib
+- Add all the JARS in lib to the build path.
+- Create a package and a test class to test the connection:
+``` java
+package com.moamen.jdbctest;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+public class TestJDBC {
+	public static void main(String[] args) {
+		String jdbcUrl = "jdbc:mysql://localhost:3306/hb_student_tracker?useSSL=false&serverTimezone=UTC";
+
+		String user = "hbstudent";
+		String pass = "hbstudent";
+		
+		try {
+			System.out.println("Connecting to: " + jdbcUrl);
+			
+			Connection myConn = DriverManager.getConnection(jdbcUrl, user, pass);
+			
+			System.out.println("Connection Successful!");
+			
+		} catch(Exception e) {
+			System.out.println("Connection Failed, cause:\n");
+			e.printStackTrace();
+		}
+	}
+}
+
+```
+- Test it.
+
+Configuring hibernate:
+- Add a file hibernate.cfg.xml to src
+- inside it:
+``` java
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <!-- JDBC Database connection settings -->
+        <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="connection.url">jdbc:mysql://localhost:3306/hb_student_tracker?useSSL=false&amp;serverTimezone=UTC</property>
+        <property name="connection.username">hbstudent</property>
+        <property name="connection.password">hbstudent</property>
+
+        <!-- JDBC connection pool settings ... using built-in test pool -->
+        <property name="connection.pool_size">1</property>
+
+        <!-- Select our SQL dialect -->
+        <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+
+        <!-- Echo the SQL to stdout -->
+        <property name="show_sql">true</property>
+
+		<!-- Set the current session context -->
+		<property name="current_session_context_class">thread</property>
+ 
+    </session-factory>
+
+</hibernate-configuration>
+```
+- Notice we can change the properties connection.url, connection.username, connection.password, and all properties according to the database of the project.
+
+Using hibernate:
+----------------
+We map java classes to tables in the DB, or "entity tables".
+Those classes are called "entity classes".
+They are normal classes with hibernate annotations (or done by xml too) that define the mapping to the DB tables.
+
+Mapping a class to a java table:
+- Create a package com.moamen.entity.
+- Create a class called Student:
+	- 3 private String field: first name, last name, email.
+	- 1 private int field: id.
+- Annotate the class with @Entity, and @Table.
+	- Import them from javax.persistence.
+	- @Table has an argument 'name', give it the DB table's name.
+- Annotate each field with @Column.
+	- Import it from javax.persistence.
+	- It has an argument 'name', give it the name of the column in the DB table.
+- Annotate the id field with @Id
+- Add getters, setters, a noarg constructor, and a constructor with all args except id.
+``` java
+@Entity
+@Table(name="student")
+public class Student {
+	@Id
+	@Column(name="id")
+	private int id;
+	
+	@Column(name="first_name")
+	private String firstName;
+	
+	@Column(name="last_name")
+	private String lastName;
+	
+	@Column(name="email")
+	private String email;
+	
+	// noarg constructor
+	// another constructor that takes all the fields
+	// getters and setters
+}
+```
+
+Question: Why are we using javax.persistence annotations?
+- Answer: because JPA is a standard, and Hibernate is an implementation of it, so we use JPA's annotations, but Hibernate will be used as an implementation.
+
+CRUD using Hibernate:
+---------------------
+- To do anything with the DB, we need to use two of Hibernate's classes:
+	- SessionFactory: configures Hibernate and creates sessions, example starter code for SessionFactory:
+	``` java
+	SessionFactory factory = new Configuration()
+        .configure("hibernate.cfg.xml")
+        .addAnnotatedClass(Student.class)
+        .buildSessionFactory();
+	```
+	- Session: A wrapper for JDBC connection to DB, example code:
+	``` java
+	Student tempStudent = new Student("M", "M", "M@m.com");
+	Session session = factory.getCurrentSession();
+    try {
+        session.beginTransaction();
+        session.save(tempStudent);
+        session.getTransaction().commit();
+    } catch(...) {
+        // your catch blocks here.
+    } finally {
+        factory.close();
+    }
+	```
+- We'll use Session to make CRUD operations.
+
+CRUD in Hibernate:
+- Create a new package com.moamen.demo
+- Create a new class in it CreateStudentDemo
+- Impor the Student class.
+- Create a SessionFactory like above.
+- Get a Session like above.
+- Create new a student.
+- Use Session object to save it and commit like above.
+- Check DB for the new record.
+- For Create:
+``` java
+Student tempStudent = new Student("M", "M", "M@m.com");
+Session session = factory.getCurrentSession();
+	
+session.beginTransaction();
+session.save(tempStudent);
+session.getTransaction().commit();
+```
+
+- For Read:
+``` java
+// Select * from student where id = 'specific value';
+session.beginTransaction();
+Student s = session.get(Student.class, myStudent.getId());
+session.getTransaction().commit();
+
+// Select * from student;
+List<Student> theStudents = session.createQuery("from Student").getResultList();
+
+// Select * from student where last_name = 'Max';
+List<Student> theStudents = session.createQuery("from Student s where s.lastName='Max'").getResultList();
+```
+
+- For Update:
+``` java
+// Updating one entity
+session.beginTransaction();
+Student myStudent = session.get(Student.class, 2);
+
+myStudent.setFirstName("Manuel");
+myStudent.setLastName("Calavera");
+myStudent.setEmail("manny.calavera@dod.com");
+
+session.getTransaction().commit();
+
+// Updating many entities
+session.beginTransaction();
+session.createQuery(
+		"update Student"
+		+ " set lastName='Delirious'"
+		+ " where id > 1")
+	.executeUpdate();
+
+session.getTransaction().commit();
+```
+
+- For Delete:
+``` java
+// Deleting one entity
+Student myStudent = session.get(Student.class, studentId);
+session.delete(myStudent);
+session.getTransaction().commit();
+
+// Deleting many entities
+session.beginTransaction();
+session.createQuery(
+		"delete Student"
+		+ " where id = 2")
+	.executeUpdate();
+
+session.getTransaction().commit();
+```
+
+Primary key in Hibernate:
+- We can specify how Hibernate generates the primary key:
+- @GeneratedValue annotation has a parameter 'strategy', check the docs for possible values.
 
 
+Advanced Mappings in Hibernate:
+-------------------------------
+For tables with relationships between them, we'll need to reflect those relationships in mappings like 1-1, 1-N or N-1, N-M.
+
+1-1:
+----
+Setting up the DB:
+- Create two new tables:
+	- teacher_detail:
+		- id: int, primary key, auto inc.
+		- degree.
+	- teacher:
+		- id: int, primary key, auto inc.
+		- first_name.
+		- last_name.
+		- email.
+		- teacher_detail_id: foreign key references teacher_detail table.
+
+Creating entity classes:
+- Create TeacherDetail class just like we created Student class.
+- Create Teacher class:
+	- Same as before, except it won't have an int detailId inside it.
+	- Because any Teacher instance should have a TeacherDetail as part of it (since it's related in the DB), we will have a TeacherDetail field inside of it.
+		- private TeacherDetail detail;
+	- Annotate this new field with:
+		- @OneToOne
+		- @JoinColumn(name="teacher_detail_id").
+	- The argument 'name' takes a column name, just like @Column, but here we give it the name of the column in Teacher (the main entity) that references TeacherDetail (the referenced entity) i.e. the foreign key column in the Main entity (the entity of the class).
+	``` java
+	@OneToOne
+	@JoinColumn(name="teacher_detail_id")
+	private TeacherDetail detail;
+	```
+- Add the classes as annotated classes to the SessionFactory initialization:
+``` java
+SessionFactory factory = new Configuration()
+		.configure("hibernate.cfg.xml")
+		.addAnnotatedClass(Student.class)
+		.addAnnotatedClass(Teacher.class)
+		.addAnnotatedClass(TeacherDetail.class)
+		.buildSessionFactory();
+```
+- Test it by creating a Teacher instance and do an operation on this entity and the TeacherDetail inside it.
+
+Entity Lifecycle (Or states of an Entity in Hibernate):
+-------------------------------------------------------
+- Detatched: entity is not linked to the session.
+- Merge: link entity to a sesion.
+- Persist: take new instance and save it on next DB commit.
+- Remove: remove entity from DB on next commit.
+- Refresh: sync data with DB.
+
+Cascading:
+----------
+Deleting a Teacher entry from DB won't delete its related TeacherDetail entry, unless we specify that CASCADING is enabled.
+- Add an argument 'cascade' to @OneToOne: @OneToOne(cascade=CascadeType.ALL)
+- Other types are MERGE, PERSIST, REMOVE, REFRESH, DETATCH
+- If you want many types, put them in array form using curly brackets {}.
+
+Bidirectional 1-1:
+------------------
+- If we want TeacherDetail to reference Teacher when we retrieve the TeacherDetail object, add a Teacher field to TeacherDetail class and annotate it with @OneToOne, do NOT annotate by @JoinColumn.
+- Pass 'mappedBy' argument to @OneToOne, and give it the name of the FIELD in the OTHER entity that references it.
+- i.e. if in Teacher class you have ```private TeacherDetail detail;```, then in the mappedBy you give the value 'detail', the name of the field in the OTHER entity class.
+- This means that the Teacher Object also has a TeacherDetail field that maps to this TeacherDetail object, so go retrieve THAT Teacher object.
+- The 'mappedBy' argument is added to the entity class that maps the entity that does NOT have a foreign key in its table.
+
+Deleting in bidirectional 1-1:
+------------------------------
+- If you want to delete a TeacherDetail entity but NOT cascade it (not delete the associate Teacher), you need to set that Teacher's detail to null BEFORE you delete the TeacherDetail.
+- Because we need to break bidirectional link BEFORE we delete no cascade.
+
+
+1-N and N-1:
+------------
+Teacher to many Courses.
+If a teacher is deleted, the course(s) don't have to be deleted, and vice versa.
+
+Setting up the DB:
+- Create a table 'course'.
+	- id
+	- course_name
+	- teacher_id
+- Put some entries into it.
+
+Entity classes:
+- Create Course class:
+	- Create it like before.
+	- Add Teacher field annotated with:
+		- @ManyToOne(cascade={CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST, CascadeType.DETACH})
+		- @JoinColumn(name="teacher_id")
+- Modify Teacher class:
+	- Add List<Course> courses annotated with:
+		- @OneToMany(mappedBy="teacher", cascade={CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST, CascadeType.DETACH})
+	- Add getters and setters for courses.
+	- Add a method addCourse, pushes a Course object in courses.
+	
+Unidirectional 1-N and N-1:
+---------------------------
+- If we have Reviews of Courses, each Course has many Reviews (N-1) but each Review is for One Course (1-N)
+- Deleting the Course deletes the reviews, but NOT vice versa.
+- So you can remove @ManyToOne and Course field from Review class.
+
+N-M:
+----
+In the DB we'll have a join table.
+In the code we'll use @ManyToMany and @JoinTable annotation.
+@JoinTable takes three args:
+	name: the name of the join table.
+	joinColumns: @JoinColumn(name="the name of the column referencing the current entity")
+	inverseJoinColumn: @JoinColumn(name="the name of the column referencing the OTHER entity")
+In our example, Students entity, Student can have many Courses and vice versa.
+
+Setting up DB:
+- Add some entries for table student.
+- Add a table student_course (a join table)
+	- student_id foreign key
+	- course_id foreign key
+- Add some entries too.
+
+Entity classes:
+- Modify Student class:
+	- Add List<Course> courses.
+	- @ManyToMany
+	- @JoinTable(
+		name="student_course", 
+		joinColumns=@JoinColumn(name="student_id"), 
+		inverseJoinColumn=@JoinColumn(name="course_id")
+		)
+	- Add getters and setters.
+	- Add addCourse method.
+- Modify Course class:
+	- Add List<Student> students.
+	- @ManyToMany
+	- @JoinTable(
+		name="student_course", 
+		joinColumns=@JoinColumn(name="course_id"), 
+		inverseJoinColumn=@JoinColumn(name="student_id")
+		)
+	- Add getters and setters.
+	- Add addStudent method.
+- Test it.
+
+Fetch types in Hibernate:
+-------------------------
+- Eager: get everything i.e. Teacher requested, then load Teacher AND all of its Courses.
+- Lazy: get on request, load Teacher only, but if request courses then load them.
+
+For lazing loading, we need an open session:
+- session.get()
+- or use Query and HQL (Hibernate Query Language)
+
+To specify fetch type:
+- In the mapping annotations @OneToOne, @OneToMany, @ManyToOne, @ManyToMany, Pass argument 'fetch' with one of values { FetchType.LAZY or FetchType.EAGER }
+
+Summary of relationships
+------------------------
+1. One-to-one uni:
+	- The one that has instance of the other gets:
+		- @OneToOne
+		- @JoinColumn(name=<foreign key column>)
+2. One-to-one bi:
+	- Both get @OneToOne
+	- Without foreign key gets mappedBy=<field mapping it in the other class>
+	- With foreign key gets @JoinColumn(name=<foreign key column>)
+3. One-to-many-uni:
+	- One gets @OneToMany
+	and gets @JoinColumn(name=<foreign key column>)
+4. One-to-many-bi: 
+	- One gets @OneToMany, 
+	- the other gets @ManyToOne,
+	- the one without foreign key gets mappedBy=<field mapping it in the other class> arg,
+	- the one with foreign key gets @JoinColumn(name=<foreign key column>) annotation.
+
+====================================================================================================================================================================================================================================================================
+Summary of Hibernate:
+---------------------
+
+====================================================================================================================================================================================================================================================================
+Spring with Hibernate:
+======================
+
+====================================================================================================================================================================================================================================================================
+Summary of Spring with Hibernate:
+---------------------------------
+
+====================================================================================================================================================================================================================================================================
+Spring Security:
+================
+We'll learn how to secure MVC web apps:
+- Develop login pages
+- Users and roles with authentication
+- Protect URLs according to role
+- Store users, passwords, and roles in DB
+
+Spring Security is a framework for security.
+It's implemented using Servlet filters.
+Servlet filters can pre-process and post-process web requests.
+They can route the request based on security logic.
+
+Two ways of using Spring Security: declarative, and programmatic.
+
+Spring Security flow chart:
+1) Request comes in.
+>> Is the web resource protected?
+2.1) Yes:
+	>> Is user authenticated?
+	2.1.1) Yes:
+		>> Is user authorized?
+			2.1.1.1) Yes: ALLOW ACCESS.
+			2.1.1.2) No: DENY ACCESS.
+	2.1.2) No:
+		2.1.2.1) Show login page.
+		2.1.2.2) Authenticate user and password.
+		2.1.2.3) Go to step 2.1.1
+2.2) No: ALLOW ACCESS
+
+Levels of security:
+- Authentication: Check user id and password.
+- Authorization: Check if user is authorized to access a resource.
+
+Logging in can be done by:
+- HTTP basic authentication (an ugly modal).
+- Default login form that Spring Security provides.
+- Custom login page with your own HTML/CSS.
+
+Authentication and Authorization:
+- In-memory authentication
+- JDBC
+- And many others
+
+Declarative Security:
+---------------------
+We define the security constraints in the configuration, using:
+- Java config.
+- XML config.
+
+Programmatic Security:
+----------------------
+Spring provides Security API for custom coding of security logic.
+
+
+====================================================================================================================================================================================================================================================================
+Summary of Spring Security:
+---------------------------
+
+====================================================================================================================================================================================================================================================================
+Spring REST:
+============
+
+====================================================================================================================================================================================================================================================================
+Summary of Spring REST:
+-----------------------
+
+====================================================================================================================================================================================================================================================================

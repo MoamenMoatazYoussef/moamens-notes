@@ -1,0 +1,1721 @@
+Spring quick notes:
+===================
+Intro:
+------
+Why use spring anyway:
+- Popular easier framework for building Java apps.
+
+Backend parts:
+- Client-side presentation: frontend.
+- Server-side presentation: HTML and CSS stored on the server.
+- Server-side business logic: backend.
+- Database.
+
+Some definitions:
+- Dependency Injection: An object receive other objects in depends on, it's a representation of the USING relationship in ER diagram.
+	- There is specific code that passes the dependencies to the client (the object that wants them), it's called an Injector.
+	- So instead of the client specifying which dependencies it needs, the inector tells the client what dependencies to use.
+	- This is done to achieve:
+		- Separation of concerns: so the code now can be more reusable and flexible.
+		- Inversion of control: Instead of the custom code calling in the libraries to take care of its tasks, the generic framework calls the custom code when it's needed.
+			- That's why you'll see us making separate classes with different code, and not wiring them together, since Spring wires them (injection) and calls each one when it's needed.
+			- Instead of creating objects yourself, you use FACTORIES and THEY create the object.
+			- This means that your business logic is highly configurable, you can swap factories and return different objects without altering your business logic.
+	- You don't hard-wire things together, you just specify the wiring (using annotations in Spring), and the framework wires things together.
+- Declarative Programming:
+	- Basically, this is a way of programming where instead of writing code to handle business logic, then writing code to wire that logic up in specific sequences, you just write the business logic in encapsulated parts, then a framework or something will handle the control flow.
+	- Spring does that, but also SQL (you just tell it the query and some transformation or conditions, but the flow of how each part is applied is up to the SQL engine), regexes, functional programming.
+	- Declare your logic and how it will be applied, and the framework will apply it as specified.
+- 
+
+Overview of Spring Framework:
+-----------------------------
+Spring consists of many things:
+- Spring Core: This is the heartthrob of Spring:
+	- It has a Bean Factory for creating the beans.
+	- It manages configuration.
+	- It holds the Beans in memory.
+	- It has Spring Expression Language (SpEL): A language specific to Spring.
+
+- Spring Infrastructure:
+	- AOP.
+	- Instrumentation: provides Java Agents, bytecode manipulation, and other tools for managing your app.
+
+- Data Access Layer: Where commucation with a DB happens.
+	- JDBC.
+	- ORM: Which allows you to connect to Hibernate.
+	- Transactions.
+	- JMS: To send messages to a Message Queue in an Async fashion.
+	
+- Web Layer: Where we can build MVC apps using Spring MVC framework (part of Spring)
+	- Servlet.
+	- WebSocket.
+	- Web: which has Controller classes, View classes, etc.
+
+- Test Layer: Spring supports TDD
+	- Unit testing
+	- Integration testing: where you create an app context and wire it up to your app.
+	- Mock objects to mock servlets, JDNI access, etc.
+	
+Spring Projects:
+- These are additional Spring Modules or Plugins that add functionality for you to use in your application e.g. Spring Data, Spring Security, Spring for Android, Spring Cloud, etc.
+- There are a LOT more.
+
+Setting up your dev environment:
+--------------------------------
+- Install JDK
+- Install a java app server e.g. Tomcat
+- Install an IDE e.g. Eclipse
+- Add Tomcat to Eclipse as a server
+- Download Spring JAR files
+- Create a normal Java project in Eclipse (perspective: Java).
+- Create a new folder in your project called "lib"
+- Add the Spring JAR files (copy them and paste) in the lib folder.
+- Right-click on the project -> Properties -> Java Build Path -> Libraries tab -> Classpath -> Add JARs -> choose the Spring JAR files in the lib folder you created.
+- A folder called Referenced Libraries should be created :)
+
+Inversion of control:
+---------------------
+Example of non-configuratble inversion of control:
+``` java
+public interface Coach {
+	public String getDailyWorkout();
+}
+
+public class SoccerCoach implements Coach {
+
+	@Override
+	public String getDailyWorkout() {
+		return "Score 100 goals";
+	}
+}
+
+public class BasketballCoach implements Coach {
+
+	@Override
+	public String getDailyWorkout() {
+		return "Score 100 3-pointers";
+	}
+}
+
+public class MyApp {
+	public static void Main(String[] args) {
+		Coach coach = new SoccerCoach();
+		System.out.println(coach.getDailyWorkout());
+	}
+}
+```
+We can change the Coach coach from SoccerCoach to BasketballCoach, and we can change it to any implementation of Coach.
+
+How Spring handles inversion of control:
+----------------------------------------
+Here instead of hardcoding the implementation we'll use, we'll use a config file that will be passed to Spring's OBJECT FACTORY, and this will return the object we want.
+The Spring Container does that, along with injecting dependencies.
+
+Spring Bean: basically a java object, created from normal Java classes. Basically any object created by the Spring Container (not by direct instantiation or your own factories) it's called a Spring Bean.
+
+To configure Spring Container (which is also called ApplicationContext), we can do one of these:
+- XML config file.
+- Java annotation.
+- Java source code.
+
+For example, XML configuration (this is not the full file):
+``` xml
+<bean
+	id="myCoach" class="com.luv2code.springdemo.BaseballCoach">
+</bean>
+```
+We'll use the id to request an implementation of this class (or bean) in our code, and Spring will use a bean factory to construct it.
+Also, notice we passed the FQN to class attribute.
+
+In our code, we'll make an instance of one of the implementations of ApplicationContext e.g. ClassPathXmlApplicationContext (for xml config), and we'll pass the .xml config file to it.
+``` java
+ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+...
+
+// this is put at the end of the code
+context.close();
+```
+
+Then, we'll use that to "get" implementations of classes using factories (The classes here will be Beans), .
+``` java
+public class SpringApp {
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+		Coach coach = context.getBean("myCoach", Coach.class);
+
+		System.out.println(coach.getDailyWorkout());
+
+		context.close();
+	}
+}
+```
+You can see that we can easily change the .xml entry to com.luv2code.springdemo.SoccerCoach or any other implementation WITHOUT modifying the code i.e. configurable inversion of control.
+
+We pass the Coach interface to getBean as a second argument because this makes Spring provide a type safety by adding an exception BeanNotOfRequiredType if the bean isn't of the required type, so a casting exception won't be thrown on casting (which can happen with getBean())
+
+Dependency Injection:
+---------------------
+Basically, if you want a car, you call a factory to make the car for you, you don't go and build the car yourself and inject the Engine, Exhause, etc.
+
+Spring has an object factory.
+When we getBean the coach object, this coach objet may have other dependencies.
+Instead of we manually build the coach object and its dependencies, the Spring Factory will do that for us.
+So we get an object that's ready to use.
+
+There are a lot of methods for injection, two are:
+- Constructor Injection.
+- Setter Injection.
+
+Constructor injection:
+----------------------
+Add the interface FortuneService:
+``` java
+public interface FortuneService {
+	public String getDailyFortune();
+}
+```
+
+Add this implementaion:
+``` java
+public class HappyFortuneService implements FortuneService {
+
+	@Override
+	public String getDailyFortune() {
+		return "Today is awesome";
+	}	
+}
+```
+
+Add this to the SoccerCoach:
+``` java
+private FortuneService fs;
+
+// constructor, we'll perform the constructor injection
+// i.e. we WON'T instantiate SoccerCoach with a FortuneService argument
+// well getBean the SoccerCoach, and Spring will inject a FortuneService object
+// into the constructor because it's a dependency of SoccerCoach
+// so, in our code we can just use the SoccerCoach object.	
+public SoccerCoach(FortuneService _fs) {
+	fs = _fs;
+}
+```
+
+Then we'll add the new bean to xml, as well as specifying that it will be injected as constructor arg.
+``` xml
+<bean id="myFortuneService" class="com.luv2code.springdemo.HappyFortuneService">
+</bean>
+	
+<bean id="myCoach" class="com.luv2code.springdemo.BasketballCoach">
+	<!-- 
+		This right here is Constructor injection, 
+		we inject the object (or the bean) defined above in the 
+		constructor of the coach bean as an argument
+	-->
+	<constructor-arg ref="myFortuneService"></constructor-arg>
+</bean>
+```
+
+How is that done?
+- Spring reads the xml file.
+- When it reads a bean, it constructs that object with the specified class (the one you wrote with FQN).
+- When it reads a bean with a constructor-arg, it passes in a constructor argument, using the beans you referenced in the ref argument.
+
+
+Note: give beans default noarg constructors if they have a parameterized constructor, because when you define any constructor the compiler doesn't provide a default one (since you don't need it), UNLESS you don't provide any constructor at all, so add a noarg one when you have param ones in order to be safe if Spring constructs an object using the noarg one.
+
+Setter Injection:
+-----------------
+Instead of Spring injecting in the constructor, it uses a setter method (That you need to define), and uses it to inject the dependency.
+``` java
+public class SoccerCoach implements Coach {
+	
+	private FortuneService fs;
+	
+	public SoccerCoach(FortuneService _fs) {
+		fs = _fs;
+	}
+	
+	// add this setter
+	public void setFortuneService(FortuneService _fs) {
+		fs = _fs;
+	}
+
+	@Override
+	public String getDailyWorkout() {
+		return fs.getDailyFortune();
+	}
+}
+```
+
+Then in the config:
+``` xml
+<bean id="myCoach" class="com.luv2code.springdemo.SoccerCoach">
+	<property name="fortuneService" ref="myFortuneService" />
+</bean>
+```
+The name attribute gets the value of "fortuneService", which is the same as the setter name "setFortuneService" but remove the "set" and make it lowercase.
+
+Injecting literal values:
+-------------------------
+Spring can also inject values directly.
+``` java
+public class SoccerCoach implements Coach {
+	
+	// create a field
+	private String secretField;
+
+	private FortuneService fs;
+
+	public SoccerCoach() {
+	}
+
+	// and its setter
+	@Override
+	public void setSecretField(String secretField) {
+		this.secretField = secretField;
+	}
+	
+	@Override
+	public void getDailyWorkout() {
+		return secretField;
+	}
+}
+```
+
+Then in the config:
+``` xml
+<!-- inside the SoccerCoach bean -->
+<property name="secretField" value="This is the value to be injected directly"/>
+
+```
+
+Referencing values from a config file so that we can modify them without modifying the xml config file:
+-------------------------------------------------------------------------------------------------------
+Add a file config.properties:
+```
+secretField="This was retrieved from the external config file"
+```
+
+Add this in the xml insie <beans />:
+``` xml
+<context:property-placeholder location="classpath:config.properties" />
+```
+
+And modify the <property /> tag:
+``` xml
+<property name="secretField" value="${secretField}" />
+```
+
+That's it :)
+
+Bean Scopes/Lifecycle:
+----------------------
+Since instances (or beans) are created by the Spring factory, we can't control how many instances, how are they shared, when they are terminated, etc.
+So what are the available "scope"s or "lifecycle"s for any bean created?
+1) Singleton (which is the default):
+	- Creates ONE instance of the object.
+	- Stored in cache.
+	- Everyone is sharing that one instance. i.e. whenever you retrieve it in ANY PART of the code, it'll have the data produced by the LAST operation on that instance. 
+	- This is good for Stateless beans i.e. when we don't require a specific state for our object instance.
+2) Prototype: Creates a new instance of the object for EACH getBean request.
+3) Request: Only scoped to an HTTP request
+4) Session: Same, but session.
+5) Global session: Same, but GLOBAL session.
+
+To change the scope from default (or set it as Singleton if you want), add the attribute 'scope' to the bean definition in the XML config file:
+``` xml
+<bean 
+	id="myCoach" 
+	class="com.luv2code.springdemo.SoccerCoach" 
+	scope="prototype"
+	>
+</bean>
+```
+
+Bean Lifecycle Methods:
+-----------------------
+Any object created goes through this process:
+- Instance created
+- Dependencies injected
+- Internal processing by Spring
+- Custom init method (This is where we can add some custom code to run on the object DURING initialization)
+---> App is running and the object is used
+- Custom destroy method (Same, DURING destruction)
+- Bean is totally destroyed
+
+The custom init/destroy methods are called "Hooks", to add them, we do this:
+Suppose your custom init method is called doMyStartupStuff and your custom destroy method s called doMyCleanupStuff
+``` xml
+<bean 
+	id="myCoach" 
+	class="com.luv2code.springdemo.SoccerCoach" 
+	init-method="doMyStartupStuff"
+	destroy-method="doMyCleanupStuff"
+	>
+</bean>
+```
+
+Both methods can return values but you won't be able to capture them, so void is usually used.
+Both methods can not accept arguments, they should be noarg.
+
+The destroy method is NOT called for prototype-scoped objects.
+Actually, prototype-scoped objects are not cleaned up or managed by Spring factory, so we HAVE to handle that ourselves.
+
+Configuring Spring with Java Annotations (instead of XML):
+----------------------------------------------------------
+Spring offers another way of configuring beans, dependency injection (in all its forms), etc. Using Java Annotations (which are basically compiler directives) instead of XML.
+
+Spring scans your Java classes for those annotations, and when it finds a class that has special annotations for Beans, it will automatically use it as a bean i.e. create it with the Spring factory and stuff.
+
+To do that, we need to:
+1- Enable component scanning, by adding this to the XML inside the <beans/> component:
+``` xml
+<!-- instead of com.luv2code.springdemo, put your base package here -->
+<context:component-scan base-package="com.luv2code.springdemo" />
+```
+
+2- Add the @Component annotation to the beans:
+``` java
+// inside the brackets of the annotation we give the component id, just like the bean id
+// OR, leave it empty, Spring will use a Default bean ID which is the class name but first letter is lowercase :)
+@Component("myCoach")
+public class SoccerCoach implements Coach {
+		// old stuff here
+}
+```
+
+3- Retrieve the bean normally:
+``` java
+Coach theCoach = context.getBean("myCoach", Coach.class);
+```
+
+Example:
+0- Add the XML configuration as shown in step 1 above, and remove all other beans.
+1- Interface for Coach:
+``` java
+public interface Coach {
+	public String getDailyWorkout();
+}
+
+```
+
+2- Implementation:
+``` java
+@Component("soccerCoach")
+public class SoccerCoach implements Coach {
+
+	@Override
+	public String getDailyWorkout() {
+		return "Run 10 miles";
+	}
+
+}
+```
+
+3- Main app:
+``` java
+public class App1 {
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+		
+		Coach theCoach = context.getBean("soccerCoach", Coach.class);
+		
+		System.out.println(theCoach.getDailyWorkout());
+		
+		context.close();
+	}
+}
+```
+
+Dependency Injection with Annotations:
+--------------------------------------
+We can inject dependenceis like the FortuneService using Annotations and something called "AutoWiring".
+Basically, Spring will wire up the stuff together by looking for a class that MATCHES the property by Type, then automatically injecting it.
+
+We can do that by three ways:
+- Constructor injection: injecting in the parameters of the constructor, we've done that before.
+- Setter injection: injecting in the parameters of a setter function, we've done that before.
+- Field injection: injecting directly in a class field, I think we've done that before using the .properties file.
+
+Constructor injection using annotations:
+----------------------------------------
+1- Define the interface and class for the thing that will be injected i.e. FortuneService.
+``` java
+public interface FortuneService {
+	public String getDailyFortune();
+}
+
+@Component
+public class SadFortuneService implements FortuneService {
+	
+	@Override
+	public String getDailyFortune() {
+		return "Oh shit, that day will be BAD";
+	}
+}
+```
+2- Define a constructor in the class that will get the injection, whose parameters have a parameter of type of the previous interface i.e. FortuneService
+	- Add the @Autowired annotation to the constructor.
+	- Don't forget to modify the Coach interface to add the getDailyFortune method.
+``` java
+@Component
+public class SoccerCoach implements Coach {
+	
+	private FortuneService fs;
+
+	@Autowired
+	public SoccerCoach(FortuneService _fs) {
+		this.fs = _fs;
+	}
+
+	@Override
+	public String getDailyWorkout() {
+		return "Run 10 miles";
+	}
+
+	@Override
+	public String getDailyFortune() {
+		return this.fs.getDailyFortune();
+	}
+}
+```
+3- Just use the getDailyFortune method and see the output :)
+
+Setter injection using annotations:
+-----------------------------------
+1- Create the setter methods and add the @Autowired annotation.
+	- Don't forget to remove it from the constructor and add a no arg constructor.
+``` java
+@Autowired
+public void setFortuneService(FortuneService _fs) {
+	this.fs = _fs;
+}
+```
+2- That's it, really.
+
+NOTE: We can use ANY method in autowiring, not just the setter methods i.e. we can inject the bean in any method we want to call.
+
+Field injection using annotations:
+----------------------------------
+NOTE: this happens using Java Reflection, so it applies even on private fields.
+1- Just add @Autowired on the field, remove the setter too.
+``` java
+@Autowired
+private FortuneService fs;
+```
+2- That's it.
+
+Which type of injection should we use:
+--------------------------------------
+Any style, but stay CONSISTENT within your project :)
+
+What if there are more than one implementation of FortuneService?
+-----------------------------------------------------------------
+This will give a NoUniqueBeanDefinitionException...unlesssssssssssssssssssssss: we use the @Qualifier annotation. :)
+1- Make another implementation of the dependency's interface i.e. FortuneService:
+``` java
+@Component
+public class HappyFortuneService implements FortuneService {
+
+	@Override
+	public String getDailyFortune() {
+		return "Today will be awesomezzzzzz";
+	}
+
+}
+```
+2- At the injection itself i.e. 3nd @Autowired, add the Qualifier annotation and specify the bean id you want as argument:
+``` java
+@Autowired
+@Qualifier("sadFortuneService") // or sadFortuneService, whatever you want
+private FortuneService fs;
+```
+3- That's it.
+
+This works for all injection types.
+With constructors it's used kinda differently, because it applies on the Argument, it's placed INSIDE the thing:
+``` java
+@Autowired
+public SoccerCoach(@Qualifier("sadFortuneService") FortuneService _fs) {    
+    this.fs = _fs;
+}
+```
+Property injection using annotations:
+-------------------------------------
+Use the @Value annotation like this:
+``` java
+@Value("${secretField}")
+private String secretField;
+```
+
+Configuring Bean Scopes and Lifecycle using annotations:
+--------------------------------------------------------
+Remember the scopes?
+- Singleton (the default one)
+- Prototype
+- And a bunch of others
+
+To specify a bean scope using annotations, just annotate a bean (class annotated with @Component) with @Scope, and pass a string argument as the name of the scope e.g. "singleton", "prototype".
+``` java
+@Component
+@Scope("prototype")
+public class SoccerCoach implements Coach {
+	// stuff here
+}
+```
+
+Remember the lifecycle method annotations?
+- Custom creation.
+- Custom destruction.
+Same constraints of lifecycle methods apply: 
+- Must be noarg.
+- In prototype scope, destroy method is NOT called.
+
+To specify lifecycle methods using annotations:
+1- Write the methods you'll use as lifecycle methods, write them inside the class.
+2- Annotate them with @PostConstruct or @PreDestroy accordingly.
+``` java
+@PostConstruct
+public void doStartupStuff() {
+	// do stuff here
+}
+
+@PreDestroy
+public void doCleanupStuff() {
+	// do stuff here
+}
+```
+
+Configuring Spring with ONLY Java, No XML whatsoever:
+-----------------------------------------------------
+We've done configuration using:
+- XML, totally.
+- Java annotations and a little bit of XML.
+- Now, we'll just use Java.
+
+We need to:
+1- Create a Java class, this will be our configuration class, and annotate it with @Configuration:
+``` Java
+@Configuration
+public class AppConfig {
+
+}
+```
+2- Enable component scan by annotating the config class with @ComponentScan("base.package")
+``` Java
+@Configuration
+@ComponentScan("com.luv2code.springdemojavaconfig")
+public class AppConfig {
+
+}
+```
+
+3- In the main class, instead of ClassPathXmlApplicationContext, we'll use AnnotationConfigApplicationContext to use the config class we created.
+``` java
+public class App {
+	public static void main(String[] args) {
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+		
+		// do normal stuff here
+		
+	}
+}
+```
+
+Since this is equivalent to what we did in the Annotations-XML, so we will leave the config class empty for now just like we did with XML before.
+Well add some stuff later, but ComponentScan is only what we need so far :)
+
+Defining beans in Java config class:
+------------------------------------
+Remember the dependency injection we did? We'll do that using the Java config class:
+1- Define methods to expose the bean or the dependency.
+	- basically a method that creates a new instance of the bean and returns it.
+		- The method name will be the bean ID we use to retrieve the bean.
+	- Annotate the method with @Bean
+	- Remove the @ComponentScan annotation since we'll define the beans manually, we don't need Spring to scan the components for us.
+``` Java
+@Configuration
+public class AppConfig {
+
+	@Bean
+	public Coach soccerCoach() {
+		SoccerCoach coach = new SoccerCoach();
+		return coach;
+	}
+
+}
+```
+
+2- Inject dependencies.
+``` Java
+@Configuration
+public class AppConfig {
+
+	@Bean
+	public FortuneService sadFortuneService() {
+		return new SadFortuneService();
+	}
+
+	@Bean
+	public Coach soccerCoach() {
+		// notice we're calling the bean method above, and passing it here
+		SoccerCoach coach = new SoccerCoach(sadFortuneService());
+		return coach;
+	}
+}
+```
+Notice that we injected the dependency using Constructor Injection, here it's really visible which dependency injection method we're using.
+
+NOTE: you might want to go back to SoccerCoach class and remove @Autowired and @Qualifier from the FortuneService field.
+
+3- Then operate normally just like before.
+
+How does that work?
+- Yeah, the method feels like we're creating new instances, but the @Bean annotation intercepts all calls to that method, and behind the scenes it checks the memory of the Spring Container - or the applicationContext -, if it has this bean, a reference to the already existing bean is returned. (i.e. the method will NOT be executed in this case)
+
+Value injection using Java config class:
+----------------------------------------
+Very easy:
+1- Annotate the config class with @PropertySource("classpath:propfile.properties").
+2- Annotate the fields you want to inject values in, with @Value("${theValueYouWant}").
+``` java
+@Value("${secretField}")
+private String secretField;
+```
+====================================================================================================================================================================================================================================================================
+Summary of Spring intro:
+------------------------
+- Spring: a framework for developing web apps in java in a faster and better way than java EE.
+- Spring emphasizes:
+	- Dependency injection: we don't wire things together, we specify what goes where and Spring wires things accordingly.
+	- Declarative programming: we declare our logic and when/where will it be applied, Spring handles the HOW.
+- Spring consists of many things:
+	- Core: configuration, bean factory (spring container), and more.
+	- Infrastructure: AOP, and other tools for management.
+	- Data Access Layer: JDBC, ORM like Hibernate, Transactions, JMS.
+	- Web Layer: to make MVC apps.
+	- Test Layer.
+- Spring Bean: a java object created from normal class but by the spring container.
+- Spring handles inversion of control by:
+	- Us specifying the Schema or Blueprint (class) for objects, but Spring creates them using its factory and we just retrieve them.
+	- Us specifying the dependencies and how they're wired, and Spring injects them.
+
+- Configuring Spring Container:
+	- Configuring the spring container means that we specify the beans, the classes that map to the beans, how dependencies are injected, property files, etc.
+	- Three ways:
+		- XML
+		- Annotations
+		- Java config class
+- Defining a bean:
+```
+// XML way:
+<bean id="myBean" class="com.luv2code.springdemo.MyBean">
+</bean>
+
+// Annotation way:
+// add this in XML:
+<context:component-scan base-package="com.luv2code.springdemo" />
+
+// then:
+@Component
+public class MyBean {
+	// stuff
+}
+
+// Java config class way:
+@Configuration
+// if you want component scan, add this:
+@ComponentScan("base.package.here")
+public class AppConfig {
+	
+	@Bean
+	public MyBean myBean() {
+		return new MyBean();
+	}
+}
+```
+
+- Constructor injection:
+1. Add DependencyInterface and an implementation for it.
+2. Add a constructor to MyBean with an argument of type of the dependency, then:
+```
+// XML way:
+<bean id="myDependency" class="com.luv2code.springdemo.MyDependency">
+</bean>
+
+<bean id="myBean" class="com.luv2code.springdemo.MyBean">
+	<constructor-arg ref="myDependency"></constructor-arg>
+</bean>
+
+// Annotation way:
+// add DependencyInterface and an implementation for it, then:
+@Component
+public class MyBean {
+	private DependencyInterface dep;
+
+	@Autowired
+	public MyBean(DependencyInterface _dep) {
+		this.dep = _dep
+	}
+	// stuff
+}
+
+// Java config class way:
+@Configuration
+public class AppConfig {
+	
+	@Bean
+	public MyBean myBean() {
+		return new MyBean();
+	}
+}
+```
+
+- Setter injection:
+```
+// XML way:
+<bean id="myDependency" class="com.luv2code.springdemo.MyDependency">
+</bean>
+
+<bean id="myBean" class="com.luv2code.springdemo.MyBean">
+	<property name="dep" ref="myDependency" />
+</bean>
+
+// Annotation way:
+// add DependencyInterface and an implementation for it, then:
+@Component
+public class MyBean {
+	private DependencyInterface dep;
+
+	// add a noarg constructor
+	public MyBean() {
+	}
+	
+	@Autowired
+	public void setDep(DependencyInterface _dep) {
+		this.dep = _dep;
+	}
+	// stuff
+}
+```
+- Direct injection:
+```
+// Annotation way:
+@Component
+public class MyBean {
+	@Autowired
+	private DependencyInterface dep;
+
+	// stuff
+}
+```
+
+- Value injection:
+```
+// XML way:
+<bean id="myDependency" class="com.luv2code.springdemo.MyDependency">
+</bean>
+
+<bean id="myBean" class="com.luv2code.springdemo.MyBean">
+	<property name="theValue" value="the value directly" />
+</bean>
+
+// Annotation way:
+@Component
+public class MyBean {
+	@Value("the value")
+	private String theValue;
+}
+```
+
+- Bean scopes: Singleton, Prototype, Request, Session, Global Session.
+```
+// XML way:
+<bean id="myBean" class="com.luv2code.springdemo.MyBean" scope="prototype">
+</bean>
+
+// Annotation way:
+@Component
+@Scope("prototype")
+public class myBean {
+	// stuff
+}
+```
+- Bean lifecycle methods:
+```
+// XML way:
+<bean id="myBean" class="com.luv2code.springdemo.MyBean" init-method="doInit" destroy-method="doDestroy">
+</bean>
+
+// Annotation way:
+@Component
+@Scope("prototype")
+public class myBean {	
+	@PostConstruct
+	public void doInit() {
+		// stuff
+	}
+	
+	@PreDestroy
+	public void doDestroy() {
+		// stuff
+	}
+	
+	// stuff
+}
+```
+
+- If many implementations of one interface used in injection, use @Qualifier annotation.
+
+====================================================================================================================================================================================================================================================================
+Spring MVC:
+===========
+A part of Spring that's designed to build web apps, based on the MVC design pattern.
+It leverages Spring's features i.e. dependency injection, inversion of control.
+
+Flow of stuff:
+- A request comes to the app.
+- It goes to the front Controller, or the "DispatcherServlet".
+- The DispatcherServlet delegates the request to a Controller code.
+- The Controller processes the request (it's your business logic).
+- It creates a model, which is passed to the front controller.
+- Which is passed to the view template.
+- Which is the response returned to the user.
+
+It consists of:
+- Spring beans (like usual).
+- Spring configurations (like usual).
+- Some web page builders for the View.
+
+We don't create the:
+- DispatcherServlet, it's created by Spring already.
+
+We create:
+- The model objects.
+- The controller classes.
+- The view templates.
+
+Model:
+------
+This is where the data is contained after being retrieved from db or web service or etc.
+- Basically any kind of java object that holds the data.
+
+View:
+-----
+How the data is presented to the user.
+
+Controller:
+-----------
+The business logic that processes incoming requests.
+- Handles the requests and route them.
+- Communicates with the database.
+- Puts the data in the model.
+- Passes the model back to the view.
+
+Setting up:
+-----------
+- In Eclipse, in Java EE perspective, File->New->Dynamic Web Project.
+- Put the Spring jar files in WebContent/WEB-INF/lib, as well as:
+	- commons-logging-1.2.jar
+	- javax.servlet.jsp.jstl-1.2.1.jar
+	- javax.servlet.jsp.jstl-api-1.2.1.jar (in all the files, version doesn't have to be 1.2.1)
+- These will automatically be on our build path.
+- Create web.xml and spring-mvc-demo-servlet.xml in WebContent/WEB-INF.
+web.xml:
+``` xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+	id="WebApp_ID" version="3.1">
+
+	<display-name>spring-mvc-demo</display-name>
+
+	<absolute-ordering />
+
+	<!-- Here we'll write the Spring MVC Configs -->
+	
+</web-app>
+```
+
+spring-mvc-demo-servlet.xml: This will be the normal Spring xml config file.
+- Create a folder "view" in WEB-INF, this is where the View templates will reside.
+
+Configuration:
+--------------
+- First, we configure the DispatcherServlet (in the WEB-INF/web.xml)
+``` xml
+<!-- inside <web-app> -->
+<servlet>
+	<!-- we write whatever name we want -->
+	<servlet-name>myDispatcher</servlet-name>
+	
+	<!-- we specify the Spring built-in class that will be used to create the Servlet -->
+	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+	
+	<!-- These are parameters we pass to configure the servlet -->
+	<init-param>
+		<!-- The name of the param, here we specify the contextConfigLocation, which is Where the Spring config is -->
+		<param-name>contextConfigLocation</param-name>
+		
+		<!-- and here's the location -->
+		<param-value>/WEB-INF/spring-mvc-demo-servlet.xml</param-value>
+	</init-param>
+
+	<load-on-startup>1</load-on-startup>
+
+</servlet>
+```
+
+- Then we set URL mappings to the DispatcherServlet.
+``` xml
+<!-- inside <web-app> -->
+<servlet>
+	<!-- previous stuff -->
+</servlet>
+
+<!-- here we say that all web requests coming with the url pattern specified below, should be routed to the dispatcher specified below -->
+<servlet-mapping>
+	<!-- which servlet do we want to route requests that have the url pattern to -->
+	<servlet-name>myDispatcher</servlet-name>
+	
+	<!-- the url pattern to route -->
+	<url-pattern> </url-pattern> 
+</servlet-mapping>
+```
+- Configure Spring just like before, in the WEB-INF/spring-mvc-demo-servlet.xml (as we specified in the configuration above).
+	- Add support for component scanning.
+	- Add support for three things Spring MVC can do for us: Converstion, Formatting, Validation.
+	``` xml
+		<!-- in the same level as context:component-scan tag -->
+		<mvc:annotation-driven />
+	```
+- Configure the Spring MVC view resolver, that resolves the view templates.
+	- Simply, we add a bean with a class that references one of Spring's view resolver classes.
+	- And add some properties for it.
+		- Prefix: which is prepended to any view file name we reference in the code, as a root path for view files.
+		- Suffix: which is appended to any view file name we reference in the code, as a default format.
+```xml
+<bean
+	class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+	<property name="prefix" value="/WEB-INF/view/"/>
+	<property name="suffix" value=".jsp"/>
+</bean>
+```
+
+Configuration with all Java code:
+---------------------------------
+- Create com.luv2code.springdemo.config.
+- Create a class in this package DemoAppConfig:
+``` java
+@Configuration
+@EnableWebMvc
+@ComponentScan(basePackages="com.luv2code.springdemo")
+public class DemoAppConfig {
+ 
+	// define a bean for ViewResolver
+ 
+	@Bean
+	public ViewResolver viewResolver() {
+		
+		InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+		
+		viewResolver.setPrefix("/WEB-INF/view/");
+		viewResolver.setSuffix(".jsp");
+		
+		return viewResolver;
+	}
+	
+}
+```
+
+- Create the file MySpringMvcDispatcherServletInitializer:
+``` java
+public class MySpringMvcDispatcherServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+ 
+	@Override
+	protected Class<?>[] getRootConfigClasses() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+ 
+	@Override
+	protected Class<?>[] getServletConfigClasses() {
+		return new Class[] { DemoAppConfig.class };
+	}
+ 
+	@Override
+	protected String[] getServletMappings() {
+		return new String[] { "/" };
+	}
+ 
+}
+```
+
+Developing MVC apps:
+--------------------
+The controller gets requests from the DispatcherServlet, it contains the business logic that processes the request.
+It consists of:
+- The controller class (in your base package com.luv2code.springdemo).
+	- Basically a class annotated with @Controller, which inherits from @Component i.e. will be picked up by component scanning.
+	- Inside it we define methods that contain business logic.
+	- These methods are called according to how we map them to requests.
+	- Which we'll see later.
+- Inside it, add a method.
+- Annotate the method with @RequestMapping, and give the argument a string "/".
+	- So any call to the url "/" will trigger the execution of THIS method.
+- Finally, remember that the controller passes the model to the view, it does that by choosing which view to be viewed.
+	- So, you need to return a string of the view name.
+	- Which will be prepended with /WEB-INF/view/, and appended with .jsp ;)
+``` java
+@Controller
+public class HomeController {
+	@RequestMapping("/")
+	public String doStuff() {
+		return "main-menu";
+	}
+}
+```
+
+So now, we'll need to go to /WEB-INF/view/ and create a file called "main-menu" with the extension .jsp.
+Inside it, we just put any HTML or JSP page.
+``` xml
+<html>
+	<body>
+		<p>Hello</>
+	</body>
+</html>
+```
+
+In Eclipse, right-click on the project -> Run as -> Run on server -> Choose the Tomcat server and Finish
+
+What if we want to read data from the user i.e. they enter it in the VIEW?
+--------------------------------------------------------------------------
+To do that, we need to access the MODEL, and the REQUEST parameters, and we'll see how we can do that in the controller:
+- Give the input tag inside the form a name, like "userContent".
+- Add a link in your page that goes to "/showForm".
+- Add a controller method showForm and "/showForm" request mapping.
+	- In the method, return a view page with a form element with an INPUT field and a BUTTON that goes to "/processForm".
+- Add a controller method processForm and "/processForm" request mapping.
+	- This method will have two arguments:
+		- HttpServletRequest request: this is automatically passed as a request with its parameters.
+		- Model model: this is automatically passed as the model to retrieve/input data in.
+	- Retrieve the name entered by the user in the input fields, like this:
+	``` java
+	String userInput = request.getParameter("userContent");
+	
+	
+	String result = userInput.toUpperCase();
+	
+	// then put it inside the model as a key/value, like this:
+	model.addAttribute("returnMessage" result);
+	
+	return "the view page"
+	```
+	
+	Another way of doing that:
+	``` java
+	public String processForm(@RequestParam("userContent") userInput, Model model) {
+		String result = userInput.toUpperCase();
+		model.addAttribute("returnMessage" result);
+		return "the view page"
+	}
+	```
+	
+Request Mapping at the Controller Level:
+----------------------------------------
+If we create another controller with the same mappings e.g. /processForm, a conflict will happen: which controller and controller method will be mapped to by the request?
+
+The solution: make each controller map to a specific different path e.g. /main and /side THEN add /processForm.
+So they become /main/processForm and /side/processForm.
+
+In order to do this, we can replace each request mapping in each controller with the right prefix.
+OR, we can make map the WHOLE controller to the right prefix.
+
+``` Java
+@Controller
+@RequestMapping("/main")
+public class MainController {
+	@RequestMapping("/showForm")
+	public String showForm() {
+		return "user-form";
+	}
+	
+	@RequestMapping("/processForm")
+	public String processForm(@RequestParam("userContent") String userInput, Model model) {
+		String result = userInput.toUpperCase();
+		model.addAttribute("returnMessage", result);
+		return "user-form-result";
+	}
+}
+
+@Controller
+@RequestMapping("/side")
+public class SideController {
+	@RequestMapping("/showForm")
+	public String showForm() {
+		return "user-form";
+	}
+	
+	@RequestMapping("/processForm")
+	public String processForm(@RequestParam("userContent") String userInput, Model model) {
+		String result = userInput.toUpperCase();
+		model.addAttribute("returnMessage", result);
+		return "user-form-result";
+	}
+}
+```
+Now, requests will be prefixed with /main e.g. localhost:8002/spring-mvc-demo/main/showForm.
+
+Don't forget to update the links in the view files and config.
+====================================================================================================================================================================================================================================================================
+Summary of Spring MVC:
+----------------------
+
+====================================================================================================================================================================================================================================================================
+Hibernate:
+==========
+A framework we can use to communicate with DBs.
+It uses JDBC in the background.
+We define classes that map to tables in the DB, where we define the one-to-one mapping of each field in the class to each field in the table. (via xml or annotations)
+Then we use Hibernate to save and get data and put then in java objects.
+
+Without writing SQL ourselves.
+e.g. if we have table Student(PK, first_name, last_name).
+
+Then we can do this:
+``` java
+Student s1 = new Student("Moamen", "Moataz");
+
+// inser into Student(first_name, last_name) values('Moamen', 'Moataz'
+int s1_pk = (Integer) session.save(s1);
+
+// select * from students where PK = s1_pk
+Student s2 = session.get(Student.class, s1_pk);
+
+// select * from students
+Query q1 = session.createQuery("from Student");
+List<Student> students = query.list();
+```
+
+Steps:
+- Go to dev.mysql.com/downloads.
+- Choose MySQL Community Server.
+- Download MySQL installer.
+- Select msi Web version.
+- download and install.
+- open MySQL Workbench.
+- Choose a connection , enter password.
+- See if it opens.
+- Execute this query to create a user:
+	- user: hbstudent
+	- pass: hbstudent
+``` sql
+CREATE USER 'hbstudent'@'localhost' IDENTIFIED BY 'hbstudent';
+
+GRANT ALL PRIVILEGES ON * . * TO 'hbstudent'@'localhost';
+
+ALTER USER 'hbstudent'@'localhost' IDENTIFIED WITH mysql_native_password BY 'hbstudent';
+```
+- Execute this query to create the tables:
+``` sql
+CREATE DATABASE  IF NOT EXISTS `hb_student_tracker`;
+USE `hb_student_tracker`;
+
+DROP TABLE IF EXISTS `student`;
+
+CREATE TABLE `student` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(45) DEFAULT NULL,
+  `last_name` varchar(45) DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+```
+
+Setting up hibernate:
+- Create a new java project.
+- Make a folder called Lib inside it.
+- [optional] add the spring JAR files to it.
+- Get hibernate JARs:
+	- www.hibernate.org > Hibernate ORM > Download > Download the latest stable version.
+	- Extract the archive > lib > required
+	- Add those JARs to your project's lib
+- Get hibernate JDBC driver:
+	- dev.mysql.com/downloads
+	- Download Connector/J:
+		- OS: Platform independent
+	- Unzip the archive and add the jar file to lib
+- Add all the JARS in lib to the build path.
+- Create a package and a test class to test the connection:
+``` java
+package com.moamen.jdbctest;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+public class TestJDBC {
+	public static void main(String[] args) {
+		String jdbcUrl = "jdbc:mysql://localhost:3306/hb_student_tracker?useSSL=false&serverTimezone=UTC";
+
+		String user = "hbstudent";
+		String pass = "hbstudent";
+		
+		try {
+			System.out.println("Connecting to: " + jdbcUrl);
+			
+			Connection myConn = DriverManager.getConnection(jdbcUrl, user, pass);
+			
+			System.out.println("Connection Successful!");
+			
+		} catch(Exception e) {
+			System.out.println("Connection Failed, cause:\n");
+			e.printStackTrace();
+		}
+	}
+}
+
+```
+- Test it.
+
+Configuring hibernate:
+- Add a file hibernate.cfg.xml to src
+- inside it:
+``` java
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <!-- JDBC Database connection settings -->
+        <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="connection.url">jdbc:mysql://localhost:3306/hb_student_tracker?useSSL=false&amp;serverTimezone=UTC</property>
+        <property name="connection.username">hbstudent</property>
+        <property name="connection.password">hbstudent</property>
+
+        <!-- JDBC connection pool settings ... using built-in test pool -->
+        <property name="connection.pool_size">1</property>
+
+        <!-- Select our SQL dialect -->
+        <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+
+        <!-- Echo the SQL to stdout -->
+        <property name="show_sql">true</property>
+
+		<!-- Set the current session context -->
+		<property name="current_session_context_class">thread</property>
+ 
+    </session-factory>
+
+</hibernate-configuration>
+```
+- Notice we can change the properties connection.url, connection.username, connection.password, and all properties according to the database of the project.
+
+Using hibernate:
+----------------
+We map java classes to tables in the DB, or "entity tables".
+Those classes are called "entity classes".
+They are normal classes with hibernate annotations (or done by xml too) that define the mapping to the DB tables.
+
+Mapping a class to a java table:
+- Create a package com.moamen.entity.
+- Create a class called Student:
+	- 3 private String field: first name, last name, email.
+	- 1 private int field: id.
+- Annotate the class with @Entity, and @Table.
+	- Import them from javax.persistence.
+	- @Table has an argument 'name', give it the DB table's name.
+- Annotate each field with @Column.
+	- Import it from javax.persistence.
+	- It has an argument 'name', give it the name of the column in the DB table.
+- Annotate the id field with @Id
+- Add getters, setters, a noarg constructor, and a constructor with all args except id.
+``` java
+@Entity
+@Table(name="student")
+public class Student {
+	@Id
+	@Column(name="id")
+	private int id;
+	
+	@Column(name="first_name")
+	private String firstName;
+	
+	@Column(name="last_name")
+	private String lastName;
+	
+	@Column(name="email")
+	private String email;
+	
+	// noarg constructor
+	// another constructor that takes all the fields
+	// getters and setters
+}
+```
+
+Question: Why are we using javax.persistence annotations?
+- Answer: because JPA is a standard, and Hibernate is an implementation of it, so we use JPA's annotations, but Hibernate will be used as an implementation.
+
+CRUD using Hibernate:
+---------------------
+- To do anything with the DB, we need to use two of Hibernate's classes:
+	- SessionFactory: configures Hibernate and creates sessions, example starter code for SessionFactory:
+	``` java
+	SessionFactory factory = new Configuration()
+        .configure("hibernate.cfg.xml")
+        .addAnnotatedClass(Student.class)
+        .buildSessionFactory();
+	```
+	- Session: A wrapper for JDBC connection to DB, example code:
+	``` java
+	Student tempStudent = new Student("M", "M", "M@m.com");
+	Session session = factory.getCurrentSession();
+    try {
+        session.beginTransaction();
+        session.save(tempStudent);
+        session.getTransaction().commit();
+    } catch(...) {
+        // your catch blocks here.
+    } finally {
+        factory.close();
+    }
+	```
+- We'll use Session to make CRUD operations.
+
+CRUD in Hibernate:
+- Create a new package com.moamen.demo
+- Create a new class in it CreateStudentDemo
+- Impor the Student class.
+- Create a SessionFactory like above.
+- Get a Session like above.
+- Create new a student.
+- Use Session object to save it and commit like above.
+- Check DB for the new record.
+- For Create:
+``` java
+Student tempStudent = new Student("M", "M", "M@m.com");
+Session session = factory.getCurrentSession();
+	
+session.beginTransaction();
+session.save(tempStudent);
+session.getTransaction().commit();
+```
+
+- For Read:
+``` java
+// Select * from student where id = 'specific value';
+session.beginTransaction();
+Student s = session.get(Student.class, myStudent.getId());
+session.getTransaction().commit();
+
+// Select * from student;
+List<Student> theStudents = session.createQuery("from Student").getResultList();
+
+// Select * from student where last_name = 'Max';
+List<Student> theStudents = session.createQuery("from Student s where s.lastName='Max'").getResultList();
+```
+
+- For Update:
+``` java
+// Updating one entity
+session.beginTransaction();
+Student myStudent = session.get(Student.class, 2);
+
+myStudent.setFirstName("Manuel");
+myStudent.setLastName("Calavera");
+myStudent.setEmail("manny.calavera@dod.com");
+
+session.getTransaction().commit();
+
+// Updating many entities
+session.beginTransaction();
+session.createQuery(
+		"update Student"
+		+ " set lastName='Delirious'"
+		+ " where id > 1")
+	.executeUpdate();
+
+session.getTransaction().commit();
+```
+
+- For Delete:
+``` java
+// Deleting one entity
+Student myStudent = session.get(Student.class, studentId);
+session.delete(myStudent);
+session.getTransaction().commit();
+
+// Deleting many entities
+session.beginTransaction();
+session.createQuery(
+		"delete Student"
+		+ " where id = 2")
+	.executeUpdate();
+
+session.getTransaction().commit();
+```
+
+Primary key in Hibernate:
+- We can specify how Hibernate generates the primary key:
+- @GeneratedValue annotation has a parameter 'strategy', check the docs for possible values.
+
+
+Advanced Mappings in Hibernate:
+-------------------------------
+For tables with relationships between them, we'll need to reflect those relationships in mappings like 1-1, 1-N or N-1, N-M.
+
+1-1:
+----
+Setting up the DB:
+- Create two new tables:
+	- teacher_detail:
+		- id: int, primary key, auto inc.
+		- degree.
+	- teacher:
+		- id: int, primary key, auto inc.
+		- first_name.
+		- last_name.
+		- email.
+		- teacher_detail_id: foreign key references teacher_detail table.
+
+Creating entity classes:
+- Create TeacherDetail class just like we created Student class.
+- Create Teacher class:
+	- Same as before, except it won't have an int detailId inside it.
+	- Because any Teacher instance should have a TeacherDetail as part of it (since it's related in the DB), we will have a TeacherDetail field inside of it.
+		- private TeacherDetail detail;
+	- Annotate this new field with:
+		- @OneToOne
+		- @JoinColumn(name="teacher_detail_id").
+	- The argument 'name' takes a column name, just like @Column, but here we give it the name of the column in Teacher (the main entity) that references TeacherDetail (the referenced entity) i.e. the foreign key column in the Main entity (the entity of the class).
+	``` java
+	@OneToOne
+	@JoinColumn(name="teacher_detail_id")
+	private TeacherDetail detail;
+	```
+- Add the classes as annotated classes to the SessionFactory initialization:
+``` java
+SessionFactory factory = new Configuration()
+		.configure("hibernate.cfg.xml")
+		.addAnnotatedClass(Student.class)
+		.addAnnotatedClass(Teacher.class)
+		.addAnnotatedClass(TeacherDetail.class)
+		.buildSessionFactory();
+```
+- Test it by creating a Teacher instance and do an operation on this entity and the TeacherDetail inside it.
+
+Entity Lifecycle (Or states of an Entity in Hibernate):
+-------------------------------------------------------
+- Detatched: entity is not linked to the session.
+- Merge: link entity to a sesion.
+- Persist: take new instance and save it on next DB commit.
+- Remove: remove entity from DB on next commit.
+- Refresh: sync data with DB.
+
+Cascading:
+----------
+Deleting a Teacher entry from DB won't delete its related TeacherDetail entry, unless we specify that CASCADING is enabled.
+- Add an argument 'cascade' to @OneToOne: @OneToOne(cascade=CascadeType.ALL)
+- Other types are MERGE, PERSIST, REMOVE, REFRESH, DETATCH
+- If you want many types, put them in array form using curly brackets {}.
+
+Bidirectional 1-1:
+------------------
+- If we want TeacherDetail to reference Teacher when we retrieve the TeacherDetail object, add a Teacher field to TeacherDetail class and annotate it with @OneToOne, do NOT annotate by @JoinColumn.
+- Pass 'mappedBy' argument to @OneToOne, and give it the name of the FIELD in the OTHER entity that references it.
+- i.e. if in Teacher class you have ```private TeacherDetail detail;```, then in the mappedBy you give the value 'detail', the name of the field in the OTHER entity class.
+- This means that the Teacher Object also has a TeacherDetail field that maps to this TeacherDetail object, so go retrieve THAT Teacher object.
+- The 'mappedBy' argument is added to the entity class that maps the entity that does NOT have a foreign key in its table.
+
+Deleting in bidirectional 1-1:
+------------------------------
+- If you want to delete a TeacherDetail entity but NOT cascade it (not delete the associate Teacher), you need to set that Teacher's detail to null BEFORE you delete the TeacherDetail.
+- Because we need to break bidirectional link BEFORE we delete no cascade.
+
+
+1-N and N-1:
+------------
+Teacher to many Courses.
+If a teacher is deleted, the course(s) don't have to be deleted, and vice versa.
+
+Setting up the DB:
+- Create a table 'course'.
+	- id
+	- course_name
+	- teacher_id
+- Put some entries into it.
+
+Entity classes:
+- Create Course class:
+	- Create it like before.
+	- Add Teacher field annotated with:
+		- @ManyToOne(cascade={CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST, CascadeType.DETACH})
+		- @JoinColumn(name="teacher_id")
+- Modify Teacher class:
+	- Add List<Course> courses annotated with:
+		- @OneToMany(mappedBy="teacher", cascade={CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST, CascadeType.DETACH})
+	- Add getters and setters for courses.
+	- Add a method addCourse, pushes a Course object in courses.
+	
+Unidirectional 1-N and N-1:
+---------------------------
+- If we have Reviews of Courses, each Course has many Reviews (N-1) but each Review is for One Course (1-N)
+- Deleting the Course deletes the reviews, but NOT vice versa.
+- So you can remove @ManyToOne and Course field from Review class.
+
+N-M:
+----
+In the DB we'll have a join table.
+In the code we'll use @ManyToMany and @JoinTable annotation.
+@JoinTable takes three args:
+	name: the name of the join table.
+	joinColumns: @JoinColumn(name="the name of the column referencing the current entity")
+	inverseJoinColumn: @JoinColumn(name="the name of the column referencing the OTHER entity")
+In our example, Students entity, Student can have many Courses and vice versa.
+
+Setting up DB:
+- Add some entries for table student.
+- Add a table student_course (a join table)
+	- student_id foreign key
+	- course_id foreign key
+- Add some entries too.
+
+Entity classes:
+- Modify Student class:
+	- Add List<Course> courses.
+	- @ManyToMany
+	- @JoinTable(
+		name="student_course", 
+		joinColumns=@JoinColumn(name="student_id"), 
+		inverseJoinColumn=@JoinColumn(name="course_id")
+		)
+	- Add getters and setters.
+	- Add addCourse method.
+- Modify Course class:
+	- Add List<Student> students.
+	- @ManyToMany
+	- @JoinTable(
+		name="student_course", 
+		joinColumns=@JoinColumn(name="course_id"), 
+		inverseJoinColumn=@JoinColumn(name="student_id")
+		)
+	- Add getters and setters.
+	- Add addStudent method.
+- Test it.
+
+Fetch types in Hibernate:
+-------------------------
+- Eager: get everything i.e. Teacher requested, then load Teacher AND all of its Courses.
+- Lazy: get on request, load Teacher only, but if request courses then load them.
+
+For lazing loading, we need an open session:
+- session.get()
+- or use Query and HQL (Hibernate Query Language)
+
+To specify fetch type:
+- In the mapping annotations @OneToOne, @OneToMany, @ManyToOne, @ManyToMany, Pass argument 'fetch' with one of values { FetchType.LAZY or FetchType.EAGER }
+
+Summary of relationships
+------------------------
+1. One-to-one uni:
+	- The one that has instance of the other gets:
+		- @OneToOne
+		- @JoinColumn(name=<foreign key column>)
+2. One-to-one bi:
+	- Both get @OneToOne
+	- Without foreign key gets mappedBy=<field mapping it in the other class>
+	- With foreign key gets @JoinColumn(name=<foreign key column>)
+3. One-to-many-uni:
+	- One gets @OneToMany
+	and gets @JoinColumn(name=<foreign key column>)
+4. One-to-many-bi: 
+	- One gets @OneToMany, 
+	- the other gets @ManyToOne,
+	- the one without foreign key gets mappedBy=<field mapping it in the other class> arg,
+	- the one with foreign key gets @JoinColumn(name=<foreign key column>) annotation.
+
+====================================================================================================================================================================================================================================================================
+Summary of Hibernate:
+---------------------
+
+====================================================================================================================================================================================================================================================================
+Spring with Hibernate:
+======================
+
+====================================================================================================================================================================================================================================================================
+Summary of Spring with Hibernate:
+---------------------------------
+
+====================================================================================================================================================================================================================================================================
+Spring Security:
+================
+We'll learn how to secure MVC web apps:
+- Develop login pages
+- Users and roles with authentication
+- Protect URLs according to role
+- Store users, passwords, and roles in DB
+
+Spring Security is a framework for security.
+It's implemented using Servlet filters.
+Servlet filters can pre-process and post-process web requests.
+They can route the request based on security logic.
+
+Two ways of using Spring Security: declarative, and programmatic.
+
+Spring Security flow chart:
+1) Request comes in.
+>> Is the web resource protected?
+2.1) Yes:
+	>> Is user authenticated?
+	2.1.1) Yes:
+		>> Is user authorized?
+			2.1.1.1) Yes: ALLOW ACCESS.
+			2.1.1.2) No: DENY ACCESS.
+	2.1.2) No:
+		2.1.2.1) Show login page.
+		2.1.2.2) Authenticate user and password.
+		2.1.2.3) Go to step 2.1.1
+2.2) No: ALLOW ACCESS
+
+Levels of security:
+- Authentication: Check user id and password.
+- Authorization: Check if user is authorized to access a resource.
+
+Logging in can be done by:
+- HTTP basic authentication (an ugly modal).
+- Default login form that Spring Security provides.
+- Custom login page with your own HTML/CSS.
+
+Authentication and Authorization:
+- In-memory authentication
+- JDBC
+- And many others
+
+Declarative Security:
+---------------------
+We define the security constraints in the configuration, using:
+- Java config.
+- XML config.
+
+Programmatic Security:
+----------------------
+Spring provides Security API for custom coding of security logic.
+
+
+====================================================================================================================================================================================================================================================================
+Summary of Spring Security:
+---------------------------
+
+====================================================================================================================================================================================================================================================================
+Spring REST:
+============
+
+====================================================================================================================================================================================================================================================================
+Summary of Spring REST:
+-----------------------
+
+====================================================================================================================================================================================================================================================================

@@ -1,0 +1,230 @@
+Hacking:
+========
+Contents:
+1) Networks
+2) Ethical hacking
+
+========================================================================================================================
+Networks:
+=========
+Network: bunch of computers connected to each others. (Computer here means PCs, phones, devices e.g. printers, all types of computers).
+
+Types of networks:
+- LAN: Local area network, the computers connected are in the same building.
+- MAN: Metropolitan area network, in the same metropolian area e.g. a city.
+- WAN: Wide area network, anything bigger than that. The internet is the biggest WAN.
+
+Some terms:
+- Node: anything on a network that's NOT wires, communication means e.g. computers, devices, etc.
+- Communication media: the wires and Wifi and stuff connecting the network together.
+- Client: the one requesting the website and the info.
+- Server (Host): the one that "hosts" the website and "serves" it to clients asking for it.
+
+- Network Interface Card (NIC): The hardware in your computer (i.e. the motherboard) that connects that computer to the internet.
+========================================================================================
+Network layouts:
+================
+How nodes are connected to each other.
+
+Bus layout:
+-----------
+One bus where everything is connected to.
++ Very cheap and easy.
+- Can break very easily.
+- We need Terminators in order to prevent the signal from bouncing and reflecting back to the main bus.
+
+Ring layout:
+------------
+Nodes are connected to a ring.
++ No terminators.
++ Can be a double ring too.
+
+Star layout:
+------------
+Nodes are connected to a central node, like a Router.
++ Easy to add nodes to.
++ If one node goes down, the rest of the network is fine (unless it's the central node).
+- The entire network depends on the central node.
+
+Mesh layout:
+------------
+Everything is connected to everything.
++ Alternate routes for data in case some communication media go down.
+- LOTS of communication media.
+- NIC cards don't usually support many communcation media, so you might need additional hardware for ports PER node.
+	
+========================================================================================
+Networking devices:
+===================
+Modem:
+------
+Wires that have internet come from outside into your house and connects to your Modem.
+Then the modem connects to your Router.
+Then the router connects to all your devices.
+So your devices and the router are basically a private network, then the modem connects that network to the Internet.
+
+What does the modem do?
+- The Modem converts Digital signals from your router to Analog signals (that can be sent over copper wires) to the internet, and vice versa for incoming signals.
+- It uses a communuication standard called DOCSIS.
+- It has different channels (upstream and downstream).
+
+Router:
+-------
+The central node in your network, it connects to the modem in order to connect to the internet, and connects to your devices in order to connect THEM to the internet.
+
+It decides the best route for data to travel between your devices and servers on the internet.
+
+So, Routers join networks together.
+
+Switch:
+-------
+Connects to the router so it offers more ports.
+
+Repeater (Extender):
+--------------------
+Take weak signals and boost them so they can travel further.
+
+
+========================================================================================
+Networking protocols, the OSI model, and tech stuff:
+=======================================================
+Protocol:
+---------
+- When nodes exchange messages, the may follow a certain a number of rules.
+- These set of rules are called a Protocol.
+- For example, HTTP is actually a protocol, HyperText Transfer protocol, we specify it before requesting anything from anyone. (http://)
+- When you write a URL e.g. http://www.thenewboston.org/index.php
+	- http://: That's the protocol.
+	- www.thenewboston.org: that's the server name.
+	- /index.php: that's the file we're requesting.
+	
+OSI model:
+----------
+This is a model of how computer networks work.
+
+It consists of Layers that describe how data flows from the applications on the PC that send data, to the network-level stuff.
+
+1) Application layer: 
+	- What the user sees.
+	- The apps that send or receive data e.g. web browsers, email clients, etc.
+	
+2) Presentation layer: your OS.
+	- It converts the data to be sent/received, converts user-friendly data to binary or ASCII data in case the data will be SENT, and vice versa if the opposite.
+	- Also encrypts the data.
+	
+3) Session layer:
+	- A part of the network responsible for managing (starting, maintaining, and ending) Sessions, a session is the conversation between two computers.
+	
+4) Transport layer:
+	- A part of the network responsible for splitting data and formats it into Packets or Frames, then sending them reliably and orderly.
+	- Protocols are followed here.
+	
+5) Network layer:
+	- Routing happens here.
+
+6) Data link layer:
+	- Where your NICs are.
+	- Checks for errors.
+
+7) Physical layer:
+	- The physical communications media e.g. wires, fiber optics, waves.
+
+IP address:
+-----------
+When we send an old-school letter, we write two addresses:
+- The recipient's address
+- The return address (the address to reply to)
+
+IP addresses are the same, but for computers.
+IP addresses identify each computer so computers can specify:
+- Where the data they're sending should go to (the recipient's address).
+- Where will the returns go to (the return address).
+
+IP address is essentially a 32-bit binary number, it's divided into  four parts called Octets.
+They're represented by decimal instead of binary, so they're written as:
+xxx.xxx.xxx.xxx
+
+That's because the Internet is not a HUGE network, it's a network of networks.
+
+So, to send data, a computer needs to know:
+- What network to send to (network ID).
+- What device INSIDE the network to send to (host ID).
+
+So we need to split the IP address, but not in a fixed manner in order to accomodate for really big networks with small devices or vice versa and NOT waste any IPs.
+
+So, when sending the data, another thing is sent with the IP address called a SUBNET MASK.
+
+Subnet Mask:
+------------
+A 32-bit number sent WITH the IP address where the ones identify which positions in the original IP address are the Network ID, and the zeros identify which positions in the original IP address are the Host ID.
+e.g.
+- IP: 
+	01101100 10100001 11100100 01000110
+- Subnet mask:
+	11111111 11111111 1111111 11110000
+	
+The first 28 bits from the IP are the Network ID, and the last 4 bits are the Host ID.
+- Network ID = IP && Subnet
+- Host ID = IP && (Subnet!)
+
+So in the above example, we have 16 hosts in our network, but only 14 USABLE ones. Why?
+
+Because, two special IP addresses exist in every subnet:
+- The first one, because it's the Network ID.
+- The very last one, it's a Broadcast address i.e. sends to ALL devices on the network.
+
+The max size of your network ID can be 30 bits, this only has TWO hosts.
+
+Subnet mask CIDR notation:
+--------------------------
+IP address and Subnet mask shorthand version:
+xxx.xxx.xxx.xxx/yy
+
+The yy indicate how many ones you write when writing the subnet mask, from the left.
+
+e.g.
+IP address: 
+	108.22.2.74/20
+Therefore, the Mask will be:
+	11111111 11111111 11110000 00000000
+
+DHCP:
+-----
+How do IP addresses get assigned to the PCs and networks anyway?
+
+Dynamic Host Configuration Protocol (DHCP) is an automatic method to assign IP addresses to new devices added to the network, and unassign IP addresses from devices leaving the network.
+
+DHCP can be done by:
+- Servers dedicated to it, most Server OSs have DHCP built-in.
+- Routers, for home networks and stuff, the router does all the work.
+
+When a new device is added to the network:
+- It sends a Discover message (broadcast message) to the network.
+- The Router picks up the message, looks for all available IP addresses in the network, chooses one, and broadcasts it to the device. This message is called a DHCP Offer.
+- The new device receives the IP address, and sends back a DHCP Request, requesting to have that IP address.
+- The Router sends back an Acknowledge (Ack) along with some info about the network, IP timeout, etc.
+- The device receives the Ack, gets assigned the IP address sent in the DHCP offer, and gets configured according to the info received. Now it's part of the network.
+
+DNS:
+----
+A way that we can use Domain names and translate them to IP addresses so that we users work with Domain names, while the network works with IP addresses.
+
+Basically, DNS or Domain Name System are servers that store the domain names and their corresponding IPs.
+
+Routing tables:
+---------------
+How do routers choose the best route for your connection to a certain website?
+
+When a router receives a packet
+- It looks at its destination address
+- Then scans its table for networks that could have the destination IP
+- If not, there's a default route that it routs to. (Usually that default is the one that goes to the internet)
+
+Firewalls:
+----------
+Firewalls filter traffic i.e. what traffic do you want to allow/block?
+
+Firewalls can be set on computer level or on network level.
+
+A tool for setting firewalls is "iptables".
+

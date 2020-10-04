@@ -1,0 +1,771 @@
+# StarLIMS Quick Summary
+```
+Made by Moamen Moataz Youssef
+Reach me for any issues, suggestions, addons, etc. at:
+Email: moamen.moataz.youssef@gmail.com
+Phone: 01093431888
+```
+
+## Table of Contents
+
+## JScript tutorial
+### Basics of JScript
+Creating variables:
+``` jscript
+Var s = "Hello World";
+```
+
+A variable can be:
+- Number
+- Boolean
+- String
+- Objects.
+- Null
+- Undefined
+
+Here, types restrict some operations e.g. you can't multiply two strings.
+
+But at the same time, JScript is loosely typed i.e. we don't have to specify the type of variables when we declare it, and they automatically change during script execution.
+
+Operations in JScript are the same as any language, with exception to "-" which negates the variable it's preceding i.e. it's like multiplying by -1.
+
+Comparison operations and Boolean operations in JScript are the same as any non-JS language.
+
+Same for assignment operations =, +=, &=, etc.
+
+Same for the ? and typeof operations.
+
+#### Scope of a variable
+There are 3 scopes that a variable can be in:
+1. Application global.
+2. Form global.
+3- Local.
+```
+function button1_onClick(sender, eventArgs) {
+	// Local variable
+	var s = "Hello world";
+
+	// Form local variable
+	form.Variables["compname"] = s;
+	
+	// Global variable
+	navigator.Variables["compname"] = s;
+}
+
+function button2_onClick(sender, eventArgs) {
+	alert(navigator.Variables["compname"]);
+	alert(form.Variables["compname"]);
+}
+```
+
+#### Statements
+Same as any programming language really, especially for loops are similar to JS.
+
+#### Functions
+Like JS:
+```
+function funcName(arg1, arg2 /*, rest of args */) {
+	statement1;
+	statement2;
+	/* rest f statements */
+	
+	// optional return statement
+	return finalVar;
+}
+
+// calling functions:
+var x = funcName(1, 2);
+```
+
+#### Objects
+Same as JS.
+```form``` and ```navigator``` are Objects.
+
+## StarLIMS Scripting Language (SSL) Tutorial in StarLIMS
+Here we'll explore the StarLIMS Scripting Language or SSL (not to be confused with Secure Socket Layer)
+
+### Basics of SSL
+SSL is a type-less case insensitive language, all variables are of type "variant". <br/>
+
+:DECLARE keyword can be used to declare new variables ina procedure or external script. Any variable defined in a script/procedure will be visible to all called scripts. <br/>
+
+:PUBLIC keyword is the same as :DECLARE, but the variable will be visible to ALL SCRIPTS until the engine is shutdown.
+```
+:DECLARE newVar;
+newVar := 5;
+
+:PUBLIC newvar2;
+```
+
+Scope:
+1. Application global: any SSL script from the same directory/database can access it.
+2. Local: only inside the function/procedure/action where it was defined and assigned.
+```
+:PUBLIC Logged, Hold;
+Logged := "Logged";
+Hold := "NeedPrep";
+```
+
+Types:
+1. Numbers
+2. Booleans
+3. Strings
+4. Date
+5. N dimentional array
+6. Empty(): similar to Null
+
+It's a good practice to prefix the variable name with a small letter indicating its type e.g. sTableName -> a string, bIsValid -> a Boolean.
+
+```
+:DECLARE a;
+a := 2;
+:RETURN LimsTypeEx(a);
+```
+Output: "NUMERIC" <br/>
+```
+:DECLARE a;
+a := 2;
+:RETURN VarType(a);
+```
+Output: "INT32"
+
+Casting can be done using the function Cast(variable, "TYPE");
+
+#### Operators
+Numeric operators: Same as Python, and any other prog lang.
+
+Relational operators:
+- '=' is Equal To.
+- '==' is the same. But for Strings, it includes trailing spaces of the string.
+- '<>' and '!=' are Not Equal.
+- '#' and '>' are Greater Than
+- The rest of any other prog lang.
+- For inequality of strings, we can use:
+```
+:RETURN DoProc("isNotEqualStrings", {"abc", "ab"});
+
+:PROCEDURE isNotEqualStrings;
+:PARAMETERS s1, s2;
+:IF(!(s1 == s2);
+:RETURN .T.;
+:ENDIF;
+:RETURN .F.;
+:ENDPROC;
+```
+
+Boolean Operators:
+- .and.
+- .or.
+- .not.
+```
+:DECLARE b;
+b := .F.;
+:IF !b;
+:RETURN "b is false";
+:ENDIF; 
+```
+
+String operators:
+- + concatenate.
+- - concatenate but remove trailing spaces from first before conacatenation.
+- [] indexing or delimiter
+- {} array defined inline
+
+NOTE: Strings are indexed using 1-index based
+
+Initializing strings:
+```
+:DECLARE s1, s2, s3;
+s1 := 'abc';
+s2 := "abc";
+s3 := [abc];
+```
+
+Arrays:
+```
+:DECLARE a1;
+a1 := {1, 2, 3, {4, 5, 6}, "abc"};
+:RETURN ar[4]; /* Output: {4, 5, 6};
+:RETURN ar[4][1]; /* Output: 4;
+:RETURN ar[4, 1]; /* Output: 4;
+```
+
+Date:
+```
+:DECLARE d;
+d := Today();
+d := d + 10;
+:RETURN d;
+```
+
+Assignment operators:
+- ':=' is the normal assignment.
+- All others +=, /=, ^=, etc.
+- += and -= cannot be used directly on strings to concatenate, unless you use a construct like this:
+```
+usrmes("TestNumericOperators", DoProc("TestNumericOperators") );
+usrmes("TestStringOperators", DoProc("TestStringOperators") );
+usrmes("TestDateOperators", DoProc("TestDateOperators") );
+:PROCEDURE TestNumericOperators;
+:DECLARE n;
+n := 2;
+n += 3;
+n ^= 2;
+n *= 3;
+n /= 5;
+n %= 4;
+n -= 1;
+:RETURN n;
+:ENDPROC;
+:PROCEDURE TestStringOperators;
+:DECLARE s;
+:DECLARE dummy;
+s := "ab";
+/* This will not work;
+/*s += "c";
+/* This will work;
+dummy := s += "c ";
+dummy := s -= "d";
+:RETURN s;
+:ENDPROC;
+:PROCEDURE TestDateOperators;
+:DECLARE d;
+d := Today();
+d += 3;
+d -= 1;
+:RETURN d;
+:ENDPROC;
+```
+
+Bitwise operators:
+- _AND(a, b)
+- _OR
+- _XOR
+- _NOT
+- << shift left
+- >>
+
+### Advanced
+#### IIf operators
+Evaluates a condition inside an expression and returns the result of the expression based on the condition.
+```
+IIf(condition, true, false)
+```
+It's essentially the ? operator.
+
+```
+:DECLARE a, b;
+:DECLARE sResult;
+a := 2;
+b := 3;
+
+sResult = IIf(a < b, "a < b", "a >= b");
+:RETURN sResult;
+```
+
+#### SSL Expressions
+If conditions:
+```
+:IF
+	statement1;
+:ELSE
+	statement2;
+:ENDIF
+```
+
+Switch case:
+```
+:BEGINCASE
+	:CASE condition1:
+		statement1;
+		:EXITCASE;
+	:CASE condition2:
+		statement2;
+		:EXITCASE;
+	:OTHERWISE;
+	statement3;
+:ENDCASE;
+```
+
+Loops:
+```
+:WHILE condition;
+	statements;
+:ENDWHILE;
+```
+
+Break and Continue:
+```
+:WHILE condition;
+	:IF(continueCond);
+		:LOOP;
+	:ENDIF;
+	statements;
+	
+	:IF(exitCond);
+		:EXITLOOP;
+	:ENDIF;
+:ENDWHILE;
+```
+
+Labels:
+```
+:LABEL abc;
+```
+
+Comments:
+```
+/* the comment can be in one line;
+/* or in multi lines like 
+this;
+```
+
+#### Server Scripts
+Programs in SSL don't have a certain structure, they are a collection of scripts and each can be an entry point for an event or a caller.
+
+They are arranged in a flat structure of libraries.
+
+You can call scripts from other scripts using their external name using the Fully Qualified Name in the form of "library.scriptname".
+
+There is a variable defined in the execution runtime that keeps a list of libraries considered to be system libraries, called "System Library Path".
+
+In reality, the scripts are stored in a binary repo (relational database), not a file structure, but similar to a flat file structure.
+
+Variables declared in a script that calls another script are visible in that other script, unless the called script declares a variable with the same name.
+
+##### Example on this
+script01:
+```
+:DECLARE p;
+:DECLARE a, b;
+:DECLARE sum;
+
+p := 1;
+a := 2;
+b := 3;
+
+sum := ExecFunction("Research.script02", {a, b});
+:RETURN {sum, p};
+```
+
+script02:
+```
+/* Redeclaration of a, b, and sum so as not to affect the ones in script01
+:PARAMETERS a, b;
+:DECLARE sum;
+
+/* p is visible since script02 is called by script01
+p := p  +1;
+sum := a + b;
+RETURN sum;
+```
+
+#### Functions
+```
+:PROCEDURE funcName;
+
+/* if parameters;
+:PARAMETERS p1, p2, ...;
+statemetns;
+
+/* if something to be returned;
+:RETURN value;
+:ENDPROC;
+```
+
+All variables except arrays and objects are passed by VALUE. Arrays and objects are passed by REFERENCE;
+
+#### :INCLUDE
+To include the contents of a script inside our script.
+
+StarLIMS executes all :INCLUDE statements before executing the code.
+
+script01:
+```
+:INCLUDE Research.script02;
+:DECLARE a, b;
+:DECLARE sum, prod;
+
+a := 2;
+b := 3;
+sum := DoProc("MakeSum", {a, b});
+prod := DoProc("MakeProd", {a, b});
+
+:RETURN sum / prod;
+```
+
+script02:
+```
+:PROCEDURE MakeSum;
+:PARAMETERS a, b;
+	:DECLARE sum;
+	sum := a + b;
+	:RETURN sum;
+:ENDPROC;
+
+:PROCEDURE MakeProd;
+:PARAMETERS a, b;
+	:DECLARE prod;
+	prod = a * b;
+	:RETURN prod;
+:ENDPROC;
+```
+
+#### Examples of Procedures and stuff
+Recursive:
+```
+:PROCEDURE Prod;
+:PARAMETERS n;
+	:IF n <= 1;
+		:RETURN 1;
+	:ELSE;
+		:RETURN n * DoProc("Prod", {n-1{);
+	:ENDIF;
+ENDPROC;
+
+:RETURN DoProc("Prod", {5});
+```
+
+#### Regions
+They are code blocks which are NOT PARSED by the SLL interpreter.
+
+We can get the content of a region using GetRegion function
+```
+:Regions
+/* your code here;
+:ENDREGION
+```
+
+For example:
+```
+:DECLARE a, b, s;
+a := "2";
+b := "3";
+s := GetRegion("MyTemplate", {"$a", "$b"}, {a, b});
+
+:RETURN s;
+
+:REGION MyTemplate;
+	var par1 = $a;
+	var par2 = $b;
+	var ret = form.showModalDialog(formAddress, [par1, par2]);
+:ENDREGION
+```
+
+#### Dynamic code execution
+Using ExecUDF:
+```
+:DECLARE script;
+script := "";
+script := script + ":PARAMETERS x, y" + Chr(59) + Chr(13);
+script := script + ":RETURN x + y" + Chr(59) + Chr(13);
+
+:DECLARE sum;
+sum := ExecUDF(script, {2, 3});
+:RETURN sum;
+```
+
+#### Inline code
+```
+:BEGININLINECODE "MyInlineCode";
+/* some code here;
+:ENDINLINECODE;
+
+:RETURN GetInlineCode("MyInlineCode", {params});
+```
+Similar to regions, BUT:
+- Stored in global space.
+- To delete it from global space memory, we need to manually use DeleteInlineCode.
+
+#### Code Blocks
+```
+:DECLARE cbBlock;
+:DECLARE x, y;
+x := 2;
+y := 3;
+cbBlock := (|x, y| x * y);
+:RETURN eval(cbBlock, x);
+```
+
+Some functions take code blocks as parameters to execute inside them.
+Essentially they are lambda expressions.
+
+### OOP In SSL
+#### Clases
+```
+:CLASS clsVehicle;
+:DECLARE wheels;
+:PROCEDURE GetPrice;
+	:RETURN 100;
+:ENDPROC;
+```
+
+#### Inheritance and Polymorphism
+Referring to last example:
+```
+:CLASS clsCAR;
+:INHERIT Research.clsVehicle;
+
+:DECLARE MSRPrce;
+
+:PROCEDURE Constructor;
+	Me:Wheels := 4;
+:ENDPROC;
+
+/* Polymorphism;
+:PROCEDURE GetPrice;
+	:RETURN 500 + Base:GetPrice();
+:ENDPROC
+
+:PROCEDURE Destructor;
+	Me:Wheels := 0;
+:ENDPROC
+```
+
+#### Creating and using classes
+```
+:DECLARE myCar;
+myCar := CreateUdObject("Research.clsCar");
+
+myCar:Wheels := 5;
+
+:DECLARE myCar2;
+myCar2 := myCar:Clone();
+
+/* Prints xml containing data of the car;
+:Return myCar:Serialize();
+```
+
+### Misc
+#### Exceptions
+script01:
+```
+/* throwing errors;
+RaiseError("description", "function i.e. description of where the error is", errorCode);
+```
+
+script02:
+```
+/* catching errors;
+:ERROR;
+/* here write what's equivalent to catch block;
+```
+Always use :RETURN before any :ERROR block because if you don't, the execution will continue and the block inside :ERROR will actually work.
+
+SQL operations in SSL have implicit RaiseError.
+
+but if you want to handle it yourself, youse :ERROR or ShowSQLErrors function.
+
+Also check helper functions in exception handling :)
+
+## StarLIMS Web Services
+StarLIMS Provides a generic web service interface, there are some functions for consumers to login to StarLIMS and execute server scripts they're allowed to access.
+
+These generic services are:
+- UserLogin(username, password);
+- UserLogout();
+- UserLogged();
+- RunAction(actionId, params);
+- RunActionDirect(actionId, params, username, password);
+
+Also, we can create our own web services with dedicated methods.
+
+We can create web services wrappers in C#, where the web service would inherit/instantiate the generic services and enrich them with new methods or data types.
+
+i.e. we can create sort of a proxy between StarLIMS generic web services and the outside world.
+
+### Custom web services
+We can implement web methods using SSL procedures.
+We can implement data transfer objects (DTOs) using SSL classes.
+
+But, in order to make any SSL construct (script, procedure, or class) a web element, we need to "Decorate" it with "Metadata".
+
+#### Metadata
+XML construct with predefined tags and attributes, it's placed in an SSL script, right above the element it describes.
+
+It must be in comments in order to be ignored by the SSL compilers.
+
+But StarLIMS will scan SSL constructs and metadata, and will generate C# containing the web services, methods, and DTO classes.
+
+StarLIMS will generate:
+- Web service DLL file, to be placed in the bin folder of the web app.
+- ASMX file, to be placed in Services folder of the web app.
+
+
+How to write metadata:
+1- In order to identify a web service implementation, this must be placed in the first line of an SSL script:
+``` xml
+<WebService name="the name of the service" description="description of the service />
+```
+
+2- In order to identify a procedure as a web method, the script must be a web service implementation (Step 1), AND we add this on top of the method:
+``` xml
+<WebMethod name="method name" description="method description">
+	<Parameter name="param name" type="param type" description="param summary />
+	<Parameter name="param name" type="param type" description="param summary />
+	...
+	<Return type="return type" description="return summary />
+</WebMethod>
+```
+
+3- To identify a class as a DTO, it must have this above it:
+``` xml
+<DtoClass description="dto description" />
+```
+
+4- To identify a class member as a DTO member:
+``` xml
+<Member description="", type="" />
+```
+
+#### Type attribute
+Since SSL is typeless, we need to specify the types of metadata, the types are: 
+- void: only for returns.
+- bool
+- char
+- sbyte: 8 bit integer
+- byte: unsigned 9 but integer
+- short: 16 bit
+- ushort
+- int: 32 bit
+uint
+- long: 64 bit
+- ulong
+- float: 32 bit float
+- double: 64 bit float
+- decimal: 128 bit
+- date
+- string
+- A DTO type, specified by category_name.script_name, where they are used to identify which SSL script has the class definition of the data type.
+- any of these types followed by [] or [,]: array of tha type e.g. int[], category_name.script_name[].
+
+Note: Avoid using unsigned stuff since they're not supported in Java.
+
+Note: avoid passing arrays with null elements between web services.
+
+#### Accessing the services
+After putting the ASMX file in the Services folder of the web app, you can access it by: http://YourStarLIMSWebsite/Services/ServiceName.asmx
+
+
+### Example of a web service
+```
+/* <WebService name="MyService" />;
+
+/*
+	<WebMethod >
+		<Parameter type="string" description="input" />
+		<Return type="string" description="output" />
+	</ WebMethod>
+;
+:PROCEDURE Echo;
+:PARAMETERS input;
+	:RETURN input;
+:ENDPROC
+```
+
+Example of a DtoClass for a web service:
+
+```
+/* <DtoClass description="order dto" />;
+:CLASS OrderDto;
+	/* <Member type="string" description="order name" />;
+	:DECLARE name;
+	
+	/* <Member type="string" description="order id" />;
+	:DECLARE id;
+	
+	/* <Member type="string[]" description="order items" />;
+	:DECLARE items;
+
+```
+
+Using the DtoClass above in a web service as a type:
+```
+/*
+	<WebMethod >
+		<Parameter type="WebService Dtos.OrderDto" description="order info" />
+		<Return type="string" description="id of the order" />
+	</ WebMethod>
+;
+:PROCEDURE PlaceOrder;
+:PARAMETERS order;
+	:DECLARE xml, path, guid;
+	
+	guid := CreateGuid();
+	path := GlbDefaultWorkPath + "Orders\" + guid + ".xml";
+	
+	order:id := guid;
+	xml := order:Serialize();
+	
+	WriteText(path, xml);
+	:RETURN guid;
+:ENDPROC
+```
+
+Check out how to consume SSL web services from C# client. 
+
+## Consuming Web Services from StarLIMS
+
+StarLIMS uses a Web Service Connector component, which is like a bridge between StarLIMS and web services providers.
+
+This connector is a .NET assembly that can be registered as a COM server and can be used by SSL lamguage.
+
+i.e. in SSL you can load the connector component, create instances of its classes and use their methods and properties to access web services.
+
+### Proxy
+A better way is to wrap the connector in a proxy class, so that your program can interact with the proxy, and the proxy delegates the work to the connector.
+
+Making an SSL class, that class would have the same interface (methods and parameters and returns) as the web service.
+
+### DTO classes
+If remote web methods return complex data, we can use SSL classes, StarLIMS will generate a corresponding SSL class with the same name and structure for each DTO type that a remote web service uses.
+
+All these proxy and DTO classes are stored in a separate server script category.
+
+### Examples
+#### Using a web service
+```
+:INCLUDE UnitTests.Assert;
+:DECLARE proxy, total, age, array_in, array_out;
+/* create Web service proxy instance;
+proxy := CreateUDObject( "NumericServices.NumericServices" );
+/* call Web method that sums an array of integers;
+total := proxy:AddIntegers( { 1, 2, 3 } );
+DoProc( "UnitTests.Assert.AreEqual", { 6, total } );
+total := proxy:AddIntegers( { 137 } );
+DoProc( "UnitTests.Assert.AreEqual", { 137, total } );
+/* call Web method that computes the age of a certain date;
+age := proxy:GetAge( Today() );
+DoProc( "UnitTests.Assert.AreEqual", { 0, age } );
+/* call Web method that echoes back an array of integers;
+array_in := { 2, 35, 579 };
+array_out := proxy:GetIntegers( array_in );
+DoProc( "UnitTests.Assert.AreEqual", { array_in, array_out } );
+/* don't forget to dispose of the proxy once no longer needed;
+proxy:Dispose();
+:RETURN "OK";
+```
+
+#### Using a web service with DTO type
+```
+:PROCEDURE ChangeFileType;
+:PARAMETERS docId, fileTypeId;
+	:DECLARE proxy, req, resp;
+	/* create instance of request object;
+	req := CreateUDObject("SDMSIntegrationService.UpdateDocObjRequest");
+	/* fill out request object with information;
+	req:DocumentId := docId;
+	req:ObjectId := fileTypeId;
+	req:UserName := "SYSADM";
+	req:Password := "********";
+	req:ActiveSiteId := 1;
+	/* create instance of proxy class;
+	proxy := CreateUDObject("SDMSIntegrationService.IntegrationService");
+	/* call web method;
+	resp := proxy:ChangeDocumentFileType( req );
+	/* check response DTO for errors;
+	:IF resp:Acknowledge != "Success";
+	RaiseError( resp:Message, "ChangeFileType()", 3000 );
+	:ENDIF;
+:ENDPROC;
+```

@@ -1,0 +1,114 @@
+Ethical Hacking course:
+=======================
+Keywords to look for:
+---------------------
+- Reconnaissance/footprinting
+- Scanning networks
+- Enumeration
+- Vulnerability analysis
+- System hacking
+- Malware threats
+- Sniffing
+- Social engineering
+	- fishing
+	- pretexting
+- Denial of service
+- Session hijacking
+- Evading IDS, firewalls, honeypots
+- Hacking web servers
+- Hacking web apps
+- Code injection (SQL injection)
+- Hacking wireless networks
+- Hacking mobile platforms
+- Hacking iot
+- Cloud computing
+- Cryptography
+- Pen testing
+- trojan horses
+- NAND mirroring
+- exploit
+- buffer overflow
+- botnet
+
+Steps of hacking:
+-----------------
+1) Reconnaisance/Foot printing: getting info about the target or the IP or website to be attacked, this can be done actively (by you going to the physical device and getting the info), or passively (using tools)
+2) Scanning: getting some more info about the target using tools like port scanner, nslookup, ping. The info is details about how the servers or connection is configured.
+3) Gaining access: actually hacking the system to gain access.
+4) Maintaining access: while doing what you want to do.
+5) Covering tracks: to make sure you're untraceable.
+
+==============================================================================================================================
+Nmap:
+=====
+A footprinting tool or Reconnaisance tool.
+It helps us in Scanning: finds info about the target IP e.g. OS, open ports and their protocols, 
+
+Nmap is easily detectable by firewalls and scanners, So we need to know how to do it anonymously.
+
+For reconnaissance you can also use:
+- Google "major ip blocks" and select the link by NirSoft, there will be a list of IP address ranges by country, which can be very helpful.
+- nslookup command to find the hostname and address of a site or an IP.
+- Googling "who is <put ip here> and you'll find the owner of the address.
+
+Note: ONLY scan scanme.nmap.org or any sites that say explicitly that it's okay to scan them, because unauthorized scanning might be illegal.
+
+Setting up:
+- Download and install Nmap
+- >> nmap --help
+- See the commands
+
+Basic scanning:
+---------------
+Steps:
+- >> nmap scanme.nmap.org 
+- The result will be:
+	- Ports, their status (open, filled) & their protocols.
+	
+This is bad practice since it scans for 1000 ports by default, that's a lot and unnecessary, it's better to search for targeted ports e.g. SSH, HTTP, etc.
+
+More scanning:
+- >> nmap -p 22 -vv -oG /path/to/output/file.txt scanme.nmap.org
+	-p: scan the port specified (which is 22)
+	-vv: double verbose
+	-oG: grappable output (a nice format of output).
+
+Aggressive scanning:
+--------------------
+We want more info about the e.g. the OS, its version, any running scripts, traceroute.
+
+Steps:
+- >> nmap -A scanme.nmap.org
+	-A: aggressive scan
+- Results:
+	- Trace route
+	- Open ports
+	- OS and version
+	- SSH gostkeys
+	
+- >> nmap -sV scanme.nmap.org
+	- sV: services
+- Results:
+	- Service version, which is the version of services OS that's used on the server.
+	
+- >> nmap --open scanme.nmap.org > /path/to/output/file
+	--open: Only scan open ports.
+- Results here come really fast compared to the others.
+	
+Service version is helpful because if there's a vulnerability in older versions, and we run into an older version, we can exploit those vulnerabilities.
+
+Steps:
+- >> nmap -F scanme.nmap.org
+	-F: fast scan, it usually gives us the most targeted ports.
+	
+Tip: you can scan multiple addresses (you don't have to use -F) e.g. nmap -F address1 address2 address3 
+
+==============================================================================================================================
+Proxychains:
+============
+A tool that gives you different proxys that gives you anonymity.
+
+A proxy usually anonymizes HTTP connections, a proxychain anonymizes everything you're using.
+
+Steps:
+- 

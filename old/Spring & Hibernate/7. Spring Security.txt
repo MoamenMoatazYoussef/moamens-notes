@@ -1,0 +1,61 @@
+# Spring Security
+
+## Intro
+Usually, these tasks should be carried out when developing backend:
+- Secure Spring MVC web apps.
+- Develop login pages.
+- Define users, roles, and authentication.
+- Protect URLs based on roles.
+- Use JSP tags to hide/show content based on role.
+- Store users, passwords, and encrypt them in DB.
+
+There are two methods:
+- Declarative security.
+- Programmatic security.
+
+Spring Security is a framework of Spring that uses Servlet Filters which pre and post-process web requests, and route them based on security logic.
+
+Spring Security intercepts web requests, pre-process them to know if they are allowed to access whatever resource they are requesting, by checking:
+- The app's security logic.
+- Users and passwords.
+
+Flow chart:
+1- Request comes
+2- Is web resource protected?
+	- Yes: Go to step 6:yes
+	- No: Go to step 3.
+3- Is user authenticated?
+	- Yes: Go to step 6.
+	- No: Go to step 4.
+4- Show login form.
+5- Authenticate UserId and Password.
+6- Is user authorized?
+	- Yes: Show resource.
+	- No: Deny access.
+	
+Security concepts:
+- Authentication: Check user and pass with credentials stored in db.
+- Authorization: Check if that user has an authorized role to access a resource.
+
+Declarative Security:
+- Define app's security constraints in config:
+	- Using java config @Configuration
+	- Or Spring XML config.
+	
+Programmatic Security:
+- Spring Security provides an API for custom application coding.
+- Greater customization for specific app requirements.
+
+Login methods:
+- HTTP basic auth: the web browser pops up a basic windows dialog box, which is ugly.
+- Default login form: given by Spring Security.
+- Custom login form: you provide your own look and feel.
+
+Authentication and Authorization methods:
+- In-memory.
+- JDBC.
+- LDAP.
+- Custom/Pluggable.
+- other methods...
+
+We'll create a project to have all that.

@@ -1,0 +1,447 @@
+# AWS Developer Associate - Pluralsight
+
+## Course 1: The Big Picture
+### Intro
+AWS Services: a collection of cloud services that can be used together or individually to run or support a computer program or a web app. (Cloud: because the services run on Amazon's data centers)
+
+Why depend on AWS?
+- Low cost: Instead of buying servers, database servers, equipment the servers need, a room for the servers, maintain them, and scale them by buying more, using AWS we only pay for the services we use on a monthly basis.
+- Easily scalabe: Instead of physically scaling and enduring the time we need to buy, deliver, setup, install, and configure the servers so that we can scale, we just ask AWS to dedicate more servers for us.
+- Global deployment: which reduces latency and increases redundancy and backups.
+
+AWS consists of:
+- Regions: locations where certain servers are hosted.
+- Availability Zone: a collection of data centers that are separately operated, but are connected by very fast fiber cables i.e. VERY HIGH tolerability, if an AZ goes down and you deploy multi-AZ, your app still runs on other AZs.
+
+AWS Servers interact with each other via TCP connections, but usually you are initiating the connections.
+In the same VPC, stuff has local IP addresses.
+
+### AWS Services overview
+#### EC2
+An EC2 instance is basically a computer, so we can use it to:
+- Run apps.
+- As a virtual desktop.
+- Run 3rd party software.
+- Anything a computer can do, really.
+
+Elastic Cloud Compute (EC2):
+- Elastic: the instances can increase or decrease easily, highly scalable.
+- Cloud: it's located in the cloud.
+- Compute: because it offers computing services.
+
+EC2 instance: a virtual server, when we create it we select:
+- Its OS, also known as its Image.
+	- or AMI, short for Amazon Machine Image.
+	- Truly, AMIs are OSs and some software needed with the OSs.
+	- Amazon updates the available images, but not the images you are already using.
+- Its specs, or Instance Type:
+	- Its numbers of CPUs, RAM, Network performance, Storage, etc.
+	- These are grouped in collections, known as "Instance Types"
+- Instance details that relate to Network, Subnet, Security, etc.
+- Number of instances: how many instances of that configuration to spawn.
+	- AWS will create an auto-scaling group that increase/decrease the number of instances according to rules we set, so it auto-scales.
+- Its storage, or Elastic Block Storage (ELB):
+	- These are basically storage volumes used for EC2 file systems.
+	- Unlike S3, which is for storing and serving independent files.
+- Its tags, basically key/value pairs.
+- Its security groups:
+- A security group is basically a small firewall that controls which IPs can talk to your instances, and which IPs your instances can talk to.
+	- This is useful to define how we connect, how EC2 instances connect to DBs, etc.
+- Its Key Pair:
+	- This is used to connect to EC2 using SSH.
+	
+EC2 pricing:
+- EC2 instances are charged by the hour.
+- Instance Type, AMI, ELB, Additional load balancers affect the price.
+- Auto-scaling groups are free.
+- There are different pricing types too: On-demand instances, reserved, spot, etc.
+	
+EC2 is used undercover for other services as well.
+
+#### S3
+A service that stores files.
+Used by other services of AWS too.
+Max file size is 5 terabytes...so yeah we have room xD
+
+S3 consists of Buckets, buckets are like computer drives basically.
+We can:
+- Set permissions, hosting, logging events on buckets.
+- Store older versions.
+- Replicate objects across regions.
+
+Buckets are assigned a URL when created, we can use that to access the contents.
+If we allow anonymous access, S3 can host static files for websites.
+
+##### Latency in S3
+We can replicate files.
+BUT
+We can use CloudFront, somehow solves latency.
+
+S3 pricing:
+- Affects price: Amount of data stored (per GB), number of requests (per 1000 requests), and amount of data transferred (per GB).
+
+#### RDS
+AWS takes care of all Backups, Software update, and Infrastructure.
+We would do that manually if we install our DB on EC2 instance msln.
+
+When picking an RDS instance, you also pick the type of the EC2 instance.
+Access to RDS is controlled by Security Groups.
+
+RDS pricing:
+- Affects the price: Type of database, region, and EC2 instance type.
+
+#### Route 53
+Service to manage DNS, it allows us to configure domain names to resolve to internal AWS services.
+
+#### Elastic Beanstalk
+Service that makes it easy to run and scale your app on AWS.
+It runs your code on EC2 instances.
+
+How to deploy your app on EC2:
+- Manual config, code deployment, CLI, manual monitoring, and scaling with AMIs.
+- Use Elastic Beanstalk that does all that.
+
+Structure of Elastic Beanstalk apps:
+- Application:
+	- Name: a unique name.
+	- Versions: this is the actual code.
+		- Deployed to environments.
+		- Environment: the rules and configs that manage the EC2 instances that are used e.g. which platform (java, node, etc.), instance types.
+
+Application versions are stored in S3.
+
+#### Lambda
+Lambda is a service that executes function code, basically you give it some code, and lambda executes it with no config required.
+We don't need to configure servers, load balancers, etc.
+And we only pay when our code runs :)
+
+Lambda consists of:
+- A function:
+	- A bundle of code with a specified execution entry point.
+	- The platform type: the type of code e.g. node, python, etc.
+	- Triggers: things that trigger the code running e.g. api gateway, cloudwatch, cloudfront.
+	- Additional config e.g. exec timeout, IAM role used by Lambda, memory.
+	
+Lambda is great for small irregular tasks, as well as big scheduled tasks :)
+
+It's much easier to create a Lambda function that to set up an EC2 instance and install infrastructure and run code on it.
+
+#### DynamoDB
+NoSQL managed DB service, with unlimited elastic storage and no hardware choices, we just pay for what we use and only put data in it :)
+
+#### VPC
+Basically this is a way to divide our cloud into smaller "clouds" or groups, where we can group resources together.
+
+VPCs also consist of subnets, a sub-grouping of resources inside one VPC.
+
+We can group resources in subnets in a VPC.
+
+Subnets can be:
+- Private: Have no access to internet, here we put resources like DBs, app instances.
+- Public: Have access to internet and uses security groups and NAT gateway, here we put EC2 instances to tunnel into private subnets.
+
+How are VPCs secured?
+- Route tables: can override IP address ranges and control how data flows in and out.
+- NACL: subnet-level firewall, similar to security groups.
+
+VPC is a free service, totally :)
+
+#### CloudWatch
+A monitoring service to monitor other services and send alerts to you when certain events happen e.g. trigger some actions, send you SMS or mail, etc.
+
+#### CloudFront
+A content delivery network (CDN :) ), that can serve static files globally with very fast connections.
+
+It can work with S3, EC2, load balancer, Route 53.
+
+We create a cloudfront distribution: a set of content to be served by cloudfront.
+
+For each distribution we define an original location for the content.
+
+Then, a unique cloudfront URL will be generated for that.
+
+We can configure which HTTP methods, SSL certificates, and Edge locations.
+
+### Overview of how we can interact with AWS
+#### Web console
+Services are divied into many sections, for example:
+- Compute: this contains EC2, Lambda, services that run apps on virtual machines.
+- Storage: like S3.
+- Database: RDS, DynamoDB, etc.
+- Networking & Content Delivery: VPC, Cloudfront, Route 53.
+- Developer Tools: Stuff to enhance development.
+- Management & Governance: like CloudFront.
+- Security, Identity & Compliance: like IAM.
+- And many many others.
+
+#### AWS SDK
+AWS SDK are all the libraries provided by AWS to interact with all the services in AWS, so we can write apps that interact with AWS very easily :)
+
+It's very very easy to install, for node we just >> "npm install aws-sdk", for java we use Maven or Eclipse.
+
+AWS SDK supports android, ios, go, c++, .net, unity, js, java, rails, ruby, node, and MANY others.
+
+All of these are hoted on AWS's github account :)
+
+#### AWS CLI
+A set of commands to interact with AWS services from cmd.
+
+We can use it to create shell scripts and automate AWS stuff.
+
+## Course 2: Getting Started with Development on AWS
+
+### Developing on AWS
+- Most services are accessible using TCP connections, either HTTP or specified connections.
+- Each service instance has an Amazon Resource Name or ARN, basically a unique ID.
+- EC2 is the core of most services.
+
+### Demo: Deploying an app on AWS
+
+WE'll learn some AWS services by deploying an app on AWS that uses many services like DynamoDB, RDS, Elasticache, and more.
+
+#### Setting up 
+1- Install nodejs, awscli.
+2- Create an AWS account.
+3- Create an access key and download it. (not a best practice, but we'll change it with IAM soon)
+4- Open your cmd
+>> aws configure
+5- Copy the access key and secret access key and paste them in the cmd when asked about each one.
+6- Also set the other config options if you want.
+7- Run this cmd to verify that you're set up:
+>> aws ec2 describe-instances
+
+#### Setting up CloudWatch
+We'll use CloudWatch to set up monitoring for our app instead of manually monitoring it.
+
+Creating a topic for CloudWatch alarms:
+1- Switch the region to N. Virginia.
+2- Go to SNS service.
+3- Create a topic called admin_email.
+4- Create a subscription:
+	- Protocol: Email.
+	- Endpoint: set your mail here.
+
+Creating CloudWatch billing alarms:
+1- Switch region to N. Virginia.
+2- Click on your name, choose My Billing Dashboard
+3- On the left pane, select Billing Preferences.
+4- Check the Receive Billing Alerts checkbox.
+5- Go to CloudWatch.
+6- On the left pane, choose Alarms.
+7- Create alarm:
+	- Select Metric: (this shows only the services you're using and their metrics that you can use for alarms)
+		- Choose Billing, then choose Total Estimated Charge, then choose the currency.
+	- Scroll down to Conditions, enter the amount you want to use as threshold.
+	- Select the SNS topic that you created earlier.
+	- Give the alarm a name and description.
+
+#### Setting up IAM
+It's VERY IMPORTANT TO SECURE, PROTECT, AND ADMINISTER any AWS.
+When you create an account, there's a Root Account.
+
+The Root Account can administer all services, users, billing info, etc.
+So, to protect accounts, especially the Root:
+- MFA, using a hardware or virtual MFA device.
+- Not using the Root Account to do things in AWS, instead:
+	1. In IAM, Create a user, download its credentials.
+	2. >> aws configure
+		Then paste the credentials of the new user you created.
+	3. Create a User Group, add to it the permissions you need (for now, add AdministratorAccess)
+	4. Add the new user to the group.
+	5. Set an initial password to the user.
+	6. Now use that user instead of Root.
+
+Policies:
+- The fundamental building blocks of IAM permissions.
+- Policies are statements that specify a certain way of access.
+- A policy is a basic JSON object.
+- A policy consists of 3 properties:
+	Effect: "Allow" or "Deny"
+	Action: Which function is the user allowed/denied to perform
+	Resource: Which resource is the user allowed/denied to perform the action on
+- So manu policies are already made by AWS, very few times will we need to create a custom policy, but we can.
+
+- Policies are used to make permissions
+- Permissions can be attached to users to give/remove access.
+- Permissions also can be attached to User Groups to make it easy to manage permissions.
+
+#### VPC
+In a VPC, resources have private IP addresses.
+We can control access to all resources inside a VPC, by:
+- Security groups: a mini-firewall, defines allowed incoming/outgoing IP addresses and ports.
+	- They are attached at instance-level, and can be shared by instances.
+- Routing tables: to configure routing destination for traffic coming out of the VPC.
+	- Each VPC has 1 routing table.
+- NACL: same as security group, but on VPC level.
+
+VPCs are divided into Subnets:
+- A subnet has its own routing table, NACL, etc.
+- It can be public (Accessible from internet), or private (only accessible through a NAT gateway in another public subnet in the same VPC).
+- Subnets exist in ONE availability zone.
+
+To connect a VPC to the internet, we attach an Internet Gateway to it.
+
+Steps:
+1. Create a VPC with one public subnet.
+2. In the details pane below, Go to its route table.
+3. Go to the Routes tab.
+4. Add a new route:
+	Destination: 0.0.0.0/0
+	Target: Internet Gateway, select the one that pops up.
+5. Save routes.
+6. Go back to the VPC dashboard.
+7. Create a new subnet:
+	- Choose a different AZ.
+	- IPv4 CIDR block: 10.0.1.0/24 (this is important to be set so that it doesn't conflict with other subnets)
+	
+#### EC2
+A virtual machine provisioned by a certain amount of cores, memory, storage, and network performance.
+So, we can install any OS on it, we know them as AMIs :)
+EC2 instances are assisted by EBS volumes for storage.
+EBS is different from S3.
+
+Steps:
+1. Go to EC2.
+2. Create an instance:
+	- AMI: Amazon Linux 2 free tier eligible.
+	- Type: t2.micro
+	- Network: select the vpc you created.
+	- Subnet: Choose one of your subnets for now.
+	- Auto-assign Public IP: Disable.
+	- IAM role: for now, leave it at None.
+	- Storage: leave the defaults.
+	- Security group: create a new one:
+		- Leave the default SSH rule for now.
+		- Add a rule (if you're deploying an app on port 3000):
+			- Type: Custom TCP.
+			- Port Range: 3000
+			- Source: anywhere.
+		- Create a new key pair, and download it.
+	- Launch the instance.
+3. Since the EC2 instance doesn't have a public IP, we'll create one for it in order to connect to it, in the EC2 dashboard:
+	- Create an Elastic IP.
+	- Associate that new IP to the instance we created.
+4. Connect to the instance using Putty or SSH on linux.
+
+#### Deploying a demo app on the EC2
+
+Steps:
+1- Connect to the instance using SSH.
+2- Update the yum repos (yum is a package manager for Amazon Linux).
+>> sudo yum update
+3- Install Node
+>> curl -sL https://rpm.nodesource.com/setup_12.x | sudo bash -
+>> sudo yum install -y nodejs
+4- Check this guide on how to copy your app to the EC2 instance using PSCP: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html
+And this: https://serverfault.com/questions/295565/pscp-upload-an-entire-folder-windows-to-linux/295569
+
+5- Log back in the instance using SSH.
+6- cd into the pizza-luvrs directory.
+7- >> npm install
+8- >> npm start
+9- Open a browser (on your pc, not the ec2 instance), and go to http://<elastic ip here>:3000/
+10- You should see the app running :)
+
+#### Scaling EC2 instances
+If your EC2 instance goes bad, the app goes down, so it's better to scale.
+We can take a snapshot of an EC2 instance and replicate it.
+1- Go to EC2 dashboard, Instances panel.
+2- Select your instance, open the Actions menu, and choose Image -> Create.
+
+But, we don't want to monitor traffic and manually create new instances.
+
+That's where Auto Scaling Group comes in.
+We basically set thresholds, and if they are surpassed, the Auto Scaling Group automatically adds/removes instances.
+
+But, doesn't that mean the IP will change constantly?
+We need a stable DNS entry.
+That's the job of the Load Balancer.
+
+Load Balancer: a router instance that provides a stable endpoint, it will keep track of which IPs are available, and routes to them efficiently.
+
+Creating a Load Balancer:
+1- EC2 dashboard, Load Balancer panel.
+2- click Create Load Balancer.
+3- Choose the appropriate type. (For the tutorials, use "Application load balancer")
+4- Configure it:
+	- Give it a name.
+	- IP address type: ipv4
+	- Listeners: which ports will the load balancer listen on.
+		- HTTP: port 80
+		- HTTPS: port 443 (for now, don't add this entry)
+	- Choose the VPC.
+	- Choose two AZs.
+5- Create a new security group for the load balancer:
+	- TCP, 80, 0.0.0.0/0
+6- Configure the routing: how the load balancer will send requests to our app instances.
+	- Target group: a group of instances to route to.
+		- Name it.
+		- Choose the radio button "Instance".
+		- Protocol: HTTP.
+		- Port: 3000.
+	- Health checks: the load balancer decides which instance to send to, by checking their status with a health check.
+		- Protocol: HTTP.
+		- Path: / (Usually, there's a separate path for health checks, but for now, leave it on root)
+7- Register targers: instances that will be inside the target group.
+	- Add your instance from below.
+8- Create.
+
+Finally, we need to make sure that if a user logs in an instance, they keep sending requests to THAT instance (Instance Stickiness):
+1- EC2 dashboard, Target Group panel.
+2- Select the target group you created, in the details below, click Edit Attributes, and check the Stickiness checkbox, and specify time as 1 day.
+
+Finally, creating an Auto scaling group.
+
+To create the auto scaling group, we need to create a Launch Configuration: a configuration that will be used by the auto scaling group to launch new instances i.e. what is the specs of each new instance auto-launched.
+
+Creating a Launch Configuration:
+1- EC2 dashboard, Auto scaling Group.
+2- Create Auto Scaling Group.
+3- In choosing an AMI, go to My AMIs, and choose the image you created.
+4- Choose Instance Type.
+5- Configuration:
+	- Give it a name.
+	- Advanced details:
+	We need when an instance is auto-created, our app is auto-started.
+	We can run scripts at startup by writing shell scripts in the User data section.
+		- User data:
+			#!/bin/bash
+			echo "Starting pizza-luvrs"
+			cd /home/ec2-user/pizza-luvrs
+			npm start
+5- Choose the storage options you want.
+6- Security groups: Select an existing security group, then choose the security group you created for the first EC2 instance.
+7- Choose the created key pair, then Create Launch Configuration.
+
+Creating the auto scaling group:
+1- After finishing the launch configuration creation, you'll continue on creating the auto scaling group.
+2- Basic details:
+	- Name the group.
+	- Group size: start with 2.
+	- Network: select the vpc.
+	- Subnet: Add both subnets of the vpc (so load balancer sends traffic to both places).
+3- Advanced details:
+	- Check the Receive Traffic from one or more load balancers checkbox.
+	- Target groups: select the target group you created with your load balancer.
+3- Click Next, next (You can start the group to configure scaling rules, and you can add notifications when events in the autoscaling group happen e.g. instance launch, instance fail, etc.).
+4- Create the group.
+
+The auto scaling group will be created, and after a while, 2 instances will launch.
+
+The auto scaling group will be connected to the launch config, target groups, etc.
+
+Go to Load Balancers panel, click the one you created, you'll see the DNS name in the Description tab.
+
+This is the DNS name we'll use to acces the app, try it out in the browser :)
+
+Adjusting the security group to make it more secure:
+1- Go to Security groups panel.
+2- Choose your ec2 security group (not the load balancer one).
+3- Inbound tab, delete the rules except the SSH, then add this:
+	- Type: Custom TCP.
+	- Protocol: TCP.
+	- Port range: 3000.
+	- Source: Custom, <the load balancer's security group name>
+	
+This means that any instance with the load balancer security group will be allowed to connect to these instances on port 3000.
+

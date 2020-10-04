@@ -5,6 +5,35 @@ todo:
 
 I. MongoDB Basics:
 ------------------
+Some tools before we start:
+---------------------------
+1) MongoDB Atlas: a tool for managing and deploying mongodb across cloud providers , basically it's a database-as-a-service like aws RDS. 
+2: MongoDB Compass: GUI for mongodb, like mysql workbench.
+3) MongoDB Shell: an interactive JS to interact with mongodb.
+
+Let's go:
+---------
+First of all, and thankfully, MongoDB supports JSON from the ground up.
+
+MongoDB representation of data, much of MongoDB's administration, and MongoDB commands are basically JSON.
+
+A "JSON Document" or "Document" in the context of MongoDB usually refers to a record in the DB.
+
+MongoDB structure:
+------------------
+MongoDB databases consists of:
+- Databases: which consists of collections, they're similar to namespaces in a way.
+- Collections: these are collections of documents.
+- Documents: these are individual records of data.
+
+Documents in one collection don't have to be EXACTLY similar.
+
+MongoDB can support users with roles and levels of access at 
+- Database level, or 
+- Collection level.
+
+Usually we refer to collections in this format:
+	database_name.collection_name
 
 CRUD in MongoDB:
 ----------------

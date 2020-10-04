@@ -827,6 +827,198 @@ function mixin(target, ...mixin) {
 ```
 This is called a Mixin.
 
+## ES6 Syntactic Sugar
+### Classes
+This is pre-es6:
+``` js
+function Circle(r) {
+	this.r = r;
+	this.draw = function() {
+		console.log('draw');
+	}
+}
+
+const c = new Circle(7);
+c.move = function() { 
+	console.log("move"); 
+};
+```
+
+This is the same code, in es6:
+``` js
+class Circle {
+	constructor(r) {
+		this.r = r;
+		this.move = function() { 
+			console.log("move"); 
+		};
+	}
+	
+	draw() {
+		console.log('draw', this.r);
+	}
+}
+
+const c = new Circle(7);
+```
+
+See how it looks more familiar to those who used OOP or structured languages? <br/>
+
+***Note:*** Classes here are NOT the same as classes in Java, C++, etc., They are the same as objects and prototypes we talked about before, this is just syntactic sugar.
+i.e. the method draw will be on the PROTOTYPE, not on the object itself.
+
+If you want a method to be on the object itself, put it in the constructor, like the move function.
+
+Classes in ES6 have a small enhancement: they enforce you to use the "new" keyword.
+
+There are two ways to define classes (like functions):
+``` js
+// class declaration
+class Circle {
+
+}
+
+// class expression
+const Square = class {
+
+}
+```
+Unlike functions, though, class declarations are **NOT** hoisted.
+That's why class expressions are rarely used, and that's what you should do.
+
+### Static methods
+Just like any static method in any language, we can define static methods here, we use them by calling them from the reference of the Class itself, not an instance of it, like Java.
+``` js
+class Circle {
+	constructor(r) {
+		this.r = r;
+		this.move = function() { 
+			console.log("move"); 
+		};
+	}
+	
+	draw() {
+		console.log('draw', this.r);
+	}
+	
+	static tryMe(str) {
+		console.log(str);
+	}
+	
+	// this is a static function that acts like
+	// a factory, you give it a valid JSON string 
+	// containing a radius property and it returns a
+	// circle whose radius is the value of that
+	// property in the JSON
+	static parse(str) {
+		const radius = JSON.parse(str).radius;
+		return new Circle(radius);
+	} 
+}
+
+const c1 = new Circle(7);
+const c2 = new Circle(8);
+
+// we can't do this:
+// c1.tryMe("this won't work")
+
+// but we can do this (using the CLASS)
+Circle.tryMe("this will work");
+
+const c3 = Circle.parse('{ "radius": 1 }');
+```
+
+### The bane of every JS developer's existence: "this"
+``` js
+const Circle = function() {
+	this.draw = function() {
+		console.log(this);
+	}
+}
+
+const c = new Circle();
+// the "this" keyword inside the function points to the object c
+// this is the normal behavior we're used to
+c.draw();
+
+const draw = c.draw;
+
+// the "this" keyword inside the function points to the window object,
+// the global object, because we didn't call it using an object reference
+draw();
+```
+
+The second behavior can be changed if you enable **strict mode**, the "this" keyword will **NOT** point to the window global object, it will be *undefined*.
+
+This is done to avoid modifying the global object by accident, which is a BAD thing.
+
+By default, **the bodies of classes in ES6 are executed in Strict mode.**
+
+### Private members
+To make a member private, some developers do one of two (or both):
+- prefix its name with an underscore "_", note that **THIS IS NOT ABSTRACTION**, this just tells other developers working on the code that this should not be used in public, but it **CAN** be used in public.
+- Use ES6 symbols to implement REAL abstraction.
+Symbols? (Basically they are unique identifiers);
+If you compare Symbol() with Symbol(), you get *false*, because each one is unique.
+``` js
+const _radius = Symbol();
+
+class Circle {
+	constructor(r) {
+		this[_radius] = radius;
+	}
+}
+
+const c = new Circle(7);
+
+// this won't work, and that's what we want
+// now it's REALLY abstracted.
+c.radius;
+c._radius;
+
+// however, we can hack it by using Object.getOwnPropertySymbols
+// this returns an array of symbols containing the symbols used in the
+// class, now we can use them like this:
+const radiusName = Object.getOwnPropertySymbols(c))[0];
+
+// now this works, sadly :(
+c[radiusName];
+
+
+// there's no current way to make it more private
+// so we'll work with symbols for now
+```
+
+How do we implement private methods?
+``` js
+const _radius = Symbol();
+const _draw = Symbol();
+
+class Circle {
+	constructor(r) {
+		this[_radius] = radius;
+	}
+	
+	// this is called a computed property name,
+	// basically whatever's between the square brackets is
+	// evaluated and used as property name:
+	[_draw]() {
+		console.log("draw, private mode");
+	}
+}
+
+const c = new Circle(7);
+```
+
+### Using maps to make Private
+
+
+
+
+
+
+
+
 
 
 

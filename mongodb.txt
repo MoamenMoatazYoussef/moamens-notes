@@ -1,0 +1,102 @@
+MongoDB university courses:
+===========================
+todo:
+- chapter 2 labs.
+
+I. MongoDB Basics:
+------------------
+
+CRUD in MongoDB:
+----------------
+Creating one:
+- We'll use the method insertOne which is applied on the Collection level. It inserts a new document in a collection. Inside the brackets we write the document to be inserted in JSON.
+>> use video
+>> db.movies.insertOne({
+	"title": "Star Wars Episode VIII",
+	"year": "2018"
+})
+- It will create a document with an _id for us field. The _id is a unique identifier and ALL mongodb docs must have it.
+- We can supply an _id value ourselves.
+- If the _id is created for us (i.e. we didn't create it manually), it will be of type ObjectID.
+- If we'll supply _id values, they SHOULD be of the same type as previously created _id values of documents.
+
+Creating many:
+>> db.movies.insertMany([
+	{
+	"title": "Star Wars Episode IX",
+	"year": "2020"
+	},
+	{
+		"title": "Star Wars Episode VII",
+		"year": "2018"
+	},
+	{
+	"title": "Star Wars Episode VIII",
+	"year": "2019"
+	}
+])
+- If two of the documents being inserted have identical _id values (or one has _id equal to previously present document's _id), we'll get a Duplicate Key Error.
+- Default is Ordered Inserts: inserts in order that we write, if an error happens, the insertion stops i.e. only documents before the one that caused errors are inserted.
+- We can add a second arg to insertMany:
+>> db.movies.insertMany([
+	{
+	"title": "Star Wars Episode IX",
+	"year": "2020"
+	},
+	{
+		"title": "Star Wars Episode VII",
+		"year": "2018"
+	},
+	{
+	"title": "Star Wars Episode VIII",
+	"year": "2019"
+	}
+], {
+	"ordered": false
+})
+- This makes the insert unordered: any documents that did NOT cause errors will be inserted.
+
+Reading:
+- We can use selectors or "filters" to filter query results.
+- They are ANDED together by defaults.
+- We'll use find(), on the collection level, and we give it the filters as arguments.
+>> db.movies.find({
+	"mpaaRating": "PG-13", 
+	"year": 2009
+}).pretty()
+
+- Using dot notation to access embedded documents.
+- We can filter for embedded documents e.g. { "wind.direction.angle": "270" }
+
+Reading: Matching Arrays:
+- Matching an array EXACTLY in the value AND order.
+>> db.movies.find({ "cast": [ "Jeff Bridges", "Tim Robbins" ]}).pretty()
+
+- Matching for an array that contains a specific element (regardless of other constituents of the array).
+>> db.movies.find({ "cast": "Jeff Bridges" }).pretty()
+
+- Matching for an array that contains a specific element in a specific position of the array. (e.g. here, looking for Jeff Bridges in the cast array's 0th index)
+>> db.movies.find({ "cast.0": "Jeff Bridges"}).pretty()
+
+Cursor:
+- The find() method returns a Cursor: a pointer to the current location in a result set.
+- If the query returns a shitload of documents, mongodb returns the result in BATCHES.
+
+Projections:
+- They limit the fields that return in the result set; improving performance and reducing network load.
+- This will only return the title field and the _id field (since it returns by default, unless we explicitly exclude it)
+>> db.movies.find({"genre": "Action, Adventure}, {"title": 1}).pretty()
+
+- Excluding the _id (this can be done on any field btw)
+>> db.movies.find({"genre": "Action, Adventure}, {"title": 1, "_id": 0}).pretty()
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+II. MongoDB For Java Developers:
+--------------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+III. MongoDB Data Modelling:
+----------------------------
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------

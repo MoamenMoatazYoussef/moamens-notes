@@ -1645,10 +1645,167 @@ Summary of Hibernate:
 ====================================================================================================================================================================================================================================================================
 Spring with Hibernate:
 ======================
+Usually there's a followed architecture when integrating Spring with Hibernate.
 
-====================================================================================================================================================================================================================================================================
-Summary of Spring with Hibernate:
----------------------------------
+This consists of:
+- Entity: which is mapped to DB tables, just like normal Hubernate.
+- DAO (Data Access Object): This is a class that has functions that use Hibernate for this particular entity.
+	- The DAO will need SessionFactory and Session objects, which will be provided by Spring through dependency injection i.e. we wire it to Hibernate's stuff :)
+	- Which means that we need to define SessionFactory as a bean.
+- Service Layer: sits between the DAO and the controller:
+	- Here we can put custom business logic such as integrating from multiple DAOs when fetching something that's related to customers.
+	- To separate this logic from the DAO and keep the DAO's functionality only about CRUDing its entity.
+- MVC components:
+	- Views.
+	- Controllers:
+	
+Both the DAO and Service Layer are made like the following:
+- Create interfaces.
+- Create implementations.
+	
+Defining SessionFactory as a bean in Spring:
+```
+
+```
+
+Creating an entity:
+```
+// just like before
+public class Customer {
+
+}
+```
+
+When creating a DAO, we'll use Spring annotations: 
+	- @Transactional: On each function that uses Hibernate in the DAO.
+	- this automatically begins and ends transactions around Hibernate code, 
+	- so we don't need to do that manually.
+- @Repository: on the DAO itself. 
+	- this inherits from @Component (so it will be picked up by component scanning)
+	- it makes Spring provide translations for any JDBC exceptions.
+	- 
+	
+Creating an entity:
+- Just like before with hibernate.
+
+Creating a DAO:
+```
+public interface CustomerDAO {
+
+	public void createOrUpdateCustomer(Customer customer);
+
+	public List<Customer> getCustomers();
+
+	public Customer getCustomer(int id);
+
+	public void deleteCustomer(Customer customer);
+	
+	public void deleteCustomerById(int id);
+}
+
+@Repository
+public class ConcreteCustomerDAO implements CustomerDAO {
+	
+	@Autowired
+	private SessionFactory sf;
+
+	@Override
+	@Transactional
+	public void createOrUpdateCustomer(Customer customer) {
+		Session session = sf.getCurrentSession();
+		session.save(customer);
+	}
+
+	@Override
+	@Transactional
+	public List<Customer> getCustomers() {
+		Session session = sf.getCurrentSession();
+		TypedQuery<Customer> query = session.createQuery("from customer", Customer.class);
+		return query.getResultList();
+	}
+
+	@Override
+	@Transactional
+	public Customer getCustomer(int id) {
+		Session session = sf.getCurrentSession();
+		Customer customer = session.get(Customer.class, id);
+		return customer;
+	}
+
+	@Override
+	@Transactional
+	public void deleteCustomer(Customer customer) {
+		Session session = sf.getCurrentSession();
+		session.delete(customer);
+	}
+
+	@Override
+	@Transactional
+	public void deleteCustomerById(int id) {
+		Session session = sf.getCurrentSession();
+		session.createQuery(
+				"delete Student"
+				+ " where id = 2")
+			.executeUpdate();
+	}
+}
+```
+
+Creating a Service Layer:
+- Annotate the class with @Service, which inherits from @Component.
+- Inject the DAO into it.
+- Remove the @Transactional from DAO and put them on the methods of the service class.
+```
+public interface CustomerService {
+
+	public void createOrUpdateCustomer(Customer customer);
+
+	public List<Customer> getCustomers();
+
+	public Customer getCustomer(int id);
+
+	public void deleteCustomer(Customer customer);
+
+	public void deleteCustomerById(int id);
+}
+
+@Service
+public class ConcreteCustomerService implements CustomerService {
+
+	@Autowired
+	public CustomerDAO customerDAO;
+
+	@Override
+	@Transactional
+	public void createOrUpdateCustomer(Customer customer) {
+		customerDAO.createOrUpdateCustomer(customer);
+	}
+
+	@Override
+	@Transactional
+	public List<Customer> getCustomers() {
+		return customerDAO.getCustomers();
+	}
+
+	@Override
+	@Transactional
+	public Customer getCustomer(int id) {
+		return customerDAO.getCustomer(id);
+	}
+
+	@Override
+	@Transactional
+	public void deleteCustomer(Customer customer) {
+		customerDAO.deleteCustomer(customer);
+	}
+
+	@Override
+	@Transactional
+	public void deleteCustomerById(int id) {
+		customerDAO.deleteCustomerById(id);
+	}
+}
+```
 
 ====================================================================================================================================================================================================================================================================
 Spring Security:
@@ -1705,6 +1862,37 @@ Programmatic Security:
 ----------------------
 Spring provides Security API for custom coding of security logic.
 
+Setting up for first project: (Java config)
+-------------------------------------------
+- Create a new Maven spring webapp project.
+- Add support for maven WAR plugin in the pom file:
+``` xml
+<build>
+	<!-- The name of the war file that will be generated -->
+	<finalName>spring-security-demo</finalName>
+	<pluginManagement>
+		<plugins>
+			<plugin>
+				<!-- Here, add the GAV (groupId, ArtifactId, Version) of maven-war-plugin, without <dependency> tag -->
+				<groupId>org.apache.maven.plugins</groupId>					<artifactId>maven-war-plugin</artifactId>
+				<version>3.3.1</version>
+			</plugin>
+		</plugins>
+	</pluginManagement>
+</build>
+```
+- Add those dependencies to the pom file:
+	- spring-webmvc
+	- javax.servlet-api
+	- javax.servlet.jsp-api
+	- jstl
+	- junit
+	- For java 9+: jaxb-api
+- Create a package for the config classes.
+- Create a config class:
+``` java
+
+```
 
 ====================================================================================================================================================================================================================================================================
 Summary of Spring Security:

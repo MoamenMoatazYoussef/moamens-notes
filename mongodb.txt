@@ -90,6 +90,35 @@ Projections:
 - Excluding the _id (this can be done on any field btw)
 >> db.movies.find({"genre": "Action, Adventure}, {"title": 1, "_id": 0}).pretty()
 
+Updating:
+- We'll use updateOne(filter, update_params).
+>> db.movies.updateOne({
+  "title": "The Martian"
+}, {
+  $set: {
+    "awards": "Oscar"
+  }
+})
+- This updates the FIRST document it finds that matches the filter (first arg), then it uses $set to update/add the field/value pairs specified in the document that's after $set.
+- The $set is an update operator, there are other operators like:
+  - $unset: removes the field completely
+  - $min: updates fields that are smaller than an existing value.
+  - $max
+  - $inc: increments the field value by an amount
+  - $setOnInsert: 
+  - and many more, check the mongodb docs.
+  
+Updating many documents:
+- updateMany updates all documents that match the filter.
+>> db.movies.updateMany({ "rated": null }, { $unset: { "rated": "" } });
+
+Updating:
+- Using replaceOne(filter, update_document), replaces .
+>> 
+
+Upsert = Update + Insert:
+- Using update to insert new documents.
+- If we used updateOne but no documents matched the filter, the update document will be inserted as a NEW document in the collection.
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 II. MongoDB For Java Developers:

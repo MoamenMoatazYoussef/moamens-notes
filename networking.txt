@@ -228,3 +228,6 @@ Firewalls can be set on computer level or on network level.
 
 A tool for setting firewalls is "iptables".
 
+General notes:
+- Port: a virtual slot binded to the NIC.
+- 

@@ -1,5 +1,15 @@
 Ethical Hacking course:
 =======================
+General steps:
+--------------
+1) Learn C, Python, and x86 assembly
+2) Go through the ethical hacking series
+3) Take extra tutorials on topics using keywords below
+4) Choose a path:
+	- Malware and reverse engineering
+	- Pentesting
+	- Web app security
+
 Keywords to look for:
 ---------------------
 - Reconnaissance/footprinting
@@ -110,5 +120,429 @@ A tool that gives you different proxys that gives you anonymity.
 
 A proxy usually anonymizes HTTP connections, a proxychain anonymizes everything you're using.
 
+We configure it by editing the file proxychains.conf.
+
+It's available only on linux, but you can find equivalents for windows like https://github.com/shunf4/proxychains-windows
+
+When you use a proxy chain, you have to also change your DNS:
+- Changing your proxy will anonymize your IP, but your DNS is still in the country you're in.
+- So, when you access a website e.g. youtube, your IP (which is the proxy's IP) will be logged, and your DNS name will also be logged.
+- Youtube will already know you're using a proxy because your IP is inconsistent with your DNS.
+- This will enable them to block you, or even track you.
+
+You can configure proxychains as follows:
+- Choose the Type of proxy chain to use:
+	- Dynamic chain: most stable and fastest proxy chains. (Each connection will be done via chained proxies)
+	- Strict chain: will stick to the IPs or proxies you specify.
+	- Random chain: just a normal proxy connection, it's the worst way, used to test your IDS.
+- Proxy dns: a setting that allows your DNS to also be anonymized while using a proxy.
+	- To avoid the inconsistency between your IP and your DNS. 
+	- It makes anyone who wants to know the DNS follow the IP to see its DNS, which is the DNS of the proxy.
+- Choose the proxy formats that you can anonymize:
+	- HTTP.
+	- SOCKS4: old, but anonymize well.
+	- SOCKS5: recommended, will anonymize everything.
+- You'll see that a username and password is written for each format.
+- In the ProxyList section, you can add formats and addresses of proxies in this format:
+	[format_name	<1 tab space here>	ip_address port]
+	
+We'll use proxychains with Tor, Tor is:
+	
+Example for configuring proxychains:
+- Uncomment dynamic_chain, now the proxychain is active.
+- Uncomment proxy_dns, this will prevent leaking of DNS.
+- In ProxyList, add this line:
+	socks5	127.0.0.1 9050
+
+Proxychains in action:
+>> sudo apt-get install tor
+>> service tor start
+>> proxychains firefox www.duckduckgo.com
+- Look at the terminal, you'll see the IPs that proxychains have accepted or denied into the proxy.
+- Testing the proxychains: In duckduckgo, search for "check for dns leaks" and choose the first result "DNS leak test", see the address and location that it will say (they won't be your IP or location :) )
+
+==============================================================================================================================
+Using anonsurf:
+===============
+anonsurf is a way of making proxychains in a simpler way than proxychains.
+
+Installing:
+>> git clone https://github.com/Und3rf10w/kali-anonsurf
+>> cd kali-anonsurf
+>> ./installer.sh
+- This will run and install anonsurf.
+
+Using anonsurf: (Do this in any directory, doesn't have to be inside the repo)
+>> anonsurf --help (to know the commands and see how it's used)
+>> anonsutf start
+>> anonsurf status (to see the status of the proxy)
+>> anonsurf myip (to see which id you're using)
+>> anonsurf change (to change the ip and dns)
+
+Perform the dns leak test to check that your IP and dns are now changed.
+==============================================================================================================================
+Changing DNS manually:
+======================
+To check your IP and DNS:
+>> cat /etc/resolv.conf
+
+To change your DNS manually: (Use any text editor, not essential to use nano)
+>> nano /etc/dhcp/dhclient.conf
+- Go to the line prepend domain-name-servers 127.0.0.1;
+- Uncomment it.
+- Replace the 127.0.0.1 with any free dns, look up openDNS and paste BOTH of its ips, separated by comma.
+- Save and exit.
+>> service network-manager restart
+- Check the IP and DNS again.
+
+==============================================================================================================================
+Changing your MAC address:
+==========================
+Changing your MAC address gives you another layer of anonymity.
+It's not really a powerful way of anonymizing, it might be good for LANs or MANs, but not the internet.
+
+Using a tool called macchanger on Linux machines, or an equivalent for Windows.
+
+MAC addresses are unique addresses to physical devices i.e. NICs.
+MAC addresses are formatted like this:
+	aa:bb:cc:dd:ee:ff
+	- The first 3 parts "aa:bb:cc" identifies the Manufacturer of the NIC inside your machine.
+	- The last 3 parts can be changed as you wish.
+	
+So if you're a network admin and you want to find devices on a network, look at the MAC addresses.
+
+Steps:
+>> ip address show (previously known as ifconfig)
+	- Check the network interface devices e.g. eth0, lo, wlan0.
+	- Copy the name of the current network interface device you're using. e.g. eth0
+>> macchanger -s eth0
+	- It will show current MAC and permanent MAC.
+	- The permanent MAC is NOT your device's MAC address, it's the NETWORK's MAC address.
+>> macchanger -a eth0
+	- It will print a new MAC address as well as the previous ones.
+>> macchanger -p eth0
+	- This resets the device to the original MAC address.
+
+You can also create your own MAC address, as well as options options.
+
+==============================================================================================================================
+Steganography:
+==============
+Steganography is the process if hiding a file, image, or any kind of data inside another file, image, or any kind of data. Steganography is a way of communicating hidden messages.
+
+We'll use a tool Stegosuite.
+
+Using Stegosuite:
+>> sudo apt-get install stegosuite
+- Open it, it's a GUI program.
+- Upload an image.
+- Write a message to be embedded inside the image.
+- Generate the embedded image.
+- You can use Stegosuite to extract the message from the embedded image.
+
+==============================================================================================================================
+Netcat:
+=======
+Considered the "swiss army knife" of networking tools.	
+Netcat is a tool that can do things like:
+- Port listening.
+- Reverse shells:
+	- Shell: a piece of code or instructions that has command-line execution rights on a machine.
+	- Reverse shell: if you're attacking machine and you attack a target server, Netcat can help you set up a connection where you can type shell commands on your attacking machine and the target complies, and directs the output to your machine.
+
+Setting up:
+- Download and install netcat on BOTH your windows and linux machines. (usually preinstalled on linux)
+
 Steps:
 - 
+
+
+
+
+
+==============================================================================================================================
+Python for Hacking:
+===================
+Python is called the "Hacker's Language" because of its popularity, efficiency, and ease of use.
+
+Download and install pycharm (cd /bin then run pycharm.sh, you might need chmod), and create a new project.
+
+We'll learn how to make different attacks and different steps of the hacking process e.g. footprinting, etc.
+
+Brute-force attack:
+-------------------
+- It's an attack for password and key cracking.
+- Basically, trying every possible combination of letters, numbers, etc. Until you get it.
+- Time to calculate every possible solution increases exponentially with increasing password length.
+- Dictionary brute-force: a brute-force that uses "dictionaries" of common words, that are used first.
+	- darkc0de.lst is one of the most popular dictionaries used for brute-force.
+
+UNIX Password Cracker using brute-force:
+----------------------------------------
+We'll attack a UNIX system with a brute-force.
+UNIX used to store the user's info and hashed password in a file which was accessible by all users.
+They were stored like this:
+```
+user1: pass1
+user2: pass2
+```
+They were encrypted using the UNIX crypt function, which consists of two parts:
+- Key
+- Salt: The salt determines the hash algorithm, the first two chars of the hashed key indicated the algorithm used.
+
+So, if we use the algorithm indicated, and encrypt our brute-force guesses with it, and find a match, we've got access. 
+
+We'll create a cracker program that uses a dictionary of words to crack encrypted passwords in a password.txt file, it will act LIKE a unix cracker.
+
+Steps:
+- Install the crypt module
+- Create cracker.py
+``` python
+import crypt
+
+def testPassword(cryptPassword, dictionaryName):
+	# get the algorithm's name
+	salt = cryptPassword[0: 2];
+	
+	# get the dictionary file that contains our guesses
+	# open it in read only mode
+	dictFile = open(dictionaryName, 'r');
+	
+	for word in dictFile.readlines():
+		# remove newline chars from the fetched word
+		# btw the endings might be CRLF, CLF, "\r\n", or any other newline chars
+		word = word.strip('\n').strip();
+		
+		# we encrypt the word with the salt algorithm
+		cryptWord = crypt.crypt(word, salt);
+		
+		# here's our check
+		if (cryptWord == cryptPassword):
+			print "We found the password, the password is" + word;
+			return;
+	print "Password not found :(";
+	return
+	
+def Main():
+	# open the passwords file
+	passFile = open("passwords.txt", 'r');
+	
+	for line in passFile.readlines():
+		if ':' in line:
+			user = line.split(':')[0];
+			cryptPass = line.split(':')[1];
+			print "Cracking password for: " + user;
+			testPass(cryptPass, "dictionary.txt");
+			
+if __name__ = "__main__":
+	Main();
+```
+- You'll find the passwords.txt and dictionary.txt files here: https://www.mediafire.com/folder/dxle32ro9tdt6/HackingWithPython_2_-_Unix_Cracker
+- Run it, should work and crack some passwords :)
+
+You can make it more dynamic by using the package optparse in the python file in order to parse cmd args easily, then pass the paths of both files as cmd args.
+
+ZIP password cracker:
+---------------------
+An archive (zip, rar, etc.) is basically a file that can be used to hold files or file systems, as well as compress and/or encrypt them.
+
+People use rars to store stuff, some businesses use them to store whole backups.
+
+ZIP also assumes you're giving it a password when you open it programmatically, instead of opening a UI and stuff.
+
+We'll create a cracker that cracks ZIP files, and we will use threading to make the code faster.
+
+Creating the zip cracker:
+- Install the modules: zipfile, threading
+- Download the files from here: https://www.mediafire.com/folder/dxle32ro9tdt6/HackingWithPython_2_-_Unix_Cracker
+- Create a zipcracker.py
+``` python
+import optparse
+import zipfile
+from threading import Thread
+
+# This function tries to open the file with the given password
+def extractZip(zFile, password):
+	try:
+		zFile.extractAll(pwd=password);
+		print "[+] password found: " + password + "\n";
+	except:
+		# if the file doesn't open, just ignore the error
+		pass
+
+def Main():
+	# The next stuff is to use optparse to get the cmd args
+	parser = optparse.OptionParser("usage %prog " + "-f <zipFile> -d <dictionary>");
+	
+	parser.add_option("-f", dest="zname", type='string', help='specify zip file');
+	
+	parser.add_option("-d", dest="dname", type='string', help='specify dictionary file');
+	
+	(options, arg) = parser.parse_args();
+	if (options.zname == None) | (options.dname == None):
+		print parser.usage;
+		exit(0);
+	else:
+		zname = options.zname;
+		dname = options.dname;
+	
+	# Get the zip file using zipfile module
+	zFile = zipfile.ZipFile(zname);
+	
+	passFile = open(dname);
+	
+	for line in passFile.readlines():
+		password = line.strip("\n").strip();
+		
+		# here we define a thread
+		# we pass to it a "target" argument, which is a function, then its arguments in the arg "args"
+		t = Thread(target=extractZip, args=(zFile, password));
+		
+		# And we run the thread
+		t.start();
+		
+		# We should terminate all threads if one of them comes up with a resulting password.
+
+if __name__ = "__main__":
+	Main();
+```
+- Run it and pass the zip file and dictionary file, should work :)
+
+Making a port scanner:
+----------------------
+A port scanner, like nmap, is a program that's used on a LAN in order to know what machines on the network have ports open.
+
+There are many types of scans: full connect, ACK, RST, FIN, SYN-ACK.
+
+They're used for footprinting and reconnaissance.
+
+How a port scanner works:
+- Find a host
+- Connect to it
+- Send some junk
+- Wait for acknowledgment
+- If we get a reply, it's open
+- If it's closed, we time out 
+
+We'll make a basic manual port scanner, then we'll create a port scanner using nmap.
+
+We'll use threads here, and a semaphore so that no two threads try to print at the same time.
+
+Creating the scanner:
+- Install the module: socket
+- Create the file portscanner.py.
+``` python
+import optparse
+from socket import *
+from threading import *
+
+# Create a global variable as a semaphore
+# Pass 1 to it i.e. only ONE thread can access this variable
+screenLock = Semaphore(value=1)
+
+# this function tries to connect to a host through a specific port
+def connScan(tgtHost, tgtPort):
+		try:
+			# this is a socket object
+			# 
+			connSkt = socket(AF_INET, SOCK_STREAM);
+			
+			# connect to the target host/port using the socket
+			connSkt.connect(tgtHost, tgtPort);
+			
+			# send some data
+			connSkt.send("hello\r\n");
+			
+			# see if there's a reply
+			# the argument is the buffer size to receive into
+			results = connSkt.recv(100);
+			
+			# Lock the semaphore so we can do the code after that atomically
+			screenLock.acquire()
+			print "[+] " + str(tgtPort) + "/tcp open" 
+			
+		except:
+			screenLock.acquire()
+			print "[-] " + str(tgtPort) + "/tcp closed"
+			
+		finally:
+			# Unlock the semaphore so other threads can use it
+			screenLock.release()
+			
+# this function tries to find open ports for a host by trying to connect to all ports
+def portScan(tgtHost, tgtPorts):
+	try:
+		# get the ip of the host
+		tgtIP = gethostbyname(tgtHost);
+	except:
+		print "[-] Cannot resolve hostname" + tgtHost + ": unknown host"
+		return
+		
+	try:
+		# get the name of the device
+		tgtName = gethostbyaddr(tgtIP)
+		print "\n[+] Scan results for " + tgtName[0] + ":\n"
+	except:
+		# use the ip if we can't find the name
+		print "\n[+] Scan results for " + tgtIP + ":\n"
+		
+	# sets the default timeoout to
+	setdefaulttimeout(1);
+	for tgtPort in tgtPorts:
+		t = Thread(target=connScan, args=(tgtHost, int(tgtPort)))
+		t.start();
+
+# You write the main yourself -_-
+
+if __name__ = "__main__":
+	Main();
+
+```
+
+Nmap port scanner:
+------------------
+Nmap is a port scanner that is similar to the one we implemented, but uses a lot of low level networking tricks using C++.
+
+You can check the low level code at nmap's site.
+
+Python has a module "nmap" that uses the program for port scanning.
+
+In addition, we'll use python-setuptools in order to install nmap in an easier way.
+
+Steps:
+- Install the modules: nmap, python-setuptools.
+>> sudo easy_install python-nmap
+- Create nmap-portscanner.py
+``` python
+import optparse
+import nmap
+
+def nmapScan(host, port):
+	# creating the nmap port scanner
+	nScan = nmap.PortScanner()
+	
+	# scanning the desired port and host
+	nScan.scan(host, port)
+	
+	# getting the state of the port
+	state = nScan[host]['tcp'][int(port)]['state']
+	
+	print "[+] " + host + "/tcp" + port + " " + state
+
+def Main():
+	# Same main as before, but call nmapScan instead of portScan
+	
+if __name__ = "__main__":
+	Main();
+```
+==============================================================================================================================
+TODO learn:
+===========
+- how nmap works
+- proxy, http proxy
+- socks4, socks5
+- what is tor
+- what is dns leak
+- how proxychains works
+- steganography and how to perform it manually
+- socket object in python

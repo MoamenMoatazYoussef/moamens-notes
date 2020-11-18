@@ -1157,7 +1157,6 @@ So, Default listeners are ONLY specified in XML.
 
 We can use @ExcludeDefaultListeners to exclude an entity and all its subclasses from using default listeners.
 ```
-
 <entity-mappings (...) version="2.2">
 	<persistence-unit-metadata> 
 	<!-- inside this, anything that doesn't have annotation equivalent -->
@@ -1168,8 +1167,12 @@ We can use @ExcludeDefaultListeners to exclude an entity and all its subclasses 
 		</persistence-unit-defaults>
 	</persistence-unit-metadata>
 </entity-mappings>
-
 ```
+=====================================================================================
+JPA with Java EE 8:
+===================
+
+<<< I didn't cover that part since I work with Spring, not Java EE, maybe I'll visit that later >>
 
 
 

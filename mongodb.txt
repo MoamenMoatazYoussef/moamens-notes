@@ -123,6 +123,529 @@ Projections:
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 II. MongoDB For Java Developers:
 --------------------------------
+URI for mongodb: 
+	mongodb://<username>:<password>@cluster1.mongodb.net:<cluster-port>,cluster2.mongodb.net:<cluster-port>/<database>
+	mongodb+srv://<username>:<password>@<host>/<database>
+	
+- mongodb+srv is a prefix that tells mongodb the location of an SRV record.
+- SRV record: service record, it defines its own DNS with a list hostname that we want to resolve to.
+	So we connect to a cluster of services without needing to know their addresses because the SRV record knows and is up to date.
+
+Working with Java:
+------------------
+1) Driver:
+----------
+To connect with the mongodb db server, we need to connect to it using a library or a "driver" in java.
+
+There's an official Java MongoDB driver:
+- mongodb-driver-sync
+- mongodb-driver-async: uses callbacks to interact with the app (won't be covered in the course)
+
+You'll find mongodb-driver-sync in the POM file, as well as mongodb-driver-legacy, which is deprecated. (Don't use that)
+
+Within the driver there are these base classes:
+- MongoClient: base connection class that handles config and connection.
+- MongoDatabase
+- MongoCollection
+- Bson: we'll use that to define components for our query parts, etc.
+- Document: which implements Bson btw.
+
+Note: Bson is a binary representation of JSON, used in mongoDB, you don't need to learn it, but knowing what it is is cool.
+
+We start by:
+1) Instantiating MongoClient using the MongoClients.create(connection_string) factory.
+```
+mongoClient = MongoClients.create(uri);
+
+Assert.assertNotNull(mongoClient); //to make sure it connected successfully
+```
+This is the default way.
+
+Or, if you want custom connection config:
+```
+// or, this for custom connection config
+ConnectionString connectionString = new ConnectionString(uri);
+MongoClientSettings clientSettings = MongoClientSettings.builder()
+	.applyConnectionStrinc(connectionString)
+	.applicationName("mflix")
+	.applyToConnectionPoolSettings(
+		builder -> builder.maxWaitTime(maxWaitTime: 1000, TimeUnit.MILLISECONDS
+	)
+	.build();
+mongoClient = MongoClients.create(clientSettings);
+
+Assert.assertNotNull(mongoClient);
+```
+MongoClientSettings contains a builder() that allows us to configure settings for the connection e.g. maxWaitTime
+
+2) Get databases:
+```
+MongoIterable<String> databaseIterable = mongoClient.listDatabaseNames();
+
+List<String> dbnames = new ArrayList<>();
+for(String name: databaseIterable) {
+	dbnames.add(name);
+}
+
+Assert.assertTrue(dbnames.contains("mflix"));
+```
+
+3) Getting the db:
+```
+database = mongoClient.getDatabase(s: "mflix");
+```
+
+4) Getting a collection:
+```
+collection = database.getCollection(s: "movies");
+```
+
+5) Getting documents:
+```
+document = new Document("name", 
+	new Document("first", "Norberto").append("last", "Leite")
+);
+
+/*
+Will produce this document:
+{
+	"name": {
+		"first": "Norberto",
+		"last": "Leite"
+	}
+}
+*/
+
+collection.insertOne(document);
+
+```
+
+MongoDB Driver query builders:
+------------------------------
+There are several builder classes to help us build queries in Java for MongoDB.
+- Filters
+- Projections
+- Sorts
+- Aggregation
+- Updates
+- Indexes
+
+1) Filters:
+Finding a movie with Salma Hayek in it.
+``` mongodb
+db.movies.find({ cast: "Salma Hayek" }).limit(1)
+```
+Java:
+``` java
+// composing a query with a document
+Document myFilter = new Document("cast", "Salma Hayek");
+Document actual = (Document) moviesCollection.find(myFilter)
+	.limit(1)
+	.iterator()
+	.tryNext();
+	
+// composing a query with a filter
+Bson queryFilter = eq(fieldName: "cast", value: "Salma Hayek");
+Document actual2 = (Document) moviesCollection.find(queryFilter)
+	.limit(1)
+	.iterator()
+	.tryNext();
+	
+Assert.assertEquals(actual, actual2);
+```
+
+Finding all the movies with Salma Hayek and Johnny Depp.
+``` mongodb
+db.movies.find({ cast: { $all: ["Salma Hayek", "Johnny Depp"]}})
+```
+Java:
+``` java
+// composing a query with a document
+Document myFilter = new Document("cast", new Document("$all", Arrays.asList("Salma Hayek", "Johnny, Depp")));
+List<Document> results1 = new ArrayList<>(); 
+moviesCollection
+	.find(myFilter)
+	.into(results1);
+
+// composing a query with a filter
+Bson queryFilter = eq(fieldName: "cast", ...values: "Salma Hayek", "Johnny Depp");
+List<Document> results2 = new ArrayList<>(); 
+moviesCollection
+	.find(queryFilter)
+	.into(results2);
+	
+Assert.assertEquals(results1, results2);
+```
+
+Finding all movies with Tom Hanks, released after 1990 and before 2005, minimum metacritic of 80.
+```
+// composing a query with a filter
+Bson queryFilter = and(
+	eq(fieldName: "cast", value: ""),
+	gte(fieldName: "year", value: "1990"),
+	lt(fieldName: "year", value: "2005"),
+	gte(fieldName: "metacritic", value: "80")
+	);
+List<Document> results = new ArrayList<>(); 
+moviesCollection
+	.find(queryFilter)
+	.into(results2);
+```
+
+2) Projections:
+Finding a movie with salma hayek in it, but only display the title and year fields.
+``` mongodb
+db.movies.find({cast: "Salma Hayek"}, {title: 1, year: 1});
+```
+
+In Java
+``` java
+// composing a query with a document
+Document myFilter = new Document("cast", "Salma Hayek");
+Document actual = (Document) moviesCollection.find(myFilter)
+	.limit(1)
+	.projection(new Document("title", 1).append("year", 1))
+	.iterator()
+	.tryNext();
+	
+// composing a query with a filter
+Bson queryFilter = eq(fieldName: "cast", value: "Salma Hayek");
+Document actual2 = (Document) moviesCollection.find(queryFilter)
+	.limit(1)
+	.projection(fields(include(...fieldNames: "title", "year")))
+	.iterator()
+	.tryNext();
+	
+Assert.assertEquals(actual, actual2);
+```
+
+WE can remove the id in the filter method by adding excludeId() methid after include() methid inside the projection(fields(...))
+
+Basic Reads:
+------------
+There is no findOne method in mongoDb filter, we can just use limit(1), this finds the first matching document in the order of their entering in the db.
+
+Reading one document:
+```
+Document unexpected = null;
+
+// mongoCursor is an iterator over the list of results returned
+MongoCursor cursor = moviesCollection.find(new Document()).limit(1).iterator();
+
+Document actual = (Document) cursor.next();
+
+Assert.assertNotEquals(message: "should not be null", unexpected, actual);
+```
+
+Another example:
+```
+Document queryFilter = new Document("cast", "Salma Hayek");
+Document actual = (Document) moviesCollection.find(queryFilter)
+	.iterator()
+	.next();
+```
+
+Calling next() on an iterator that was empty will throw a NoSuchElementException.
+This is why we use tryNext() method, it returns null instead of an exception.
+
+Using POJOs:
+------------
+How can we map documents to POJOs?
+We want to create classes that mimic Documents, like Entity classes in Hibernate.
+
+To do that, we need to:
+1) Define how bson data from mongoDB is translated to java objects and which field is converted to what type. We'll use a Codec for that.
+2) 
+
+We do that by:
+- Creating a codec registry, this is like a "factory" for codecs.
+	- The automatic(true) means that the provider automatically tries to handle any POJO it sees and registers it.
+```
+CodecRegistry pojoCodecRegistry =
+	fromRegistries(
+		MongoClientSettings.getDefaultCodecRegistry(),
+		fromProviders(PojoCodecProvider.builder().automatic(true).build()));
+```
+- Creating a basic class ActorBasic, where each field type is the same as its corresponding document field type in the document.
+- Annotate fields with @BsonProperty("doc_field_name"), just like @Column in Hibernate.
+- Associate the collection with the class and the registry:
+```
+MongoCollection<ActorBasic> actors =
+    testDb.getCollection("actors", ActorBasic.class).withCodecRegistry(pojoCodecRegistry);
+```
+- To map to documents that don't have the exact same structure (since this is mongo db) e.g. having different data types, we make other classes e.g. ActorWithStringId, for a document whose id is a string.
+- And write that method that manually maps each property from the document to a new instance of the corresponding class using setters.
+```
+public ActorWithStringId fromDocument(Document doc) {
+	ActorWithStringId actor = new ActorWithStringId(); // create an empty ActorWithStringId object
+	actor.setId(doc.getObjectId("_id").toHexString()); // convert to String
+	actor.setName(doc.getString("name"));
+	actor.setDateOfBirth(doc.getDate("date_of_birth"));
+	actor.setAwards((List<Document>) doc.get("awards"));
+	actor.setNumMovies(doc.getInteger("num_movies"));
+	return actor;
+}
+```
+
+Using POJOs: custom codecs:
+---------------------------
+- As we've seen, codecs help us write cleaner code because we don't have to write the mapping methods.
+- But the default codec doesn't let us work with any Actor documents with the _id as string not as ObjectId.
+- The solution is either mapping, or custom codecs.
+	- A class that implements CollectibleCodec<ActorWithStringId>.
+	- Private final Codec<Document> field.
+	- public void encode, args: BsonWriter, ActorWithStringId, EncoderContext. (encodes ActorWithStringId POJO into BSON before it's saved to mongoDB)
+	- public ActorWithStringId decode, args: BsonReader, DecoderContext. (el3aks)
+```
+public class ActorCodec implements CollectibleCodec<ActorWithStringId> {
+
+  private final Codec<Document> documentCodec;
+
+  public ActorCodec() {
+    super();
+    this.documentCodec = new DocumentCodec();
+  }
+
+  public void encode(
+      BsonWriter bsonWriter, ActorWithStringId actor, EncoderContext encoderContext) {
+
+    Document actorDoc = new Document();
+    String actorId = actor.getId();
+    String name = actor.getName();
+    Date dateOfBirth = actor.getDateOfBirth();
+    List awards = actor.getAwards();
+    int numMovies = actor.getNumMovies();
+
+    if (null != actorId) {
+      actorDoc.put("_id", new ObjectId(actorId));
+    }
+
+    if (null != name) {
+      actorDoc.put("name", name);
+    }
+
+    if (null != dateOfBirth) {
+      actorDoc.put("date_of_birth", dateOfBirth);
+    }
+
+    if (null != awards) {
+      actorDoc.put("awards", awards);
+    }
+
+    if (0 != numMovies) {
+      actorDoc.put("num_movies", numMovies);
+    }
+
+    documentCodec.encode(bsonWriter, actorDoc, encoderContext);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public ActorWithStringId decode(BsonReader bsonReader, DecoderContext decoderContext) {
+    Document actorDoc = documentCodec.decode(bsonReader, decoderContext);
+    ActorWithStringId actor = new ActorWithStringId();
+    actor.setId(actorDoc.getObjectId("_id").toHexString());
+    actor.setName(actorDoc.getString("name"));
+    actor.setDateOfBirth(actorDoc.getDate("date_of_birth"));
+    actor.setAwards((List<Document>) actorDoc.get("awards"));
+    actor.setNumMovies(actorDoc.getInteger("num_movies"));
+    return actor;
+  }
+
+  @Override
+  public Class<ActorWithStringId> getEncoderClass() {
+    return ActorWithStringId.class;
+  }
+
+  @Override
+  public ActorWithStringId generateIdIfAbsentFromDocument(ActorWithStringId actor) {
+    return !documentHasId(actor) ? actor.withNewId() : actor;
+  }
+
+  @Override
+  public boolean documentHasId(ActorWithStringId actor) {
+    return null != actor.getId();
+  }
+
+  @Override
+  public BsonString getDocumentId(ActorWithStringId actor) {
+    if (!documentHasId(actor)) {
+      throw new IllegalStateException("This document does not have an " + "_id");
+    }
+
+    return new BsonString(actor.getId());
+  }
+}
+
+```
+
+- Then, we use this codec like this:
+```
+// create an instance of the custom codec
+ActorCodec actorCodec = new ActorCodec();
+
+// create a codec registry with that custom codec
+CodecRegistry codecRegistery = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), fromCodecs(actorCodec));
+
+// define your filters
+Bson queryFilter = new Document("_id", actorId);
+
+// get something from "actors" collection using the codec registry
+MongoCollection<ActorWithStringId> myActors = testDb.getCollection( s: "actors", ActorWithStringId.class).withCodecRegistry(codecRegistery);
+```
+
+What if we want to use the default codec while customizing the fields?
+---------------------------------------------------------------
+We can create custom codecs for specific FIELDS.
+```
+// select a class that will be used as our POJO
+    ClassModelBuilder<ActorWithStringId> classModelBuilder =
+        ClassModel.builder(ActorWithStringId.class);
+    // get the property that needs type conversion
+    PropertyModelBuilder<String> idPropertyModelBuilder =
+        (PropertyModelBuilder<String>) classModelBuilder.getProperty("id");
+    // apply type conversion to the property of interest
+    // StringObjectIdCodec describes specifically how to encode and decode
+    // the ObjectId into a String and vice-versa.
+    idPropertyModelBuilder.codec(new StringObjectIdCodec());
+    // use the default CodecRegistry, with the changes implemented above
+    // through registering the classModelBuilder with the PojoCodecProvider
+    CodecRegistry stringIdCodecRegistry =
+        fromRegistries(
+            MongoClientSettings.getDefaultCodecRegistry(),
+            fromProviders(
+                PojoCodecProvider.builder()
+                    .register(classModelBuilder.build())
+                    .automatic(true)
+                    .build()));
+    // we're done! Lets test if it worked! let us get the actors collection
+    MongoCollection<ActorWithStringId> actors =
+        testDb
+            .getCollection("actors", ActorWithStringId.class)
+            .withCodecRegistry(stringIdCodecRegistry);
+    // build a search query
+    Bson queryFilter = new Document("_id", actor1Id);
+    // find the actor that we want to test for
+    ActorWithStringId stringIdActor = actors.find(queryFilter).iterator().tryNext();
+```
+
+Aggregations in MongoDB and Java:
+---------------------------------
+Aggregations are kinda functional, in that they are functions that take Documents as input and produce some kind of altered data as output, so that another aggregation functions operate on them.
+
+For example, in JS, this is an add function
+```
+function add(a, b) {
+	return a + b;
+}
+```
+In MongoDB, this is add:
+``` json
+{ "$add": ["$a", "$b"] }
+```
+
+Some examples of aggregations in Compass:
+``` json
+db.movies.find({
+	directors: "Sam Raimi"
+})
+```
+Then add a stage:
+``` json
+{
+	_id: 0,
+	title: 1,
+	"imdb.rating": 1
+}
+```
+Then another stage:
+```
+{
+	_id: 0,
+	avg_rating: {
+		"$avg": "$imdb.rating"
+	}
+}
+```
+This will get us the average imdb rating of movies directed by Sam Raimi.
+
+Aggregations in Java:
+---------------------
+Single-stage aggregation:
+- We want to know how many movies have been produced in portugal.
+- First, we define our filter:
+```
+Bson countryPT = Filters.eq(fieldName: "countries", country);
+```
+- Define an array called "pipeline", this will hold our aggregation stages, so it will be of type List<Bson>;
+
+```
+List<Bson> pipeline = new ArrayList<>();
+```
+- Use Aggregates builder class to build an aggregate stage (instead of manually constructing the match document):
+```
+Bson matchStage = Aggregates.match(countryPT);
+
+pipeline.add(matchStage);
+```
+- Execute the query aggregation by:
+```
+AggregateIterable<Document> iterable = movieCollection.aggregate(pipeline);
+```
+- This gives us AggregateIterable, we can use it to iterate over the result set.
+- To get them in a list:
+```
+List<Document> results = new ArrayList<>();
+iterable.into(results);
+```
+
+This is basically the find() command but using the Aggregation framework.
+Let's try something different: for all the movies produced in Portugal, how many times each cast member participated in one of these movies.
+
+MongoDB command:
+``` json
+db.movies.aggregate([
+	{ $match: {countries: "Portugal"} },
+	{ $unwind: "$cast"},
+	{ $group: {_id: "$cast", count: { $sum: 1}}}
+]);
+```
+
+Java:
+- Create the pipeline array.
+- Create 4 stages:
+	- Filter for portugal.
+	- Unwind.
+	- Group (using sum accumulator).
+	- Sort.
+``` java
+BSon countryPT = Filters.eq( fieldName: "countries", country);
+Bson matchStage = Aggregates.match(countryPT);
+
+Bson unwindCastStage = Aggregates.unwind( fieldName: "$cast" );
+
+// field we'll use to group on
+String groupIdCast = "$cast";
+
+// create the sum accumulator
+BsonField sum1 = Accumulators.sum( fieldName: "count", expression: 1);
+
+Bson groupStage = Aggregates.group(groupIdCast, sum1);
+
+Bson sortOrder = Sorts.descending(...fieldNames: "count");
+Bson sortStage = Aggregates.sort(sortOrder);
+```
+- Add them all to pipeline:
+```
+pipeline.add(matchStage);
+pipeline.add(unwindCastStage);
+pipeline.add(groupStage);
+pipeline.add(sortStage);
+```
+- Do the rest of the steps.
+
+
+
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 III. MongoDB Data Modelling:

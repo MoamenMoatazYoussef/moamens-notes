@@ -1,0 +1,64 @@
+General dev questions:
+======================
+What does "program to interface, not implementation" mean?
+----------------------------------------------------------
+Alternative questions:
+- Why use the factory pattern?
+
+You're writing an API or some code that other DEVELOPERS (Clients) will use in THEIR code (client code).
+
+When writing your API:
+1- write INTERFACES that correspond to the main classes that the client code is going to be using, these interfaces specify the main operations that the client code can access.
+2- write FACTORIES that create instances of those interfaces and return them to the client code.
+
+Now, the client only uses the factory to create instances of the interfaces, then use the interfaces in their code to access the functionality you provide.
+- They won't worry about the implementation behind the interfaces i.e. the concrete objects.
+- The behavior can change at runtime by supplying a different concrete implementation that is casted to the interface.
+- Factories allow you to perform logic during creation which could also change behavior during runtime.
+
+Example:
+```
+// interface
+public interface Speaker {
+	public void speak();
+}
+
+// concretes
+public class EnglishSpeaker implements Speaker {
+	public void speak() {
+		System.out.println("I speak english.");
+	}
+}
+
+public class GermanSpeaker implements Speaker {
+	public void speak() {
+		System.out.println("I speak german.");
+	}
+}
+
+
+// factory
+public class SpeakerFactory {
+	public static Speaker createSpeaker(Language lang) {
+		switch(lang) {
+			case Language.English:
+				return new EnglishSpeaker();
+			case Language.German:
+				return new GermanSpeaker();
+		}
+	}
+}
+
+// client code
+public class Main {
+	public static void main(String[] args) {
+		Speaker speaker = SpeakerFactory.createSpeaker(Language.English);
+		speaker.speak();
+	}
+}
+
+
+public enum Language {
+	English, German
+}
+```

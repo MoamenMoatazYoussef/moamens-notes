@@ -1,0 +1,1193 @@
+Java Persistence API 2.2 (Pluralsight):
+=======================================
+=======================================
+=======================================
+JPA works only with RDBMS, not NoSQL.
+
+=====================================================================================
+Introduction:
+=============
+
+JDBC: Java DataBase Connectivity:
+---------------------------------
+A Java technology that provides methods for querying data.
+Very low level and verbose.
+
+For example, This class:
+```
+public class Book {
+	private Long id;
+	private String title;
+	
+	// constructors, getters and setters;
+}
+```
+
+Connecting to the DB:
+```
+static {
+
+	// getting the JDBC driver class
+	try {
+		Class.forName("org.h2.Driver");
+	} catch (ClassNotFoundException e) {
+		e.printStackTrace();
+	}
+	
+	// connecting to the DB
+	private static Connection getConnection() throws SQLException {
+		return DriverManager.getConnection("jdbc:h2:mem:module01-db");
+	}
+}
+```
+
+Creating/Reading a book from DB using JDBC:
+```
+private static void persistBook(Book book) {
+	// creating a SQL query
+	String query = "insert into BOOK(ID, TITLE) values (?, ?))";
+	
+	// mapping fields to db columns
+	try(PreparedStatement stmt = getConnection().prepareStatement(query)) {
+		stmt.setLong(1, book.getId());
+		stmt.setString(2, book.getTitle());
+		
+		stmt.executeUpdate();
+	} catch() {
+	
+	}
+}
+
+private static Book findBook(Long id) {
+	Book book = new Book(id);
+	String query = "select ID, TITLE from BOOK where ID = ?";
+	
+	try(PreparedStatement stmt = getConnection().prepareStatement(query)) {
+		stmt.setLong(1, id);
+		
+		ResultSet rs = stmt.executeQuery();
+		
+		while(rs.next()) {
+			book.setTitle(rs.getString("TITLE"));
+		}
+		
+		return book;
+	}
+}
+```
+
+What's wrong with JDBC?
+- You need to know SQL and use it.
+- JDBC is low-level and you need to manually map each column.
+- SQL is not easy to refactor
+- Which makes the code really verbose and hard to read/maintain.
+
+JPA:
+----
+JPA is a standard submission that's an abstraction on JDBC.
+It provides easy tools for ORM (Object-relational mapping).
+
+```
+@Entity
+public class Book {
+
+	@Id
+	private Long id;
+	// rest of previous code
+}
+```
+
+Connecting to the DB:
+```
+private static EntityManagerFactory emf = Persistence.createEntityManagerFactory("module01PU");
+
+private static EntityManager em = emf.createEntityManager();
+```
+
+Creating/Reading a book:
+```
+private static void persistBook(Book book) {
+	em.persist(book);
+}
+
+private static Book findBook(Long id) {
+	return em.find(Book.class, id);
+}
+```
+
+See? it's MUCH easier and abstracted here :)
+=====================================================================================
+Understanding JPA:
+==================
+WHAT IS IT?
+- A specification.
+- A JSR (Java Specification Request) i.e. it went through the Java community process of approval and standardizing.
+- Because of that, it's a collection of Interfaces.
+
+
+There are three main implementations of JPA:
+- EclipseLink: also referred to as the "Reference Implementation".
+- Hibernate.
+- Apache Open JPA. 
+
+JPA lives in:
+- javax.persistence: contains the core API.
+- javax.persistence.criteria: used to write queries in an OOP way.
+- javax.persistence.metamodel: brings type-safety to OOP queries.
+- javax.persistence.spi: internal interfaces for JPA implementations (we won't usually use this as developers).
+
+We can use JPA with Java SE and EE.
+
+JPA provides us with:
+- Entity Manager: the main interface we use, which manages entities and queries. It allows us to perform DB operations like:
+	- Simple CRUD operations.
+	- Java Persistence Query Language (JPQL).
+- Transactions: a transaction is a unit of business work done with the DB, it either happens all of it, or none at all e.g.
+	- Bank transfer consists of many DB ops, either they all happen, or none of them happen, so this is a Transaction.
+- Life cycle of persistent objects.
+
+JPA CANNOT do this:
+- ORM with NoSql.
+- Isn't good for mapping JSON or XML into a DB.
+- JPQL is not SQL.
+
+JPA entity:
+-----------
+Entity: POJO that maps to the DB.
+```
+@Entity
+@Table(name="BOOK")
+public class Book {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+	
+	@Column(name="book_title")
+	private String title;
+}
+```
+
+CRUD operations:
+----------------
+CRUD operations (and all operations) are done by the EntityManager, which is created using EntityManagerFactory/
+```
+public class Main {
+	static EntityManagerFactory emf = Persistence.createEntityManagerFactory("module01PU");
+
+	static EntityManager em = emf.createEntityManager();
+	
+	public static void main(String[] args) {
+		Book book = new Book(1, "Harry Potter and the JPA course");
+		
+		// this is the INSERT operations
+		em.persist(book);
+		
+		// using JPQL to query the table BOOK
+		TypedQuery<Book> query = em.createQuery(
+			"select b from BOOK b order by b.title", Book.class
+		);
+		query.getResultList();
+	}
+}
+```
+
+=====================================================================================
+Managing Entities with JPA:
+===========================
+In JPA, everything starts with the:
+- Persistence class: We use it to create an EntityManagerFactory...
+- ...which is used to create EntityManager.
+- EntityManager: it manages entities, the set of managed entities is called...
+- ...Persistence Context.
+- Persistence Unit: persistence.xml, a file that configures the Persistence Context and the EntityManagerFactory.
+
+EntityManager:
+- An interface responsible for CRUD operations.
+- Manages state and life cycle of entities.
+- Uses JPQL queries to do that.
+- An entity brought by the EntityManager is called a Managed Entity.
+- Auto-Synchronizes the state of an Entity with the DB.
+
+Persistence Context:
+- The set of managed entities.
+- Can have several persistence units.
+- It's like a cache.
+- Only ONE entity instance with a specific ID can exist in a persistence context.
+- If the persistence context participates in a transaction, it will sync the state of managed entities with the DB.
+
+Persistence Units:
+- Bridge between persistence contex and DB.
+- Provide info for the provider (implementation of JPA) in order to manage the entity classes.
+- Provide properties that are used to physically connect to the DB e.g. JDBC driver, db url, user and pass.
+- Named in order to differentiate between each EntityManagerFactory instance.
+- A persistence unit lists the set of managed entities at a give time for a given user's transaction.
+
+CRUD operations on entities:
+----------------------------
+EntityManager provides methods for CRUD operations:
+- Create: persist()
+- Read: find()
+- Delete: remove()
+
+Update is done automatically when an entity is managed and one of its attribute values change.
+
+Example:
+```
+public class BookService {
+	private EntityManagerFactory emf = Persistence.createEntityManagerFactory("myPU");
+	private EntityManager em = emf.createEntityManager();
+	
+	/*
+	 * we pass a persistence unit name to createEntityManagerFactory
+	 * which has the class Book defined as a managed entity
+	 * so now Book will become a managed entity
+	 * when we persist it, not a POJO living in JVM memory
+	 * to do that persist, we need a transaction
+	 */
+	private EntityTransaction tx = em.getTransaction();
+
+	public Book createBook(Long id, String title) {
+		Book book = new Book();
+		book.setId(id);
+		book.setTitle(title);
+		
+		tx.begin();
+		em.persist(book);
+		tx.commit();
+		
+		// now Book is a managed entity
+		
+		return book;
+	}
+	
+	public Book findBook(Long id) {
+		return em.find(Book.class, id);
+	}
+	
+	public void removeBook(Long id) {
+		/*
+		 * to remove an entity from the DB
+		 * it has to be managed, not a POJO
+		*/
+		Book book = em.find(Book.class, id);
+		if(book != null) {
+			tx.begin();
+			em.remove(book);
+			tx.commit();
+		}
+	}
+	
+	public void removeBook(Book book) {
+		/*
+		 * If we have the object itself passed
+		 * we need to manually make it a managed entity
+		 * this is done using the merge() method
+		*/
+		Book bookToBeDeleted = em.merge(book);
+		
+		// bookToBeDeleted is managed
+		
+		tx.begin();
+		em.remove(bookToBeDeleted);
+		tx.commit();
+	}
+	
+	// an example of update
+	public Book changeTitle(Long id, String newTitle) {
+		Book book = em.find(Book.class, id);
+		if(book != null) {
+			tx.begin();
+			
+			/*
+			 * we just call setters
+			 * because the persistence context auto-syncs with DB
+			 * during a transaction
+			*/
+			
+			book.setTitle(newTitle);
+			tx.commit();
+		}
+	}
+	
+	public Book changeTitle(Book book, String newTitle) {
+	
+		// also, we need the entity to be managed to update it
+		Book bookToBeUpdated = em.merge(book);
+		if(book != null) {
+			tx.begin();
+			bookToBeUpdated.setTitle(newTitle);
+			tx.commit();
+		}
+	}
+}
+```
+
+What is a transaction?
+----------------------
+A transaction is a set of DB operations either all succeed or all fail.
+It keeps the DB consistent.
+
+C, U, and D operations have to be in transactions. Read doesn't have to.
+
+Default entity mapping:
+-----------------------
+To map a class with the default mapping:
+- annotate it with @javax.persistence.Entity
+- annotate the id with @javax.persistence.Id
+- the class must have a no-arg construtor
+- can be concrete or abstract, but cannot be enum or interface
+
+All attributes will be automatically persistent. (This is called Configuration By Exception)
+
+Example:
+```
+@Entity
+public class Author {
+	@Id
+	private Long id;
+	private String name;
+	private String bio;
+	private LocalDate dateOfBirth;
+}
+```
+
+Configuration By Exception:
+- Also known as Programming by exception, or Convention over configuration.
+- It means: unless otherwise stated, use the default rules.
+- The default rules for default mapping are:
+	- Entity name -> Table of the same name
+	- Attribute name -> Column of the same name
+	- JDBC rules for mapping primitives:
+		- String -> VARCHAR(255)
+		- Long -> BIGINT
+		- Bool -> SMALLINT
+		etc.
+- The persistence provider does much of the work.
+- Unless we specify differently.
+
+Custom mapping using metadata:
+------------------------------
+We can config the mapping to be custom using either Annotations or XML.
+JPA offers a wide spectrum of customization.
+
+For example:
+- @javax.persistence.Table: to specify the name of the table, maybe it's not the exact name of the entity. Also allows us to specify the catalog and schema.
+- @javax.persistence.GeneratedValue: to specify how the id field value is generated. The default value is GenerationType.AUTO
+- @javax.persistence.Column: the same as @Table, but for column, we can specify the length of the string, larger or smaller (instead of 255 in VARCHAR, for example)
+- @javax.persistence.Transient: for attributes we DO NOT want to be persisted.
+- @javax.persistence.Enumerated: to indicate that an entity attribute is an enum type, it's saved as INT in the DB but mapped to enum in the code. Default: ORDINAL, we can specify it as STRING.
+
+```
+@Entity
+@Table(name="T_AUTHOR")
+public class Author {
+	@Id
+	private Long id;
+	
+	@Column(name="author_name", length=50)
+	private String name;
+	
+	@Column(length=5000)
+	private String bio;
+	
+	private LocalDate dateOfBirth;
+	
+	@Transient
+	private Integer age;
+	
+	@Enumerated(EnumType.ORDINAL)
+	private Language language;
+}
+```
+
+The provider provides getters/setters for your classes, and ignores the ones you specify.
+You can add these annotations on your getters directly, and the provider will use your getters instead of the ones provided by default.
+
+Mapping metadata:
+-----------------
+We can also use external XML files to customize mapping.
+Every single mapping annotation has an XML equivalent.
+XML Overrides Annotations.
+So if we have an XML mapping and an Annotation mapping on the same entity, the XML will take precedence.
+
+Why use XML/annotations:
+- If the metadata is really coupled to the code, annotations are preferred.
+- Depending on the environment, XML makes sense.
+- But ultimately it's a matter of taste.
+As usual, the rule is to stay consistent throughout your project.
+
+Example: filename: author_mapping.xml
+```
+<entity-mappings>
+	<entity class="com.pluralsight.Author">
+		<table name="T_AUTHOR"/>
+		<attributes>
+			<basic name="name">
+				<column name="author_name" nullable="false">
+			</basic>
+			<basic name="bio">
+				<column length="5000">
+			</basic>
+			
+			<!-- and so on -->
+			
+		</attributes>
+	</entity>
+</entity-mappings>
+```
+
+Then reference the file in persistence.xml:
+```
+<mapping-file>META-INF/author_mapping.xml</mapping-file>
+```
+
+Then deploy with these files in the metadata directory, and it'll work :)
+
+=====================================================================================
+Relationships and Inheritance:
+==============================
+Relationships:
+- Direction: an object refers to another one (unidirectional), if vice versa, then it's (bidirectional)
+- Cardinality: 1-1, 1-N, M-N. Or in another notation: 0..*, 1, 1..*.
+
+In Java, a relationship that involves more than one object utilizes java.util's Collection, Set, List, or Map.
+
+In DB, a relationship is modeled between Tables using foreign keys and join column/table.
+
+Relationships in JPA:
+---------------------
+@OneToOne
+@OneToMany
+@ManyToOne
+@ManyToMany
+
+1-1 Unidirectional:
+-------------------
+```
+@Entity
+public class CD {
+
+	private Musician musician;
+}
+
+@Entity
+public class Musician {
+
+}
+```
+JPA will map this relationship.
+It will use a join column MUSICIAN_ID (concatenate entity name and id)
+We can change it using: @JoinColumn 
+We can also add @OneToOne to customize things about the relation e.g. fetch: eager or lazy.
+
+```
+@Entity
+public class CD {
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="musician_fk")
+	private Musician musician;
+}
+
+@Entity
+public class Musician {
+
+}
+```
+
+We can use a join table instead.
+```
+@Entity
+public class CD {
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinTable
+	private Musician musician;
+}
+
+@Entity
+public class Musician {
+
+}
+```
+We can leave it to apply default mapping using a join table.
+
+Or we can customzie it, for example:
+- Specifying the name of the table.
+- Specifying the name of joinColumns, the column referencing THIS entity.
+- Specifying the name of inverseJoinColumns, the column referencing the OTHER entity.
+```
+@Entity
+public class CD {
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinTable(
+		name="cd_musician",
+		joinColumns= @JoinColumn(name="cd_fk"),
+		inverseJoinColumns= @JoinColumn(name="musician_fk")
+	)
+	private Musician musician;
+}
+
+@Entity
+public class Musician {
+
+}
+```
+
+1-1 Bidirectional:
+------------------
+```
+@Entity
+public class CD {
+	private Musician musician;
+}
+
+@Entity
+public class Musician {
+	private CD cd;
+}
+```
+If the default doesn't suit us, we can change it just like above.
+
+1-N Unidirectional:
+-------------------
+```
+@Entity
+public class CD {
+	@OneToMany
+	private Set<Musician> musicians = new HashSet<>();
+}
+
+@Entity
+public class Musician {
+
+}
+```
+We can use the @OneToMany to customize.
+
+1-N Bidirectional:
+------------------
+```
+@Entity
+public class CD {
+	@OneToMany
+	private Set<Musician> musicians = new HashSet<>();
+}
+
+@Entity
+public class Musician {
+	private CD cd;
+}
+```
+
+
+M-N:
+----
+```
+@Entity
+public class CD {
+	private Set<Musician> musicians = new HashSet<>();
+}
+
+@Entity
+public class Musician {
+	private Set<CD> cds = new HashSet<>();
+}
+```
+
+We can use @ManyToMany to customize, as well as @JoinTable and all other annotations.
+
+CRUD operations with relations:
+-------------------------------
+By default, CRUD operations are NOT cascaded to related entities.
+For example, if a CD references many musicians and we save the CD, the musicians are NOT saved automtically to the DB.
+
+We CAN do this:
+```
+Set<Musician> beatles = new HashSet<>();
+beatles.add(new Musician("John Lennon"));
+beatles.add(new Musician("Paul McCartney"));
+beatles.add(new Musician("Ringo Starr"));
+beatles.add(new Musician("Georges Harrison"));
+
+CD seargentPepper = new CD("Seargent Pepper");
+seargentPepper.setMusicians(beatles);
+
+em.persist(cd);
+for(Musician m : cd.getMusicians()) {
+	em.persist(musician);
+}
+```
+But that's kinda verbose. We just want to save the CD.
+
+We can do that by specifying this in the entities:
+```
+@Entity
+public class CD {
+	@OneToMany(cascade = PERSIST)
+	private Set<Musician> musicians = new HashSet<>();
+}
+
+@Entity
+public class Musician {
+	
+}
+```
+Here we tell JPA to cascade the persist, i.e. when the CD is saved, save its musicians as well.
+
+We can set cascade to an array of events, or just give it ALL:
+- cascade = {PERSIST, REMOVE, MERGE}
+- cascade = ALL
+
+We can cascade in all relationships of course.
+
+...but there's no FIND event, so how does SELECT work then?
+
+Fetching relationships:
+-----------------------
+There are two ways to do this:
+- Eager: As soon as we load an entity, we load ALL the dependent entities (the ones referenced by the first entity).
+- Lazy: Dependent entities don't load unless we explicitly load them.
+
+Eager will reduce DB access, but will consume more memory.
+Lazy saves a lot of memory, but needs many DB access.
+
+Defaults:
+1-1: EAGER
+M-1: EAGER
+1-M: LAZY
+N-M: LAZY
+
+We define the fetch type we need using the "fetch" attribute in the relation annotations.
+@OneToMany(fetch = EAGER)
+
+If we load a CD lazily, then access the Set<Musician>, JPA will automatically read the DB and fill the Set, without us doing anything different in the app. :)
+
+Inheritance:
+------------
+In RDBMS, inheritance is a completely unknown concept.
+It's not natively implemented.
+Because it doesn't matter for the DB, they're all records in tables.
+
+So, JPA has three strategies to deal with inheritance:
+- single-table-per-class
+- joined-subclass
+- table-per-concrete-class
+
+None is better or worse, they all have pros and cons.
+
+If we have an Entity as a parent, and another ENtity that inherits from it as a child.
+
+single-table-per-class: (Default)
+-----------------------
+Since child entities share attributes with parent ones, they are all mapped to ONE table, its columns will be the fields of the parent and the fields of the children.
+
+Another title: DType.
+This indicates the type of the record i.e. of the parent entity's class, or of the child entity's class.
+
+Pros:
+- Easy.
+- Works will with small DBs.
+Cons:
+- Child columns need to be nullable
+
+joined-subclass:
+----------------
+Each entity is mapped to its own table.
+The parent table defines all the root attributes and the DType.
+i.e. we divide a subclass in two records, the parent data in the parent table, and the child data in the child table.
+
+To resemble an instance of a subclass, we need to join its table with the parent's table to get the full data.
+
+The deeper the hierarchy, the more joins we'll need.
+
+table-per-concrete-class:
+-------------------------
+Each entity is mapped to its own table. BUT all attributes of the parent will also exist in the children's tables.
+No DType column exists.
+The primary key in all tables involved must match.
+
+No joins required to get instances of a subclass.
+
+In JPA:
+-------
+```
+@Entity
+public class Item { /* code */ }
+
+@Entity
+public class Book extends Item { /* code */ }
+
+@Entity
+public class CD extends Item { /* code */ }
+```
+Leaving it will make JPA the default: single-table-per-class.
+
+Customizing:
+Using @Inheritance on the parent, attribute "strategy", values are:
+- SINGLE_TABLE
+- JOINED
+- TABLE_PER_CLASS
+```
+@Entity
+@Inheritance(strategy=SINGLE_TABLE)
+public class Item { /* code */ }
+
+@Entity
+public class Book extends Item { /* code */ }
+
+@Entity
+public class CD extends Item { /* code */ }
+```
+
+The DType column's usual name is "dtype" and its type is VARCHAR.
+We can change this using @DiscriminatorColumn
+```
+@Entity
+@Inheritance(strategy=SINGLE_TABLE)
+@DiscriminatorColumn(name = "DISC", discriminatorType=CHAR)
+public class Item { /* code */ }
+
+@Entity
+public class Book extends Item { /* code */ }
+
+@Entity
+public class CD extends Item { /* code */ }
+```
+
+By default, the value of dtype is the entity name.
+We can customize it by @DiscriminatorValue:
+```
+@Entity
+@Inheritance(strategy=SINGLE_TABLE)
+@DiscriminatorColumn(name = "DISC", discriminatorType=CHAR)
+@DiscriminatorValue("I")
+public class Item { /* code */ }
+
+@Entity
+@DiscriminatorValue("B")
+public class Book extends Item { /* code */ }
+
+@Entity
+@DiscriminatorValue("C")
+public class CD extends Item { /* code */ }
+```
+
+If we change the @DiscriminatorValue of the parent, we need to do the same for the children.
+
+Inheriting from non-entity classes:
+-----------------------------------
+Entities can also inherit from POJOs, abstract classes, etc.
+Think about this:
+- If we have a joined-subclass model,
+- and our app only manages books and CDs
+- why save items at all?
+
+We can make Item abstract, but still it will have a table in the DB.
+We can make Item NOT an entity, an abstract POJO.
+
+We need a superclass that isn't an entity, but mapping annotations are inherited from, in order to avoid redefining necessary fields in the subclasses.
+
+These are called MappedSuperclasses.
+
+This is done simply by the annotation @MappedSuperclass:
+```
+@MappedSuperclass
+public class Item {
+	@Id
+	private Long id;
+	// other stuff
+}
+
+@Entity
+public class Book extends Item {
+
+}
+```
+=====================================================================================
+Querying entities and JPQL:
+===========================
+EntityManager is the class we use to do all sorts of CRUD operations on the DB.
+
+JPQL:
+-----
+Inspired by SQL.
+Database-independent.
+Returns object-oriented data of Entities and collections of entities, NOT rows and columns and tables.
+
+Simple JPQL query:
+```
+SELECT b
+FROM Book b
+```
+
+```
+SELECT b
+FROM Book b
+WHERE b.unitCost > 100
+```
+
+JPQL can access different attributes:
+```
+SELECT b.unitCost
+FROM Book b
+```
+
+or navigate across entity relationships:
+```
+SELECT DISTINCT(b.publisher.name)
+FROM Book b
+```
+.publisher: goes through the relationship between Book and Author
+.name: gets the author's name from the Entity author.
+
+Integrating JPQL statements with our code:
+------------------------------------------
+We have two interfaces:
+- Query.
+- TypedQuery: inherits from Query, we know the type of the entity.
+
+Dynamic Query:
+--------------
+```
+// em is the EntityManager made by its factory
+Query query = em.createQuery(
+	"SELECT b FROM Book b WHERE b.unitCost > 29 AND n.nbOfPages < 700"
+);
+
+// we need to cast it since it's not types
+Book book = (Book) query.getSingleResult();
+```
+NonUniqueResultException will be thrown if the query returns more than one result.
+In which case, use getResultList() method.
+```
+List books = query.getResultList();
+```
+
+TypedQuery:
+```
+TypedQuery<Book> query = em.createQuery(
+	"SELECT b FROM Book b WHERE b.unitCost > 29 AND n.nbOfPages < 700",
+	Book.class
+);
+
+List<Book> books = query.getResultList();
+```
+
+Binding parameters:
+-------------------
+Positional binding:
+```
+public List<Book> getBooks(unitCost, nbOfPages) {
+	TypedQuery<Book> query = em.createQuery(
+		"SELECT b FROM Book b WHERE b.unitCost > ?1 AND n.nbOfPages < ?2",
+		Book.class
+	);
+
+
+	query.setParameter(1, unitCost);
+	query.setParameter(2, nbOfPages);
+	List<Book> books = query.getResultList();
+}
+```
+
+Name-based parameter binding:
+```
+public List<Book> getBooks(unitCost, nbOfPages) {
+	TypedQuery<Book> query = em.createQuery(
+		"SELECT b FROM Book b WHERE b.unitCost > :cost AND n.nbOfPages < :pages",
+		Book.class
+	);
+
+
+	query.setParameter("cost", unitCost);
+	query.setParameter("pages", nbOfPages);
+	List<Book> books = query.getResultList();
+}
+```
+
+Pagination:
+-----------
+```
+public List<Book> getBooks(unitCost, nbOfPages) {
+	TypedQuery<Book> query = em.createQuery(
+		"SELECT b FROM Book b WHERE b.unitCost > :cost AND n.nbOfPages < :pages",
+		Book.class
+	);
+
+	query.setParameter("cost", unitCost);
+	query.setParameter("pages", nbOfPages);
+	
+	query.setMaxResults(10); // only retrieve 10 at a time, pagination
+	List<Book> books = query.getResultList();
+}
+```
+
+
+Pros/cons of dynamic queries:
+-----------------------------
+The query gets translated at runtime to SQL, this adds overhead which actually may be an issue.
+
+Named Queries:
+--------------
+Named queries are static and unchangeable.
+More efficient, because it's static, it's converted from JPQL to SQL once when the app starts. Rather than each time it executes.
+
+
+Defined on the entities using @NamedQuery annotations.
+```
+@Entity
+@NamedQuery(name="ExpensiveBooks", query=
+	"SELECT b FROM Book 
+	WHERE b.unitCost > 29 AND b.nbOfPages < 700")
+public class Book {
+	// code
+}
+```
+
+Then we use it like this:
+```
+Query query = em.createNamedQuery("ExpensiveBooks");
+```
+
+The rest is just like dynamic queries.
+
+We can use parameters (positional and named) and pagination with named queries too.
+```
+@NamedQuery(name="ExpensiveBooks", query=
+	"SELECT b FROM Book 
+	WHERE b.unitCost > :cost AND b.nbOfPages < :pages")
+```
+
+We can define more than one named query on the entity.
+```
+@NamedQuery(name="PublishedBOoks", query=
+	"SELECT b FROM Book 
+	WHERE b.publicationDate < :pubDate")
+@NamedQuery(name="All", query=
+	"SELECT b FROM Book")
+public class Book {}
+```
+
+The name of the queries is scoped to the persistence unit, and must be unique.
+So, only one query can be called ExpensiveBooks, and one query called All.
+A common practice is to prefix the query name with the entity name:
+```
+@NamedQuery(name="Book.All", query=
+	"SELECT b FROM Book")
+```
+
+Another good practice is to use constants:
+```
+public static final String FIND_ALL = "Book.All";
+
+@NamedQuery(name=FIND_ALL, query=
+	"SELECT b FROM Book")
+```
+
+=====================================================================================
+Entity lifecycle, callbacks, and listeners:
+===========================================
+POJO Lifecycle:
+---------------
+- We create an instance of an object using "new" keyword.
+- Garbage collector collects it and it dies.
+
+Entity lifecycle:
+-----------------
+- We create an instance of an object using "new" keyword.
+- The entity is "Detatched" or "Transient".
+- The entity becomes MANAGED if one of the following events occur:
+	- Persisting: If the entity is Persisted, it becomes MANAGED.
+	- Updating:
+	- Removing: 
+	- Loading: If the entity was loaded from the DB, it's MANAGED by default.
+- When an entity is managed, the EntityManager auto-syncs it with the DB.
+- Managed Entities have a persistence identity, a key that uniquely identifies an instance, like a primary key.
+- When a transaction is committed, the entity becomes Detatched.
+	- We can re-attach it to be MANAGED.
+- Garbage collector collects it and it dies.
+
+Example:
+```
+public class BookService {
+	// entity manager factory and entity manager
+
+	public Book createBook(Long id, String title, String desc) {
+		Book book = new Book();
+		Book.setId(id);
+		Book.setTitle(title);
+		Book.setDescription(desc);
+		
+		// until here, the book is a normal POJO, a transient
+		
+		tx.begin();
+		em.persist(book);
+		
+		// NOW the book is a managed entity
+		
+		tx.commit();
+	}
+	
+	public Book findBook(Long id) {
+	
+		// the entity returned by em.find is already managed
+		return em.find(Book.class, id);
+		
+	}
+	
+	public Book raiseUnitCost(Long id, Float raise) {
+	
+		// already managed
+		Book book = em.find(Book.class, id);
+		if(book != null) {
+			tx.begin();
+			
+			// already managed
+			book.setUnitCost(book.getUnitCost() + raise);
+			tx.commit();
+		}
+		return book;
+	}
+	
+	public Book raiseUnitCost(Book book) {
+		// here, the book is detatched
+		// so we have to manually merge it to be managed
+		Book bookToBeUpdated = em.merge(book);
+		tx.begin();
+		book.setUnitCost(book.getUnitCost() + raise);
+		tx.commit();
+	}
+	
+	public void removeBook(Book book) {
+		// save as previous method
+		Book bookToBeDeleted = em.merge(book);
+		
+		tx.begin();
+		em.remove(bookToBeDeleted);
+		tx.commit();
+	}
+}
+```
+
+Callback methods:
+-----------------
+We can put pre- and post- events before and after each of the four methods (persist, update, load, remove) to invoke business functions.
+
+Annotate a method with @PrePersist to be invoked before persist operations.
+Annotate a methid with @PostPersist to be invoked after persist operations.
+
+List of annotations:
+	@PrePersist, @PostPersist
+	@PreUpdate, @PostUpdate
+	@PreRemove, @PostRemove
+	@PostLoad
+
+No PreLoad exists.
+It doesn't make sense to preload data on an entity that isn't loaded yet.
+
+These annotations apply to any access-level methods, but not static or final methods.
+These methods can throw unchecked exceptions, but not checked ones.
+If a method throws a run-time exception, any transaction will roll back.
+
+```
+@PrePersist
+@PreUpdate
+private void validateAuthor() {
+	if(firstName == null) 
+		throw new IllegalArgumentException("Invalid first name");
+	if(lastName == null)
+		throw new IllegalArgumentException("Invalid last name");
+}
+```
+Notice the method is private, because the annotations will still invoke it.
+Any insert/update will roll back if an exception is thrown.
+
+A method can be annotated with more than one annotation.
+But only ONE lifecycle annoation of a given type may be present in an entity class. i.e. we can't have two @PrePersist annotations in one entity.
+
+Entity Listeners:
+-----------------
+Entity listeners are used to extract business logic to a separate class so that we can share the code among other entities.
+
+It's a POJO on which we can define 1+ lifecycle callback methods.
+We use the @EntityListeners annotation.
+
+Defining listeners:
+```
+public class ValidationListener {
+
+	@PrePersist
+	@PreUpdate
+	private boid validate(Author author) {
+		// validation code here
+	}
+}
+
+public class AgeCalculationListener {
+	
+	@PostLoad
+	@PostPersist
+	@PostUpdate
+	public void calculateAge(Artist artist) {
+		// code here
+	}
+}
+```
+
+Registering listeners on the desired entity:
+```
+@Entity
+@EntityListeners({
+	AgeCalculationListener.class,
+	ValidationListener.class
+})
+public class Musician extends Artist {
+
+}
+```
+
+The provider iterates through listeners in the order which they are written, and triggers callback methods on the entity itself.
+
+Default listeners:
+------------------
+Listeners that are applied by default to all entity classes.
+
+There are no annotations that are scoped to the entire persistent unit.
+So, Default listeners are ONLY specified in XML.
+
+We can use @ExcludeDefaultListeners to exclude an entity and all its subclasses from using default listeners.
+```
+
+<entity-mappings (...) version="2.2">
+	<persistence-unit-metadata> 
+	<!-- inside this, anything that doesn't have annotation equivalent -->
+		<persistence-unit-defaults>
+			<entity-listeners>
+				<entity-listener class="com.pluralsight.MyDefaultListener"/>
+			</entity-listeners>
+		</persistence-unit-defaults>
+	</persistence-unit-metadata>
+</entity-mappings>
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

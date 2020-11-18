@@ -119,6 +119,176 @@ Projections:
 - Excluding the _id (this can be done on any field btw)
 >> db.movies.find({"genre": "Action, Adventure}, {"title": 1, "_id": 0}).pretty()
 
+Updating:
+- We'll use updateOne(filter, update_params).
+>> db.movies.updateOne({
+  "title": "The Martian"
+}, {
+  $set: {
+    "awards": "Oscar"
+  }
+})
+- This updates the FIRST document it finds that matches the filter (first arg), then it uses $set to update/add the field/value pairs specified in the document that's after $set.
+- The $set is an update operator, there are other operators like:
+  - $unset: removes the field completely
+  - $min: updates fields that are smaller than an existing value.
+  - $max
+  - $inc: increments the field value by an amount
+  - $setOnInsert: 
+  - and many more, check the mongodb docs.
+  
+Updating many documents:
+- updateMany updates all documents that match the filter.
+>> db.movies.updateMany({ "rated": null }, { $unset: { "rated": "" } });
+
+Updating:
+- Using replaceOne(filter, update_document), replaces .
+>> 
+
+Upsert = Update + Insert:
+- Using update to insert new documents.
+- If we used updateOne but no documents matched the filter, the update document will be inserted as a NEW document in the collection.
+
+Deleting:
+- Delete first one object matching the filter.
+>> db.reviews.deleteOne({ _id: ObjectId("s7ywhtuiswy895tyys343") });
+
+- Delete all object that match the filters.
+>> db.reviews.deleteMany({ reviewer_id: 795548638 });
+
+Advanced mongoDB query concepts, operators, etc:
+------------------------------------------------
+Comparison operators:
+- $eq, $gt, $gte, $lt, $lte, $ne
+- $in, $nin: In, not in.
+- To get movies with runtime greater than 90 mins.
+>> db.movies.find({ 
+	runtime: { 
+		$gt: 90
+	} 
+});
+
+Why is the syntax like this?
+To be consistent with equality values, as well as it being very convenient for ranged e.g.
+>> db.movies.find({ 
+	runtime: { 
+		$gt: 90,
+		$lt: 120
+	} 
+});
+
+>> db.movies.find({ 
+	runtime: { 
+		$gt: 90,
+		$lt: 120,
+	},
+	rated: {
+		$in: ["G", "PG", "PG-13"]
+	}
+});
+
+Element operators:
+------------------
+- $exists: matches documents that have a specific field.
+- $type: matches documents that have a field whose value is of a specific type.
+>> db.movies.find({ 
+	mpaaRating: { 
+		$exists: false
+	} 
+});
+
+Note that we might need to filter documents that either:
+- Don't have a specific field i.e. $exists: false.
+- Have that field, but have a value of null (needs to be explicitly filtered)
+
+WARNING: $eq: null matches both documents that HAVE THE FIELD but equal to null, or DO NOT HAVE THE FIELD AT ALL.
+
+type:
+>> db.movies.find({ 
+	viewerRating: { 
+		$type: "int"
+	} 
+});
+
+See the docs for available types that we can filter for.
+
+Logical operators:
+------------------
+- $or, $and, $not, $nor
+>> db.movies.find({ $or [
+		{"tomato.meter": { $gt: 95 }},
+		{"metacritic": {$gt: 88}}
+	]
+});
+
+- $and is necessary ONLY in very certain situations, because seelctors in a filter are implicitly anded already.
+- So why is there a $and then?
+- Because we sometimes need to specify THE SAME FIELD in two different filters, and the KEYS in a JSON document must be unique, so we need it.
+>> db.movies.find({ 
+	$and: [
+		{"metacritic": {$ne: null} },
+		{"metacritic": {$exists: true} }
+	] 
+});
+
+Array operators:
+----------------
+- $all: we pass an array of values, and documents with the field being filtered MUST have ALL values in that array, not in the same order, and not only those values, but they must occur.
+>> db.movies.find({
+	genres: {
+		$all: ["Comedy", "Crime", "Drama"]
+	}
+});
+
+Returns documents whose genres field contains ALL three values.
+
+- $size: matches based on the length of an array.
+>> db.movies.find({
+	countries: {
+		$size: 1
+	}
+});
+Returns documents whose countries field has an array of one element i.e. movies that have been shot in ONE country.
+
+- $elemMatch: if we have an array with embedded documents, like this:
+	boxOffice: [
+		{"country": "USA", "revenue": 228.4},
+		{"country": "Germany", "revenue": 16.2},
+		{"country": "UK", "revenue": 33.9},
+		{"country": "USA", "revenue": 13.1}
+	]
+	
+And we want to match all documents where:
+	boxOffice in germany, greater than 17.
+	
+We might think that this query satisfies it:
+>> db.movies.find({
+	"boxOffice.country": "Germany",
+	"boxOffice.revenue": { $gt: 17 }
+});
+	
+However, the selectors here do NOT need to match in the same array ELEMENT, they just match on the ARRAY level.
+So we don't match an element that has both selectors covered.
+
+That's where $elemMatch comes in handy:
+>> db.movies.find({
+	boxOffice: {
+		$elemMatch: {
+			"country": "Germany",
+			"revenue": { $gt: 17 }
+		}
+	}
+});
+
+Regex operator:
+---------------
+- To use with JS regexes.
+>> db.movies.find({
+	"awards.text": {
+		$regex: "/^Won.*/"
+	}
+});
+
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 II. MongoDB For Java Developers:

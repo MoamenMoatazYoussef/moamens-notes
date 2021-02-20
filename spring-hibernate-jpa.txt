@@ -1,0 +1,500 @@
+Spring with Hibernate and JPA (pluralsight course):
+===================================================
+Why use Hibernate and JPA at all?
+---------------------------------
+The problem:
+- Developers don't always make good DBAs.
+- Data models and object models don't always line up.
+- Configuration is better with JPA, but can still be even better with Spring.
+- Business focus: the business doesn't care what we use, it cares about the problem solved.
+
+The solution:
+- JPa removes a lot of boiler plate code.
+- Developers build objects, JPA bridges gap.
+- Spring handles the config.
+- The code can be TDD easier.
+- Transactions are decoupled from the developer's code.
+- Annotation-based development, which is much faster.
+
+App we'll build:
+----------------
+We are building an app that tracks minutes of exercise in a day against a previously set goal.
+
+=====================================================================
+Arch of the app:
+================
+Standard MVC architecture:
+--------------------------
+We know what it is.
+
+One of the problems with this pattern is the question: where does my business logic go?
+
+It often gets stored in the controller, but the controller should be only for routing :(
+
+We'll use JPA for the Model
+We'll use Spring for the Controller and View.
+
+Tiered architectures:
+---------------------
+Presentation layer: the views.
+Business Logic layer: which contains the logic.
+Data layer: database.
+
+It provides:
+- separation of concerns: each layer focuses only on its task.
+- reusable layers.
+- less regressional errors since refactoring and maintenance affects only the layer affected.
+
+We'll use JPA for the Data Layer.
+We'll use Spring MVC for the Presentation layer.
+We'll use Spring itself for the Business Logic layer.
+
+Arch of our app:
+----------------
+In Spring we have these 3 components:
+- @Controller.
+- @Service.
+- @Repository.
+
+@Controller:
+------------
+- Where routing happens. (So it represents the presentation layer)
+- Should only have routing and no business logic.
+- Can directly interact with @Repository without @Service involvment if no business logic is necessary.
+
+@Service:
+---------
+- where we'll put our business logic. (So it represents the Business Logic layer)
+- where DB transactions start and end.
+- Describes the verbs(actions) of the system.
+- Ensures that business objects are in valid states. 
+
+@Repository:
+------------
+- where DB access happens. (So it represents the Data layer)
+- where JPA will be.
+- Describes the nouns(data) of the system.
+- Has 1-1 mapping with DB tables 
+
+Spring Context Files:
+---------------------
+Even while using Annotations or Java config, there is still some XML config.
+
+These are saved in CONTEXT FILES.
+- servlet-config.xml in our project.
+
+Loading these context files can be done by:
+- Dispatcher servlet.
+- Loader listener.
+- Import (Which isn't recommended).
+
+=====================================================================
+Configuration of Spring and JPA for development:
+===================================================
+Maven Dependencies to add:
+- mysql-connector-java
+- hibernate-entitymanager
+- jta (groupid: javax.transaction)
+- spring-jdbc (groupid: org.springframework)
+- spring-orm
+
+persistence.xml:
+----------------
+Where we'll define JPA configs.
+
+Why use spring, then?
+- Can override settings per environment.
+
+Even if we'll use the defaults, we will still need an empty persistence.xml
+- src/main/resources/META-INF/persistence.xml.
+
+Steps:
+- Create persistence.xml in the path specified in the previous line.
+``` xml
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+	version="2.0">
+	<persistence-unit name="punit">
+
+	</persistence-unit>
+</persistence>
+```
+
+web.xml:
+--------
+It's in src/main/webapp/WEB-INF/web.xml.
+To load Spring, we need to:
+1- tell our app where to find spring config file, this can be done in many ways e.g. using dispatcher servlet.
+2- Load it using a listener.
+
+But since JPA doesn't have anything to do with the servlet, we have a different way of loading its context file using:
+- <listener/>: Which is a listener class that loads the file.
+- <context-param/>: which specifies where the context file is.
+	- Param: contextConfigLocation (where is the context file)
+	- Value = "classpath:/jpaContext" (Because it resides in src/main/resources)
+	
+Steps:
+- Add two parts to web.xml:
+``` xml
+<!-- Config param to specify where jpaContext.xml is -->
+<context-param>
+	<param-name>contextConfigLocation</param-name>
+	<param-value>classpath:/jpaContext.xml</param-value>
+</context-param>
+
+<!-- Listener to load the file -->
+<listener>
+	<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+</listener>
+```
+
+So, when the app starts up, the Spring Container triggers the startup of the class ContextLoaderListener, which looks for contextConfigLocation parameter and uses it to load context files.
+
+jpaContext.xml:
+---------------
+This is a file we'll create ourselves.
+Used instead of persistence.xml.
+Doesn't have to be named "jpaContext" but it's a standard.
+Loaded from the class path using ContextLoaderListener.
+So it must reside in src/main/resources/jpaContext.xml
+
+Contains (the stuff we'll define):
+- EntityManagerFactory
+	- JPA vendor
+	- JPA props
+- Transaction manager
+- Annotation config
+- Datasource config and lookup
+
+Steps:
+- Create src/main/resources/jpaContext.xml.
+``` xml
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd">
+	
+	<!-- We're telling Spring that we want to configure the rest of the app using annotations -->
+	<context:annotation-config />
+	
+	<!-- A bean that tells Spring to use Persistent Context Annotation, we'll see that later -->
+	<bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
+	
+
+</beans>
+```
+
+EntityManagerFactory:
+---------------------
+What we use to start up JPA and Hibernate inside of our app.
+
+It has:
+- LocalContainerEntityManagerFactoryBean:
+	- A class that lies in spring-orm.jar.
+	- References our persistence unit.
+	- Injected if one isn't defined in the persistence unit.
+	- Defines which Vendor we're using.
+	
+	
+To add it to jpaContext.xml:
+- Open jpaContext.xml.
+- Add this bean:
+``` xml
+<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+
+	<!-- This property defines the persistence unit we're working on, the value should be from persistence.xml -->
+	<property name="persistenceUnitName" value="punit" />
+	
+	<!-- This property defines the data source, it uses ref to reference a data source we'll define later -->
+	<property name="dataSource" ref="dataSource" />
+	
+	<!-- This property defines which JPA vendor we're using -->
+	<property name="jpaVendorAdapter">
+		<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+		
+			<!-- This shows the SQL running behind the scenes when we're using Hibernate, which is good for debugging -->
+			<property name="showSQL" value="true" />
+			
+			<!-- Properties specific to Hibernate -->
+			<property name="jpaPropertyMap">
+				<map>
+					<!-- Which SQL dialect we'll be using -->
+					<entry key="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"></entry>
+					
+					<!-- We can interact with the DDL (data definition language) that our DB needs in order to work -->
+					<entry key="hibernate.hbm2ddl.auto" value="none"></entry>
+					
+					<!--  -->
+					<entry key="hibernate.format_sql" value="true"></entry>
+				</map>
+			</property>
+		</bean>
+	</property>
+</bean>
+```
+
+Transaction manager:
+--------------------
+Although JPA and Hibernate are ORM stuff, they actually do NOT work with transactions.
+They work WITHIN transactions, but they don't start or roll back transactions on their own.
+
+We have to do that using the JpaTransactionManager.
+- Inside spring-tx.jar
+- Annotation driven.
+- Takes entityManagerFactory as a ref
+
+Steps:
+- In jpaContext.xml, add this:
+```
+<bean id="transactionManager"
+	class="org.springframework.orm.jpa.JpaTransactionManager">
+
+	<!-- The class JpaTransactionManager has a setter setEntityManagerFactory 
+		that expects an entityManagerFactory -->
+	<!-- So far, this just enables a transaction manager, but it doesn't config 
+		transactions "since we do this by annotations" -->
+	<property name="entityManagerFactory"
+		ref="entityManagerFactory"></property>
+
+</bean>
+
+
+<!-- Telling Spring that we'll configure transactions using annotations -->
+<tx:annotation-driven
+	transaction-manager="transactionManager" />
+```
+
+Datasource:
+-----------
+The DB itself.
+
+Props:
+- DriverManagerDataSource: spring-jdbc.jar
+- driverClassName: com.mysql.jdbc.Driver
+- url: jdbc:mysql://localhost:3306/fitnessTracker?autoReconnect=true
+- user: root
+- pass: admin (or whatever you used when we set up the schema)
+
+Steps:
+- Add this to jpaContext.xml
+``` xml
+<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+	<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+	<property name="url" value="jdbc:mysql://localhost:3306/fitnessTracker?autoReconnect=true" />
+	<property name="username" value="root" />
+	<property name="password" value="admin" />
+</bean> 
+```
+
+=====================================================================
+Overview of JPA: (I will skip stuff explained in JPA course/notes)
+================
+JPA/Hibernate configuration properties discussion:
+--------------------------------------------------
+Remember these?
+- hibernate.dialect: what type of database are we going against (mysql, oracle, postgresql, etc.)
+- hibernate.format_sql: it's like pretty(), prints SQL stuff formatted in debug.
+- hibernate.hbm2ddl.auto
+
+hbm2ddl.auto:
+- Values:
+	- create: This can create our DB for us if we haven't set it (We still need a schema to be defined, though)
+	- create-drop: creates DB when we start the app, drop it when the app is terminated. (It doesn't really dropping your whole schema, it just drops the tables in the schema that we have objects mapped to).
+	- update: update records but can't delete any records.
+	- validate: (Usually for PROD), it verifies that what we have in our DB structure is congruent with our objects.
+	- none: doesn't do anything (kinda risky for PROD)
+
+Working with JPA config:
+------------------------
+Steps:
+- Go to com.pluralsight.model and open Goal.java.
+- Annotate it with @Entity, add an id field, and annotated it with @Id and @GeneratedValue.
+- Go to jpaContext, change the balue of hbm2ddl.auto to create. (So that it creates the table in the schema)
+
+=====================================================================
+JPA Annotations: (I will skip stuff explained in JPA course/notes)
+================
+Old annotations:
+----------------
+- @Service: business logic.
+- @Repository: DAO, where DB interaction occurs.
+- @Transactional: used to start txns.
+
+@PersistenceContext:
+--------------------
+- This grabs an instance of our EntityManager and injects it into our code.
+- It pretains to a persistence unit, that's why it's called PersistenceContext,not @EntityManager.
+- We inject it into the Repository:
+``` java
+@Repository
+public class GoalRepositoryImpl implements GoalRepository {
+	
+	@PersistenceContext
+	private EntityManager em;
+	
+	public Goal saveGoal(Goal goal) {
+		em.persist(goal);
+		
+		// YOU HAVE TO FLUSH in order for
+		// JPA to actually commit to the DB
+		em.flush();
+		return goal;
+	}
+}
+```
+
+@Transactional:
+---------------
+- These are added to the service layer, not the repo layer.
+- Should import from org.springframework.transaction.annotation.Transactional, not from javax.persistence.
+
+A bug that makes it not insert:
+-------------------------------
+- Your app runs normally with no errors, but it doesn't insert...
+- Look at jpaContext.xml:
+```
+<context:annotation-config />
+```
+- This tells Spring that we'll use Annotations...but we didn't tell Spring where to find those annotations.
+
+Why isn't it blowing up, though?
+- In WEB-INF/config/servlet-config, change the base-package in context:component-scan to com.pluralsight.controller.
+- Copy that light and put it in jpaContext.xml, and remove ".controller".
+
+JPQL:
+-----
+JPQL is different from SQL, for example:
+SQL: select * from goal
+JPQL: select g from Goal g (Goal is written like the Class name)
+
+Lazy Initialization exceptions and how to solve them:
+---------------------------------------------------
+These exceptions are very common with Hibernate and JPA.
+The solution: Use a class called OpenEntityManagerInViewFilder.
+
+It saves the session from being closed after the transaction has finished, which allows lazy fetching.
+
+Steps:
+- Go to web.xml:
+- Add this before your sevlets, in the <web-app> tag:
+``` xml
+<!-- Filter name and class -->
+<filter>
+	<filter-name>SpringOpenEntityManagerInViewFilter</filter-name>
+	<filter-class>org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter</filter-class>
+</filter>
+
+<!-- When to apply the filter, to what URLs, like Request Mapping -->
+<filter-mapping>
+	<!-- Which filter to apply -->
+	<filter-name>SpringOpenEntityManagerInViewFilter</filter-name>
+	
+	<!-- On which patterns of url -->
+	<url-pattern>/*</url-pattern>
+</filter-mapping>
+```
+
+Projections:
+------------
+Projection is a way to select specific fields from tables in order to present them to the UI.
+
+Example of projection in JPQL:
+```
+Select new com.pluralsight.model.GoalReport(g.minutes, e.minutes, e.activity)
+from Goal g, Exercise e 
+where g.id = e.goal.id
+```
+
+This creates a join between Goal and Exercise to get the results and put them in GoalReport objects, notice the constructor we're using.
+
+Named Queries:
+--------------
+A cleaner way of using JPQL queries.
+In the entity class, you add this:
+```
+public static final String FIND_GOAL_REPORTS = "findGoalReports";
+```
+
+Then above the class, below the @Table annotation, add this:
+```
+@NamedQueries({
+	@NamedQuery(name = "findGoalReports", query = "Select new com.pluralsight.model.GoalReport(g.minutes, e.minutes, e.activity)
+from Goal g, Exercise e 
+where g.id = e.goal.id")
+})
+```
+
+Then, when doing this:
+```
+Query query = em.createQuery("select .......");
+```
+
+Replace with:
+```
+TypedQuery<GoalReport> query = em.createNamedQuery(Goal.FIND_GOAL_REPORTS, GoalReport.class);
+```
+
+=====================================================================
+Spring Data JPA:
+================
+Spring Data JPA is a framework that helps eliminate boilerplate code in the DAO layer.
+
+It needs this maven dependency:
+- spring-data-jpa
+
+We need to exclude a maven dependency spring-aop because it's an incompatible dependency.
+``` xml
+<dependency>
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-jpa</artifactId>
+	<version>1.3.0.RELEASE</version>
+	<exclusions>
+		<exclusion>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aop</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+```
+
+Setting up, in jpaContext.xml:
+- Add this in the <beans> tab in the namespaces section (the attributes xmlns:something):
+``` xml
+xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+```
+- Add this to xsi:schemaLocation:
+```
+http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd 
+```
+- Add this on the same level as the component-scan:
+``` xml
+	<jpa:repositories base-package="com.pluralsight.repository" />
+```
+
+Using it:
+- Delete your Impl class, it's only required if you want to override functionality.
+- Change the repository interface to extend the JpaReposiroty interface.
+- Pass to it the class and id types.
+- Annotate it with @Repository
+```
+@Repository("exerciseRepository")
+public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
+
+}
+```
+
+Cons of spring data:
+--------------------
+- Doesn't support projections yet.
+But that's easy to get over, we can just do this:
+``` java
+@Repository
+public interface GoalReposiroty extends JpaRepository<Goal, Long> {
+
+	@Query("Select new com.pluralsight.model.GoalReport(g.minutes, e.minutes, e.activity) from Goal g, Exercise e where g.id = e.goal.id")
+	List<GoalReport> findAllGoalReports();
+}
+```

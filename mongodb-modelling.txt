@@ -1,0 +1,98 @@
+MongoDB Data Modelling Course:
+==============================
+In contrast to RDBMS, if you don't know the usage pattern, how you access to data, which questions are critical to your app, and ratios between reads and writes:
+- Don't model your MongoDB database prior to development, instead
+- START development then as you go, model your MongoDB.
+
+Why do we model data?
+- Because we have limited resources: RAM, drive space, network latency, CPU performance, data security, atomicity of updates, max size of documents, all of that.
+
+- Working set: The total body of data that the app uses in normal operations.
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+Methodology of modelling:
+-------------------------
+It consists of 3 phases:
+1) WORKLAOD: gather info about how we will use the data.
+	- From the requirement document, the scenarios the system needs to support.
+2) RELATIONSHIPS: between entities and stuff.
+	- In contrast to SQL, you need to decide if you will EMBED some entities in others, or leave them separated.
+3) DESIGN PATTERNS: to address performance requirements.
+
+Step 1: Identify the workload:
+------------------------------
+Same as SQL, gather information from the requirements docs, scenarios, etc.
+From that, identify the most important CRUD operations, liting:
+- The acting entities.
+- The operation description.
+- The operation type: Read, write, update, delete.
+- The info needed for that operation.
+- Frequency of operation.
+- Operation pattern (e.g. if it's a read pattern, will it be a query or a full scan)
+- Examples.
+
+Now, list the percentage of writes and reads.
+Qualify and quantify the queries as much as you can.
+
+
+Step 2: Identifying the relationships:
+--------------------------------------
+1-1 in mongo:
+-------------
+Embedding:
+- Fields at the same level in one document
+- Group relevant fields to each entity in a subdoc.
+
+Referencing:
+- Reference one document from another one.
+
+1-M in mongo:
+-------------
+Embedding: (array of docs)
+- Embed each of the many documents into the one document.
+- Embed the one document in each of the many documents.
+
+Usually we embed inside the document that's most queries.
+
+Referencing: (array of ids to docs)
+- Reference each of the many documents into the one document.
+- Reference the one document in each of the many documents.
+
+Usually, we reference the many inside the one.
+
+1-Z in mongo:
+-------------
+1 to Zillions.
+A subcase of 1-M where the many can go over 10,000.
+We DON'T want to retrieve a document and ALL of its zillions.
+
+So we should comment our code telling developers directives on how to handle and choose the result set.
+
+Do NOT use embedding.
+
+Do NOT use referencing in the one side.
+
+Reference in the many side.
+
+M-N in mongo:
+-------------
+Embedding: (array of docs)
+- Array of subdocuments in one of the many side.
+
+Usually we embed inside the side that's most queries.
+
+Referencing: (array of ids to docs)
+- Array of references in one of the many sides.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+Step 3: Apply Design Patterns:
+------------------------------
+
+
+
+
+
+
+
+
+
+

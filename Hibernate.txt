@@ -1,0 +1,160 @@
+Hibernate: getting started (jboss docs):
+========================================
+Intro:
+------
+Hibernate is a JPA implementation providor.
+It's divided into modules:
+- hibernate-core: The main module, defines the main ORM features and APIs as well as integrations SPI.
+- hibernate-envers: An entity versioning feature.
+- hibernate-spatial: for spatial/Geographical Information System (GIS) data.
+- hibernate-osgi.
+- hibernate-agroal.
+- hibernate-c3p0
+...and so on.
+
+Download from here: https://sourceforge.net/projects/hibernate/files/hibernate-orm/
+
+Dir structure:
+- lib/required: contains hibernate-core jars and its dependencies. All of these should be in your classpath.
+- lib/envers: for hibernate-envers.
+- lib/spatial: for hibernate-spatial.
+- lib/osgi: for hibernate-osgi.
+- lib/jpa-metamodel-generator: contains the JARs needed for generating Criteria API type-safe metamodel (What?).
+- lib/optional: for the other stuff.
+
+Also, Hibernate is found on Maven repo.
+
+Tutorial: Native Hibernate API and XML Mapping:
+-----------------------------------------------
+hibernate.cfg.xml: the config file for hibernate.
+- connection.driver_class, connection.url, connection.username, connection.password: they are <property/> properties to define the JDBC connection info.
+- conenction.pool_size: indicates the size of Hibernate's built-in connection pool.
+- dialect: a <property/> that specifies which particular SQL variant will we use. (Usually Hib ernate is able to determine the SQL variant by itself).
+- hbm2ddl.auto: enables automatic generation of DB schemas directly into the DB.
+- <mapping/>: the attribute "resource" on this tag should be set to the mapping files for persistent classes.
+	Hibernate uses java.lang.ClassLoader to locate the mapping as a classpath resource.
+	
+Entity classes:
+```
+public class Event {
+	private Long id;
+
+	private String title;
+	private Date date;
+
+	public Event() {
+		// this form used by Hibernate
+	}
+
+	public Event(String title, Date date) {
+		// for application use, to create new events
+		this.title = title;
+		this.date = date;
+	}
+
+	// getters and setters
+}
+```
+- Entity classes MUST have no-arg constructor because Hibernate uses java reflections to create objects for you.
+
+Mapping file:
+``` xml
+<hibernate-mapping package="org.hibernate.tutorial.hbm">
+
+    <class name="Event" table="EVENTS">
+        <id name="id" column="EVENT_ID">
+            <generator class="increment"/>
+        </id>
+        <property name="date" type="timestamp" column="EVENT_DATE"/>
+        <property name="title"/>
+    </class>
+
+</hibernate-mapping>
+```
+- The <id> tag doesn't have to map to the PK or vice versa, BUT this is strongly recommended.
+- The type indicated by the "type" attribute in the <property/> tag isn't a Java or a SQL type, it's a Hibernate Mapping Type: these are converters that convert between SQL and Java types.
+	- They auto-determine this using java reflection.
+
+Config file:
+``` xml
+<hibernate-configuration>
+
+    <session-factory>
+
+        <!-- Database connection settings -->
+        <property name="connection.driver_class">org.h2.Driver</property>
+        <property name="connection.url">jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE</property>
+        <property name="connection.username">sa</property>
+        <property name="connection.password"/>
+
+        <!-- JDBC connection pool (use the built-in) -->
+        <property name="connection.pool_size">1</property>
+
+        <!-- SQL dialect -->
+        <property name="dialect">org.hibernate.dialect.H2Dialect</property>
+
+        <!-- Disable the second-level cache  -->
+        <property name="cache.provider_class">org.hibernate.cache.internal.NoCacheProvider</property>
+
+        <!-- Echo all executed SQL to stdout -->
+        <property name="show_sql">true</property>
+
+        <!-- Drop and re-create the database schema on startup -->
+        <property name="hbm2ddl.auto">create</property>
+
+        <mapping resource="org/hibernate/tutorial/hbm/Event.hbm.xml"/>
+
+    </session-factory>
+
+</hibernate-configuration>
+```
+- As we can see, the <mapping/> tag references the files used in mapping entities.
+
+Setting up a SessionFactory:
+```
+protected void setUp() throws Exception {
+	// A SessionFactory is set up once for an application!
+	final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+			.configure() // configures settings from hibernate.cfg.xml
+			.build();
+	try {
+		sessionFactory = new MetadataSources( registry ).buildMetadata().buildSessionFactory();
+	}
+	catch (Exception e) {
+		// The registry would be destroyed by the SessionFactory, but we had trouble building the SessionFactory
+		// so destroy it manually.
+		StandardServiceRegistryBuilder.destroy( registry );
+	}
+}
+```
+
+Using SessionFactory to actually query and interact with the DB:
+```
+public void testBasicUsage() {
+	// create a couple of events...
+	Session session = sessionFactory.openSession();
+	session.beginTransaction();
+	session.save( new Event( "Our very first event!", new Date() ) );
+	session.save( new Event( "A follow up event", new Date() ) );
+	session.getTransaction().commit();
+	session.close();
+
+	// now lets pull events from the database and list them
+	session = sessionFactory.openSession();
+	session.beginTransaction();
+	List result = session.createQuery( "from Event" ).list();
+	for ( Event event : (List<Event>) result ) {
+		System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
+	}
+	session.getTransaction().commit();
+	session.close();
+}
+```
+
+Tutorial: Native Hibernate API and Annotations:
+-----------------------------------------------
+Entity class:
+- Annotated with annotations that are the same as JPA annotations.
+
+Config file:
+- The same, except the <mapping/> uses attribute "class" to reference the annotated entity class.

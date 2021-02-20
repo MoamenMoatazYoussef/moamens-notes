@@ -1,0 +1,692 @@
+RDBMS Design (Pluralsight course):
+==================================
+The relational model is based on:
+- Set theory.
+- First-order predicate logic.
+
+Data modelling: planning your DB before you start development.
+
+
+===========================================================================================================================================================================
+ER modelling: (Only will write stuff that I don't know)
+=============
+- Entity instance (also called Entity): objects that are relevant in the context of the data application.
+- Entity type (also called Entity): the class of an entity, characteristics of it.
+
+Relationships:
+--------------
+- Identifying relationships: relationships where the foreign key of one entity (parent) is the ONLY KEY identifier of the other entity (child, weak entity because it's dependent).
+	- In such relationship, all cardinality rules apply normally BUT the minimum cardinality on the parent's side cannot be zero.
+
+- Recursive relationship: a normal relationship but between an entity and itself.
+
+- Higher arity (relationships with more than two entities): 
+	- arity: cardinality of the set of participating entities in a relationship.
+	- Since IDEF1x diagrams don't support higher arity relationships, we use a trick like No-nominalization.
+	- no-nominalization (objectizing): transforming the relationship _verb_ to a weak entity type _noun_, then we use combination of foreign keys of the participating entities and new relationships between the main entities and the new entity. (Check picture "no-nominalization" in folder "db-design.png")
+	
+Subtypes/Specialization:
+------------------------
+- Like inheritance. (pic: "subtype-diag.png"
+- Using a descriminator in the supertype.
+- In IDEF1x, single line means: relationship is complete, because it might not include all possible categories.
+- A double line means it's complete (pic: "subtype-diag-2.png")
+- Entity types cannot have more than ONE single supertype (pic: "subtype-diag-3.png")
+
+===========================================================================================================================================================================
+Gathering info needed to create the data model:
+============================================
+Sources of info:
+- People
+- Documentation (mission statement)
+
+A data model is NOT about entity types, attributes, relationships, tables, etc.
+
+A data model IS about: FACTS.
+- What types of facts to store.
+- Constraints on those facts.
+
+What type of facts to store?
+- Facts that the end users need.
+
+What are Constraints?
+- Valid data types
+- Valid ranges
+- Duplication rules
+- Consistency with other data
+
+To answer those two questions:
+- Mission statament
+- Interviews with managers, SMEs, etc.
+- Interviews with End users (The most important one): They're usually too far away from technical language, so the IV is going to need you to adapt to language, jargon, notation forms, etc.
+
+Analyzing docs (a mission statement):
+-------------------------------------
+Usually a broad overview of the entire app and business processes, and is usually informal, vague, incomplete, and inconsistent.
+
+How to read a mission statement:
+- highlight things into categories of:
+	- Fact types. (nouns)
+	- Constraints. ("each", "three", "different", using a singular noun not the plural or VV, etc.) 
+	- Concrete examples
+	- Other
+- Write/extract concrete examples on the fact types in order illustrate the text and check your understanding.
+- Pass your examples on a SME in order to make sure you're not reading too much/too little into it.
+
+Interviews:
+-----------
+You have to interview relevant people in order to:
+- Verify your understanding of the mission statements.
+- Find more info you need, and fill in the blank spots.
+
+To do this efficiently:
+- Use leyman's terms, don't use technical terms.
+- Use their jargon, learn it before interviewing them.
+- Don't make it obvious or condescending for them, they need to feel respected by you too.
+- Ask them to bring example data to the interview, or make fake data if they're concerned about privacy or confidentiality.
+
+Read facts from the examples:
+- Make sentences that stand on their own and are unique.
+- Simplify them as much as you can while ensuring they're unique, consistent, and have their original meaning.
+
+Counter examples:
+- Modify the concrete examples to come up with counter examples, that will highlight a lot of constraints.
+- When the interviewee tells you something is not valid, ask them WHY, in order to highlight the actual constraint being violated, not the one you may assume.
+
+===========================================================================================================================================================================
+Creating the initial ER model:
+==============================
+Steps:
+1- Abstract all similar facts into fact types.
+	- Using a Template with placeholders to describe the form of those fact types.
+	- Which ones allow duplications.
+2- Use fact types to infer Entity types.
+3- Draw the IDEF1x:
+	- Draw the entity types.
+	- Draw their attributes.
+	- Draw the relationships.
+	- Draw any artificial entity types and relationships you need.
+	
+Step 1: generalizing fact types:
+--------------------------------
+- Gather similar facts together into Fact Types:
+	Example 1:
+	- Fact1: Dave was born on 1992
+	- Fact2: Mary was born on 2001
+	- The fact type is: <Member> was born on <Year>
+	Example2: (pic: "fact-type-example1.png")
+- Where duplicates are allowed in each fact type, based on the constraints you already found. (Otherwise re-conduct interviews and re-read the mission statements).
+	Example 1: In the fact type <Member> was born on <Year>
+	- <Year> can duplicate.
+	- <Member> can't duplicate.
+	
+Step 2: Inferring Entity Types:
+-------------------------------
+- Using fact types, infer the Entity types involved, but it's important to know that not all nouns (placeholders) should be entities.
+	Example 1: From the fact type <Member> was born on <Year>
+	- Member is an entity type.
+	- BUT, Date is NOT an entity type.
+	
+- Indications for a placeholder being an entity type:
+	- If it participates in many fact types, it's probably an entity type e.g. <Member>
+	- If it's in a fact type that has another placeholder which is duplicatable, but our (communism intensifies) placeholder is NOT duplicatable, it's DEFINITELY an entity type.
+	- NOT AND INDICATION: Word order of the fact type.
+
+Identifying Fact Type:
+----------------------
+- All entity types have an Identifying Fact Type.
+- They are fact types that identify instances of an entity types.
+- They're usually not explicitly stated e.g.
+	Dave was born in 1992 (is not identifying)
+	...but you can assume that Dave is part of the organization owning the DB, that's an identifying fact type.
+- Fact types with:
+	- One placeholder.
+	- 2 placeholders, but duplicates are allowed for both.
+	- 3+ placeholders, where the placeholders MUST match identification of entity type.
+
+- In both cases, check the meaning of the fact types.
+
+Step 3: Drawing the diagram:
+----------------------------
+- If possible, use software programs that help you draw.
+- Check all entity types:
+	- If it's referenced by an identifying fact, it's a STRONG entity type.
+	- Else, it's a WEAK entity type.
+- For strong entity types, all placeholders become key attributes.
+>>> Draw the strong entity types.
+
+- For weak entity types, check identifying fact types, when a placeholder references the weak type, add the key attribute of that placeholder to the weak entity type, they will be the Foreign keys.
+- Add the identifying relationship between the weak and referencing entities.
+
+>>> check the rest of this in the screenshot taken
+
+Step 4: Attributes:
+-------------------
+- Identifying fact types -> identifying entity with its key attributes and identifying relationships (already done)
+
+We will add to the diagram as attributes:
+- Fact types with two placeholders
+	- One referencing entity type and not duplicatable
+	- Other not refrencing entity type.
+	These are non-key attributes.
+	e.g.
+	<Member> has <Email>
+	<Member> was born on <Date>
+	- Member is already an entity type.
+	- Email and Date become attributes.
+- Non-identifying Fact types that have one placeholder
+	e.g.
+	<Member> is a smoker
+	So we'll add "is_smoker" as an attribute.
+	
+Btw, OPTIONAL attributes are a thing, but they're NOT indicated in IDEF1x, so we need to remember this as not all attributes in the IDEF1x are mandatory, we might make some optional.
+
+Step 5: Relationships:
+----------------------
+- Fact types with two placeholders and both reference an entity type.
+	- If duplicates are allowed in both, it's Many to many.
+	- If duplicates are allowed in one of them, it's a one to many.
+	- Otherwise, it's one to one.
+	- Don't forget to add the key of the primary entity type as foreign key to the child entity type.
+	e.g.
+	<Member> plays in <League>
+
+Step 6: Artificial entity types:
+--------------------------------
+- Fact types that hasn't been represented yet:
+	- Two placeholders where:
+		- One referencing an entity type AND allow duplicates
+		- The other does NOT represent an entity type
+	e.g.
+	<Member> has reserved a table for <Date>
+	- Member is an entity type, Date is not
+	- Member can reserve a table on more than one date, of course -> A multi-valued attribute
+	- Multi-valued attributes are NOT supported by ER Diagrams, included IDEF1x
+	- So we'll "objectize" the fact type i.e. We'll create an entity type out of the fact type.
+	- So we'll create a new entity type <Reservation>
+		Name: foreign key
+		Date: date
+	- Three placeholders
+		e.g. 
+		<Pluralsight member> watched <Course> on <Device>
+		- Same, this isn't supported by IDEF1x, so we "objectize" the relationship.
+		- Three entities: Member, Course, Device
+		- One Artificial entity: you name it.
+		- Check the screenshot too.
+		
+		
+===========================================================================================================================================================================
+Converting ER to Relational and VV:
+===================================
+1) Why do we need both representations?
+	- The ER is good for the design proces, but they're not very useful for the Implementation of the DB, because the mapping isn't exactly 1-1.
+	- The Relational model is the opposite of that, not good for design BUT is very good for Implementation.
+	- That's why we convert from ER to Relational.
+
+2) Why would we convert from Relational to ER?
+	- When we inherit an existing DB where the docs are outdated or nonexistent, reverse-engineering the DB to an ER diagram would be useful here.
+
+3) When to convert to Relational?
+	- Ideally:
+		- First we ER.
+		- Then we Normalize.
+		- Then we convert to Relational
+	- Practically:
+		- We ER.
+		- Then we Convert to Relational.
+		- Then we Normalize on the Relational.
+		- And convert back to the ER in order to update it.
+
+Representing a Relational Design:
+=================================
+Step 1: Entity types -> Tables:
+-------------------------------
+- Draw a table for each entity type:
+	- Unlike ER, Name the table using the Plural form e.g. Members (Entity types represent instances, tables represent collections of instances)
+- One column per attribute, use the attribute name.
+- Mandatory attributes -> Not Null constraint.
+- Optional attributes -> Nullable columns. (See? we needed that here)
+- Add the data type of each column (Also not in ER)
+	- This should be implementation-independent btw e.g. numeric, character, string, date, etc. (General stuff, not VARCHAR for example)
+	- Write the full details of each data type in a separate appendix that is written with the Relational model, not on the model.
+	
+	
+Step 2: Deducing primary keys:
+------------------------------
+- In any entity table, every key attribute and every combination of key attributes are Candidate Keys, enforced by Constraints:
+	- Primary keys -> PRIMARY KEY constraint.
+		- Every table MUST have one and ONLY ONE primary key.
+	- Alternate keys (candidate keys that didn't become primary keys) -> UNIQUE constraint.
+- Primary key VS Unique key:
+	- A primary key must be NOT NULL
+	- Primary keys are referenced by default whenever we define a FOREIGN KEY constraint.
+- Check screenshot of how they're drawn.
+
+Step 3: 1-1 and 1-Many Relationships:
+-------------------------------------
+- Two tables where the table of the Many (referencing) has foreign key columns that references the primary key of the table of the One (referenced)
+- FOREIGN KEY constraint is applied here.
+- Referencing alternate keys is allowed too.
+
+For 1-1:
+- Choose which entity type is the parent (referenced) and which is the subtype (referencing) (if you haven't already in the ER)
+- Do the same as above, the table of the Subtype contains a foreign key column/constraint referencing the primary key of the Parent.
+
+In both:
+- Minimum cardinality of child is represented by nullability:
+	- 0? allow null in referencing column (foreign key column)
+	- 1? don't allow null in referencing column)
+- Minimum cardinality of parent and special Maximum cardinality CANNOT be described in the Relational model, so write them in the appendix and TAKE THEM IN CONSIDERATION when you implement the DB.
+
+Step 4: Many-Many relationships:
+--------------------------------
+- Two tables for entity types.
+- A NEW TABLE: the JOIN TABLE (Also known as Junction table, Linking table, Cross-reference table), which has two foreign keys, each one references a primary key/candidate key of each table.
+- Non-zero minimum cardinalities and max cardinalities aren't supported in Relational model -> Appendix.
+- Naming options:
+	- Combine the two tables' names into the join table name.
+	- Name it according to the RELATIONSHIP the two entity types have between them.
+- Note that the join table is a NORMAL TABLE just like all other tables, it doesn't have any special properties, it's a design choice, not an implementation thing.
+
+Three or more:
+- Similar to many-to-many, but in ER you probably already split them into relationships and created a weak entity type for that, so you might just implement that. (I think?)
+
+Step 5: Other Constraints:
+--------------------------
+- CHECK constraint:
+	- For logical expressions that may not be FALSE for any row.
+	- Can be applied on one column, or columns of the same table.
+	- Cannot reference other tables or other rows on the same table.
+- Generated Column:
+	- We can let the DB calculate small equations from DBs coming from the app layer or the users
+		ALTER TABLE Matches
+		ADD FramesLost as (FramesWon - 5);
+	- Cannot assign value any other way than its definition logic (the equation in the example, for example).
+- Assertion:
+	- More powerful than CHECK
+	- Allows access to other rows and tables
+	- Not supported by all RDBMS vendors
+- DEFAULT constraint:
+	- A default value for a column.
+	- Can only be applied on one column.
+	- Constant values or built-in functions, but NO LOGIC (unlike generated columns)
+	- Not the same as Generated Column
+
+All of these are written in the appendix.
+
+Relational to ER:
+-----------------
+- OBVIOUSLY, if you have the earlier ER, use it to infer which tables in Relational convert to RELATIONSHIPS and not entity types.
+
+Steps:
+- Convert every table into an entity type (even relationships)
+	- This btw is a correct ER, nothing wrong here, we'll continue to be closer to reality, but fundamentally IDEF1x has no problem with extra tables.
+	- Find the primary key column of each table, and add them to the table as key attributes
+	- Other columns -> Non-key attributes
+	- Unique constraints -> Alternate keys
+	- Other checks go to the appendix
+	- Foreign key constraints -> Relationships
+		- Normally 1-many
+			- Referenced table -> Parent
+			- Referencing table -> Child
+		- By default:
+			- Max cardinality of child = 1
+			- Max cardinality of parent = Many
+		- If all columns of a primary key are included in the foreign key:
+			- Max cardinality of parent = 1
+		- If referencing columns are NOT NULL -> Mandatory relationship.
+		- Else -> Optional relationship.
+		- Normally here:
+			- Min cardinality of parent = 0
+				- Unless:
+		- All referencing columns INCLUDED (not exactly equal) in primary key?
+			- Identifying relationship.
+			- Referencing entity -> Weak
+		- Referencing columns  EXACTLY EQUAL to primary key:
+			- Subtype relationship
+			- Referencing entity -> Subtype
+	- Relationship readings usually cannot be inferred from Relational model.
+- Convert the tables to many-many relationships:
+	- If:
+		- All attributes are part of keys
+		- Each participating entity included ALSO participates in exactly TWO relationships that are:
+			- Both identifying
+			- Entity type is child in both
+	- Remove entity type AND both identifying relationship.
+	- Replace with many-many relationships.
+
+===========================================================================================================================================================================
+Normalization:
+==============
+Normalization is a way to fine-tune our DB design so that we reduce or eliminate redundancies and improve performance.
+
+Problems facing in with the DB:
+- Non-atomic values: values that are combinations of many values together:
+	- Require complex code, which impacts performance.
+- Redundancy:
+	- Storing facts mutliple times (in different forms), OR storing derived values from other already-existing values.
+	- Storage space wasted
+	- performance inpact
+	- Possibility of conflicting data
+
+Note that:
+- Repeating a certain VALUE (not a row/fact) isn't redundancy.
+- Not all redundancy is bad, sometimes we actually WANT to store redundant facts, reasons may include performance, the need to store derived data (overhead of re-computing the result is bigger than storing redundant data)
+
+Normalization steps:
+- 1st normal form 1NF
+- 2nd normal form 2NF
+- 3rd normal form 3NF
+- Elementary key normal form EKNF
+- Boyce-codd normal form BCNF
+- 4th normal form 4NF
+- 5th normal form 5NF
+- domain/key normal form DKNF
+- 6th normal form 6NF
+
+We will cover to 3rd normal forms.
+
+When to normalize?
+- It's better to normalize from ER, but practically we normalize at Relational then update the ER model.
+
+Functional Dependencies:
+------------------------
+- A dependency between attributes A and B (A -> B) is called FUNCTIONAL, if for every value of A, there's exactly one value of B (kind of like a math function).
+	- In other words, we can determine the value of B when given the value of A.
+	- OR, there's no value of B corresponding to a certain value of A.
+	
+e.g.
+- A dependency between FirstName and BirthDate
+- You can't know a value of BirthDate without being given the value of FirstName.
+	- FirstName is called "Determinant"
+	- BirthDate is called "Dependent Attribute"
+	
+- Functional Dependencies can be mutual i.e. A -> B and B -> A (But those are exceptions)
+	- FirstName -> BirthDate, but BirthDate is NOT -> FirstName because if you're given one BirthDate, you could find many people having that i.e. many FirstName values, violating the FUNCTIONAL constraint.
+- Can be on a combination of two or more attributes:
+	e.g. 
+	BirthDate depends on THE COMBINATION OF FirstName and LastName.
+	
+Properties of functional dependencies:
+- They are NOT universal or absolute, they depend on the data's context i.e. FirstName doesn't determine BirthDate in EVERY DATABASE IN THE WORLD.
+	- Be careful when making assumptions, then.
+- If X depends on Y, X also depends on any superset of Y:
+	- Y -> X, then (Y, Z) -> X
+	- i.e. we can actually find attribute combination determinants where we can SIMPLIFY by removing some of the attributes.
+		- Full dependency: a dependency that can't be reduced.
+- Every attribute depends on itself and on each superset of itself, Duh. (du ... du du du du du du ...)
+
+Normalization works on functional dependencies that are non-trivial and full.
+	
+Finding functional dependencies:
+- Most of them are very obvious.
+- We'll use a guaranteed, though TEDIOUS method to find ALL functional dependencies.
+
+WARNING: Derived attributes should NOT be treated as dependencies.
+
+Step 1: First Normal Form:
+--------------------------
+For a table to be 1NF:
+- Has a key
+	- Identify the candidate keys and choose one of them.
+- Every column stores atomic values:
+	- not composite ones.
+		- Depends on the business btw.
+	- Not  repeating group.
+		- a column that stores multiple similar values e.g. delimited string.
+			- you'll need to do this if you're storing an undetermined number of values.
+
+How to identify candidate keys:
+- USING FUNCTIONAL DEPENDENCIES:
+	- An attribute is a candidate key if ALL OTHER ATTRIBUTES depend on it.
+	- A combination of attributes is a candidate key if:
+		- All other attributes depend on it or a subset of it.
+		- It's NOT a superset of any other candidate key.
+		
+Finding functional dependencies for each object that will be a table (entity types + m-n relationships)
+1) For each:
+	- Entity types:
+		- Already-identified candidate keys.
+		- Combination of all key attributes is a candidate key.
+	- M-N relationships:
+		- Combination of ALL attributes is a candidate key.
+2) Mark all candidate keys.
+3) All other columns depend on the candidate keys.
+4) Verify that candidate keys are minimal:
+	- For each composite candidate key:
+		- Choose a column.
+		- Populate it with different values.
+		- For each of the rest of the columns in the same composite key, populate it with ONE value.
+		- If this pattern satisfies the already-known fact types or business rules, and SMEs consider it a valid example, then that column is itself a candidate key.
+		- Else, then this column depends on the other columns in the same candidate key 
+		- i.e. we can REDUCE the composite candidate key by removing that column.
+		- Repeat that for each column in the composite candidate key until you either 
+			- reduce the key to ONE column, or
+			- aren't able to reduce it at all
+	- Usually:
+		- In artificial entity types (e.g. nominamized relationships), the candidate keys are NOT minima.
+		- In entity types, they're usually minimal.
+		- If M-N relationships, they're almost always minimal, and if not, you need to revisit the design.
+5) Look for missing candidate keys:
+	- All attributes depend on candidate keys.
+		- No two rows with the same values for candidate key attributes.
+	- So, for each non-key attribute:
+		- Populate the candidate keys with different values in many rows.
+		- Populate the non-key attribute with equal values
+		- If this satisfies the business rules --> The attribute is NOT a key.
+		- Else --> The attribute is a key.
+	- Do this for each combination of non-key attributes too.
+	
+Step 2: Second Normal Form:
+---------------------------
+- For a table to be in 2NF:
+	- It must already be in 1NF
+	- The non-key attributes must depend on WHOLE candidate keys, not subsets of them.
+
+- If a 1NF table has only single-attribute candidate keys, it's already in 2NF.
+
+- Example:
+	Table with attributes: A, B, C,D,E,F.
+	A -> B
+	A -> E
+	A -> C
+	A -> D
+	A -> F
+	B -> E
+	D -> F
+	{B, C} -> A
+	{B, C} -> D
+	{B, C} -> F
+	Table is in 1NF
+	- Keys: A, B, C are part of candidate keys, since all others depend on each one.
+	- D depends on A, and the combination of B and C i.e. depends on the WHOLE KEY
+	- Same for F. Even though it depends on D, that isn't a 2NF violation.
+	- E depends on A and B ONLY... that is a violation of 2NF.
+	- Therefore this table is NOT in 2NF.
+	
+- How to put the table in 2NF?
+	- Create a new table/entty type in the ER diagram that has the attributes involved in the violating functional dependency.
+	- The candidate key of that table is the determinant in the functional dependency.
+	- In the original table, the determinant becomes a foreign key referencing the new table.
+	- Remove the non-key attributes involved in the violating functional dependency from the original table.
+	- This will always be the 1-many relationship with the new entity type as the parent.
+	- If the opposite candidate key that the dependent belongs to is an alternate key, the relationship is a normal one.
+	- If it was the PRIMARY key, the relationship is an IDENTIFYING relatinship and the original table becomes a WEAK entity type.
+	- Now the original table will be in 2NF.
+- NOTE: this new table can also violate 2NF, so check for that, you might need to repeat this process on the new table.
+
+Finding functional dependencies on subsets of candidate keys:
+------------------------------------------------------------
+For composite keys only, skip this for tables with:
+- Only single column candidate keys
+- One candidate key on all columns (many-many relationships)
+- One composite candidate key AND NO non-key attributes.
+
+All violations of the 2NF + extra functional dependencies.
+
+This is very similar to the process we used to verify that keys are minimal.
+
+Steps:
+- Populate the table:
+	- Choose (from 1 to (columns in key - 1)) columns as a subset of the candidate key, populate it with different values.
+	- Populate the rest of the candidate key with identical values.
+	- Populate one of the columns that are not involved in THIS candidate key with different values, and ignore the rest.
+- If this does NOT violate business rules, then the non-key column that has DIFFERENT VALUES functionally depends on the subset of the key that has IDENTICAL VALUES.
+- Repeat for all composite keys.
+- The dependencies you found may NOT BE FULL, they may be implied, so we need to check on that.
+- Look for common subsets for which every superset was found e.g. in a table with {A, B, C, D} candidate key and attributes E, F, G:
+	- {A, B, C} -> E
+	- {A, C, D} -> E
+	- {A, B, D} -> E
+- This implies that the actual dependency may be:
+	A -> E, 
+	{A, B} -> E and {A, C, D} -> E
+	{A, C} -> E and {A, B, D} -> E
+	...
+- BUT we know that {B, C} -> E doesn't exist.
+- So verify the dependencies in order to find the actual full dependencies.
+
+Once you do that:
+- Confirm that it follows 2NF and fix it if not.
+- A subset of a key depending on a subset of another key does NOT voilate 2NF.
+- A non-key column that depends on two or more subsets of keys, Do ONE OF THESE:
+	- create a new entity types for each dependencies, and remove them from the original entity type.
+	- create a new entity type for only one of these dependencies.
+	- Leave it unchanged (violates 2NF, but the rest also might cause data inconsistency, so whatever the situation requires)
+
+Step 3: Third Normal Form:
+--------------------------
+A table is in 3NF if:
+- It's already in 2NF.
+- The non-prime attributes are non-transitively dependent on every superkey....what? xD
+	Basically:
+	- No non-key attributes depend on attributes/combination of attributes that are NOT a candidate key.
+
+Therefore, a table violates 3NF if:
+- One of the non-key attributes depends on another one of the non-key attributes.
+- One of the non-key attributes depends on many non-key attributes.
+- One of the non-key attributes depends on a combination of a) candidate key subset and b) non-key attributes.
+- One of the non-key attributes depends on attributes that are part of different candidate keys.
+
+How to solve the first violation:
+- Separate the determinant(s) and the dependant(s) in a new entity type, where the determinant is the key.
+- Remove the dependant from the original entity type, and make the determinant in the original entity type a foreign key.
+- THe new entity type is strong or weak similar to the original.
+
+Finding functional dependencies in 3NF:
+---------------------------------------
+We want to check for:
+- Non-key attributes -> non-key attributes
+- Non-key attributes -> combination of non-key attributes.
+
+Test:
+- Dependency of ANY attribute on any non-key attribute. (skip this if your table doesn't have non-key attributes)
+- Dependency of ANY attribute on any combination of non-key attribute.
+
+Steps:
+- Populate the table with two rows:
+	- Choose a non-key attribute and populate it with identical values.
+	- Populate all other columns with different values.
+	- IF this is valid, then no attributes depend on this.
+	- ELSE:
+		- Cross the single-column candidate keys (keys don't depend on anything).
+		- Repeat the test, BUT only populate ONE of the columns with different values (with the same chosen non-key column we chose at first).
+		- If it's accepted, then it does NOT depend on the non-key column.
+		- ELSE: If this dependency is NOT because of a derivation rule AND dependant column is NOT part of a candidate key, it violates 3NF.
+- Repeat this procedure for each combination of two columns, three columns, etc.:
+	- Combinations that don't "fully" include one candidate key, or all columns of one candidate key.
+	- BEFORE YOU DO THIS, rule out tests you don't need to test based on the requirements, your experience, the SMEs opinions, etc. (These are assumptions, however, so they might eventually just change.
+
+===========================================
+>>>>>>>>>>> Higher Normal Forms <<<<<<<<<<<
+===========================================
+The next normalization steps are usually not required in the practical work, but may be required by the business rules.
+
+Step 4: Boyce-Codd Normal Form:
+-------------------------------
+For a table to be in BCNF:
+- They must first be 3NF
+- Every attribute (key and non-key) must depend on each candidate key. No more, no less.
+
+Sometimes BCNF can't always be achieved without violating some business rules.
+In that case, we can rreach Elementary Key Normal Form EKNF.
+
+For a table to be in EKNF:
+- The table must first be 3NF.
+- Every "elementary key attribute" depends on each candidate key.
+
+EKNF doesn't solve all problems that BCNF solves, but EKNF is the highest normal form that is always achievable.
+
+Also, bernstein's algorithm for systhesis of a 3NF always produces EKNF.
+
+Step 5: Fourth Normal Form:
+---------------------------
+Multivalued dependency: a dependency where you can determine the values of dependent columns by the determinant only, regardless of other columns.
+
+i.e.
+- The functional dependency: {A, B} -> {C, D} implies {A, B} -> C and {A, B} -> D.
+- BUT, {A, B} ->> {C, D} as in (A and B multidetermine both C and D, it does NOT imply the smaller dependencies.
+
+Basically, it's a dependency that requires a "tuple or more" of values in more than one columns.
+
+If we have A ->> B and A ->> C, and we ad a new value in B, we would have to add a record in the table with the new value of B for each value of C i.e. redundancy.
+
+For a table to be in 4NF:
+- It must be in BCNF.
+- For every multivalued dependency, the determinant is a key or a superset of a key.
+
+Step 6: Fifth Normal Form:
+--------------------------
+A join dependency: A dependency where if you split the table into two or more new table, such that joining those tables back together results in the original table being EXACTLY reconstructed.
+
+Attributes in each table represent independent facts.
+
+Join dependencies are trivial if they have:
+- One of the tables is equal to the original table.
+- Candidate key of original table is included in every new table.
+
+For a table to be n 5NF:
+- It must be in 4NF.
+- There shouldn't be any non-trivial join dependency where the determinant is NOT a key or a superset of a key.
+
+This is why 5NF is also known as Project-Join or Projection-Join normal form.
+
+Step 7: Domain-Key Normal Form:
+-------------------------------
+- Domain: the set of valid values for an attribute.
+- Constraint: rules for valid data within a single TABLE.
+
+For a table to be in DKNF:
+- Every constraint is implied by the keys ans domains i.e. you only need the keys and domains to infer all the constraints.
+
+Not always possible, for example:
+- Constraint: a table must only have 10 rows.
+- You can't infer that by the domains and keys.
+
+Step 8: Sixth Normal Form:
+--------------------------
+- DKNF has sometimes been called sixth normal form.
+
+For a table to be in 6NF:
+- It must be in 5NF.
+- Non-trivial join dependencies are not allowed at all.
+
+In other words, no independent facts are ever combined.
+
+A table in 6NF consists of:
+- All the columns of a candidate key.
+- At most ONE other column.
+
+6NF eliminates NULLs from the DB.
+
+A DB in 6NF will contain a huge number of tables, and queries need to perform many joins.
+
+Also, enforcing simple constraints in 6NF can be very hard to do.
+
+That's why there's Optimal Normal Form ONF:
+- Based on ORM methods.
+- Every fact type becomes a table.
+- So relationships that reference composite candidate keys don't have to be split.
+===========================================================================================================================================================================
+Denormalization:
+================

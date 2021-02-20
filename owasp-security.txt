@@ -1,0 +1,912 @@
+ITWorx Security awareness:
+==========================
+This course will cover OWASP.
+- OWASP: 
+- GDPR: 
+
+Why?
+- Data breaches: 
+	- 44% of them are caused by internal actors. 
+	- OR accidents caused by privileged users.
+
+---------------------------------------------------------------------
+Session 1:
+----------
+1) Broken Object Level Authorization:
+-------------------------------------
+This is an issue where attackers can exploit API endpoints by manipulating the ID of an object sent within a request.
+
+It may lead to unauthorized access of sensitive data.
+
+It happens because the server doesn't fully track the client's state and relies on parameters like the object ID.
+
+Developers may forget using authorization checks before accessing a sensitive object.
+
+Is the API vulnerable?
+----------------------
+- Object-level authorization: an access control mechanism that validates 
+	- if a user can access a certain object(s)
+	- if a user can perform a certain operation on those objects.
+- Every API that receives an ID of an object and uses it, it MUST implement object-level authorization check.
+
+How to prevent?
+- Implement an authorization that:
+	- Checks of the logged in user has access to perform the requested action on the object in every function that uses an input from the client to access that object in the DB.
+- Instead of record IDs, use random GUIDs, so they're hard to detect.
+- Write unit tests, regression tests, and e2e tests to evaluate the authorization mechanism.
+
+2) Broken User Authentication:
+------------------------------
+The authentication mechanism is exposed to everyone i.e. people will know if it's an MFA, a password, etc.
+
+Weaknesses:
+- API endpoints that are responsible for authentication must implement extra layers of protection than other APIs.
+- Authentication mechanisms that are not matching to the nature of the app e.g. using an IoT authentication with a Web application.
+
+Is my API vulnerable?
+---------------------
+- Authentication endpoints need to be protected e.g. forgot password/reset password.
+- If your API:
+	- Permits credential stuffing i.e. you can INJECT a list of breached user/pass pairs.
+	- Permits a brute force attack on the same user account. (without a lockout or a captcha mecahnism)
+	- Permits weak passwords.
+	- Sends sensitive auth details e.g. auth tokens/passwords in the URL.
+	- Doesn't validate the authenticity of tokens.
+	- Accepts unsigned/weakly signed JWT tokens/doesn't validate their expiration date.
+	- Uses plain text, non-encrypted passwords, or weakly hashed passwords, or weak encryption keys.
+- An attacker might:
+	- POST request to the password recovery API.
+	- If the API doesn't implement a rate limiting policy (only send a limited amount of HTTP requests within a specific interval), 
+	- even if the API sends an SMS code to the user, the attacker may use a script to try all combinations.
+
+How to prevent it:
+------------------
+1) Know all possible flows to authenticate to the API e.g. mobile, web, deep links that implement one-click auth, etc.
+2) Read about authentication mechanism.
+3) OAuth is not authentication, and neither are API keys.
+4) Don't reimplement authentication, token generation, password storage, etc. (Use existing well-tested will-established stuff).
+5) Follow the standards.
+6) Credential recovery/forgot password endpoints should be treated as login endpoints in terms of:
+	- Brute force
+	- Rate limiting
+	- Lockout protections
+7) Implement MFA whenever possible.
+8) Implement Anti brute force mechanisms.
+9) Implement account lockout/captcha mechanisms.
+10) Implement weak-password checks and have a strong password policy.
+11) Don't use API keys for user authentication, use them for project and client app authentication, but not USER authentication. 
+12) Use the OWASP Authentication Cheatsheet.
+
+OWASP Cheatsheet:
+-----------------
+- User IDs -> case insensitive.
+- Emails as User ID -> Always validate.
+- Do NOT allow login with sensitive account to any front-end user interface.
+- Do NOT use the same authentication solution for external users (e.g. IDP, active directory). user as you use for internal users (e.g. public access / DMZ).
+- Implement proper password strength controls.
+- Store passwords in a secure way.
+- Compare password hashes using safe functions.
+- Transmit passwords ONLY OVER TLS or another strong transport protocol.
+- Require re-authentication for sensitive features e.g. debit card verifying.
+- Consider strong transaction authentication (2nd factor authentication)
+- Implement authentication responses and error messages that don't guide the attacker to the error e.g.:
+	- Don't use "user not found" or "password not found". Instead say "User ID or password was incorrect" or "The account was locked, disbled, or doesn't exist"
+- Protect against automated attacks:
+	- Brute force.
+	- Credential stuffing: testing u/p pairs obtained from breached data.
+	- Password spraying: testing a single weak password against a large number of different accounts.
+- MFA.
+- Account Lockout.
+- Captcha.
+- Security questions and memorable words.
+- Logging and monitoring of authentication functions to detect attacks/failures real-time. BUT DON'T log the user/pass.
+	- Log and review all failures.
+	- Log and review all password failures.
+	- Log and review all account lockouts.
+- Use authentication protocols that require no password or Third-party apps e.g. OAuth, OpenID, FIDO, SAML.
+- Use password managers.
+
+3) Excessive Data Exposure:
+---------------------------
+An attack where the attacker snifs the traffic to analyze API responses, looking for sensitive data that shouldn't be returned to the user.
+
+This happens because:
+- APIs rely on client to filter incoming response data. i.e. API returns everything toe the client and the client filters it.
+- APIs are implemented as generic without thinking about what could be sensitive data.
+- Automatic tools can't detect this breach because it's hard to differentiate between legitimate data and sensitive data.
+
+Is my API vulnerable?
+---------------------
+- The API is designed to return sensitive data to the client.
+- The data is filtered on the client side before presenting to the user.
+- Can be sniffed.
+- If you use a generic toJSON method on the user model which contains Personal Identifiable Info to serialize the object.
+
+How to prevent it:
+------------------
+- Never rely on client-side filtering.
+- Review the API responses before returning it to make sure there's NO sensitive data being sent back.
+- Ask yourself "Who is the consumer of the data?" Before exposing a new API endpoint.
+- Avoid using generic methods to serialize, pick specific properties you really want to return and implement methods that serialize those ONLY.
+- Implement a schema-based response validation mechanism as an extra layer of security. To enforce data returned to be in a specific structure.
+- Classify sensitive and personally identifiable info, reviewing all API calls that return such info.
+	- They should be separate APIs accessible only to authenticated users.
+	
+---------------------------------------------------------------------
+Session 2:
+----------
+1) Lack of resources & rate limiting:
+-------------------------------------
+When an API is exposed to all channels and it doesn't required authentication and have no rate limiting, an attacker can overload it with multiple concurrent requests from a single PC or a cloud.
+
+This is basically a DoS attack which can make the API or the server go down.
+
+Is my API vulnerable?
+---------------------
+- API requests consume PC resources e.g. network, CPU, memory and storage.
+- The amount of resources consumed depends on a) user input and b) the endpoint business logic.
+- Requests from multiple clients compete for resources.
+- According to these, an API is vulnerable if one of these limits is NOT set:
+	- Execution timeout.
+	- Max allocable memory for the API.
+	- Number of file descriptors.
+	- Number of processes.
+	- Request payload size i.e. uploading.
+	- Number of requests per client or per resource.
+	- Number of records per page to return in a single request response.
+
+Example:
+- An attacker uploads large images in a POST requests to the API. The API creates thumbnails using the images. Due to the size of the images, memory is exhausted during creating the thumbnails.
+- A UI that displays a list of 200 per page. An attacker changes this limit to 200000, causing major performance issues in: Retrieving from the DB, converting to JSON to send in response, rendering.
+
+How to prevent it:
+------------------
+- Use Docker, docker makes it easy to limit memory, CPU, number of restarts, file descriptors, processes (the limits described in Is my API vulnerable)
+- Implement a limit of number of API calls per client within an interval.
+- Notify the client when the limit is exceeded and the time at which the limit will reset.
+- Implement server-side validation of querystring and request body parameters for any parameters that control the number of records returned in the response.
+- Enforce maximum size of data on all incoming parameters and payloads e.g. max length of strings.
+
+2) Broken function level authorization:
+---------------------------------------
+An attacker sends legit API calls to an API that they shouldn't have access to. Those endpoints are exposed to anonymous users or regular non-privileged users. They can then change the HTTP methods from GET to PUt or changing the "users" string in the URL to "admins".
+
+Weaknesses:
+-----------
+Authorization cheks for a function or resources are managed via config file level or code level.
+
+Complex roles and groups may make authorization checks complex.
+
+Is my API vulnerable?
+---------------------
+- Perform deep analysis of the authorization mechanism, keeping in mind the user hierarchy, different roles and groups, etc.
+	- Can a regular user access admin endpoints?
+	- Can a user perform sensitive actions e.g. create, modify, delete, that they shouldn't do by simply changing the HTTP method?
+	- Can a user from group X access a function that should be exposed only to group Y by simply guessing the endpoint URL and params?
+
+- Don't assume that an API endpoint is regular or admin only based on URL path.
+
+Example:
+- During registration to an app, the app triggers a GET call. The response contains a JSON with details like the user's role and email. The attacker duplicates the request and manipulates the HTTP method and endpoint to POST, changing the role to admin.
+
+How to prevent it:
+------------------
+- Make your application consistent and easy to analyze for authentication mechanisms.
+- This mechanism should Deny all access by default, requiring specific roles for access to every function.
+- Review your API against function-level authorization flaws, while keeping in mind the user hierarchy and business logic.
+- Make sure that your admin controllers inherit from an admin abstract controller that implements authorization checks based on the user's group/role.
+- Make sure that admin functions inside a regular controller implement auth checks based on the user group and role.
+
+3) Mass Assignment:
+-------------------
+When an attacker understands some of the business logic, object relations, and the API structure.
+
+Modern framework encourage developers to use functions that autowire input from the client.
+
+Attackers who know this can exploit this in order to manipulate sensitive data. e.g. manipulate their role, get more privileges, bypass security mechanisms, etc.
+
+Is my API vulnerable?
+---------------------
+Objects in modern apps contain many props, some should NOT be updated by the client ()e.g. user.name, user.address), and some don't (user.vip_flag, user.admin_flag).
+
+If your API converts client params into internal object properties WITHOUT checking for sensitivity or exposure level of these props, it's vulnerable.
+
+Some sensitive props:
+- Permission-related props: user.is_admin, user.is_vip, etc. (Should only be set by admins)
+- Process-dependent props: user.cash (should only be set internally after the process)
+- Internal props: only used for the code (should only be set by the code).
+
+Example:
+- An app that calls an API with a GET request with user_name, age, and credit_balance as props.
+- The attacker may replicate the request with credit_balance = 99999
+- credit_balance should be a prop that's NOT updated by the client.
+
+How to prevent it:
+------------------
+- Avoid auto-binding of client input into code variables or internal objects.
+- Use built-in features to blacklist props that should NOT be accessed by clients.
+- Enforce schemas on the client input payload.
+
+4) Security Misconfiguration:
+-----------------------------
+Security misconfiguration can happen at any level of the API stack from the network level to the application level.
+
+Automated tools can detect and exploit misconfigurations e.g. unnecessary services, legacy options.
+
+Is my API vulnerable:
+---------------------
+- Appropriate security hardening is missing across any part of the app stack.
+- Improperly configured permissions.
+- Latest security patches are not installed.
+- The systems are out of date.
+- Unnecessary features are enabled e.g. DevOps APIs.
+- TLS (Transport layer security) is missing
+- Security directives not sent to clients e.g. security headers.
+- CORS policy is missing or improperly set.
+- Error messages include stack traces or other sensitive info.
+
+How to prevent it:
+------------------
+- Conduct a repeatable hardening process that leads to a fast and easy deployment of a properly locked down environment.
+- Review and update configuration across the entire stack, include orchestration files, API components, cloud services e.g. S3 bucket permissions.
+- Use secure comm channels for all API access to static assets e.g. images.
+- Implement an automated process to continuously assess the effectiveness of the config and settings in all environments.
+- Prevent all exception traces being sent to the clients.
+- Enforce a schema for all API responses and error responses.
+- Ensure APIs can only be accessed by the specified HTTP verbs.
+- Implement CORS policy on APIs expecting to be accessed from browser clients.
+
+5) Injection:
+-------------
+Attackers can feel the API with malicious data through direct input, parameters, etc. Expecting them to be sent to an interpreter.
+
+SQL injection is an example.
+LDAP, NoSQL, OS commands, XML parsers, ORM, all can have injections happen in them.
+
+They can be detected easily by reviewing the code.
+Attackers can use scanners and fuzzers to inject the data.
+
+Is my API vulnerable:
+---------------------
+- If client data is not validated, filtered, or sanitized by the API.
+- If client data is directly concatenated to Sql, nosql, ldap, OS commands, xml parsers, ORM/ODM.
+- Data coming from integrated systems (not a browser client or user) is also not integrated or sanitized.
+
+How to prevent it:
+------------------
+- Validate data using a single, trustworthy, actively maintained library.
+- Validate, filter, and sanitize all client data and all data from integrated services.
+- Escape special characters.
+- Use safe APIs that use parameterized interfaces.
+- Limit the number of returned records to prevent mass disclosure in case of successful injection.
+- Validate incoming data to allow only valid values for each input param.
+- Define data types and strict patterns for all string params.
+
+6) Improper Asset Management:
+-----------------------------
+Old API versions are usually unpatched and are vulnerable to state-of-the-art attacking mechanisms, or bugs that can be exploited.
+
+Weaknesses:
+- Outdated documents that may not help find or fix vulnerabilities.
+- Lack of assets inventory and retire strategies may lead to unpatched systems, which may leak sensitive data.
+- Unnecessary exposed API hosts because of modern concepts e.g. microservices.
+
+Is my API vulnerable:
+---------------------
+- If an API host's purpose is unclear.
+- If you can't answer these questions explicitly:
+	- Which environment is the API running in?
+	- Who should have network access to the API (public, internal, partners)?
+	- Which API version is running?
+	- What data is gathered and processed by the API?
+	- What's the data flow?
+- If there is no documentation, or the documentation is not updated.
+- If there is not retirement plan for each API version.
+- Hosts and Integrated services inventory is missing/outdated.
+- Old API versions are running unpatched.
+
+How to prevent it:
+------------------
+- Take an inventory of all API hosts, document important aspects of each one, focusing on a) the environment of each API, b) who should have access, and c) the version.
+- Take an inventory of integrated systems and document important aspects like a) their role in the system, b) what data is exchanged, and c) the exchanged data's sensitivity.
+- Document all aspects of your API such as authentication, errors, redirects, rate limiting, CORS policy, and endpoints, including their params, requests, and responses.
+- Generate automated documentation by integrating the documentation build in your CI/CD.
+- Make the documentation available to authorized users of the API.
+- Use external protection measures e.g. API security firewalls, for ALL EXPOSED VERSIONS, not just the current production version.
+- Avoid using production data with non-prod API deployments.
+	- If this is unavoidable, secure those non-prod APIs just like the prod ones.
+- When newer versions of APIs include security improvements, perform risk analysis to decide if you need to make actions to secure older versions without breaking compatability.
+
+7) Insufficient Logging and monitoring:
+---------------------------------------
+Attackers can take advantage of lack of logging/monitoring to attack systems without being noticed.
+
+Because you can't track suspicious activities and respond to them in time.
+
+Is my API vulnerable:
+---------------------
+- If you don't produce logs, if the logging levels is not set correctly, or if the log messages don't include enough details.
+- Log integrity is not guaranteed e.g. they're not restricted to authorized users. (Logs can also have injection).
+- Logs are not continuously monitored.
+- API infrastructure is not continuously monitored.
+
+How to prevent it:
+------------------
+- Log all failed auth attempts, denied access, input validation errors.
+- Write logs such that they are in format to be consumed by a log management solution, and should include enough details to identify malicious attackers.
+- Logs are sensitive data, handle them, secure them, and transport them like sensitive data.
+- Configure a monitoring system to monitor the infrastructure, network, and API functioning.
+- Use a Security Information and Event Management (SIEM) system to aggregate and manage logs for all components of the API stack and hosts.
+- Configure custom dashbords and alerts for suspicious activities.
+
+---------------------------------------------------------------------
+Session 3: Common security vulnerabilities:
+-------------------------------------------
+1) SQL injection:
+-----------------
+An attacker crafts a user input where inside it there's SQL code, causing the app to actually perform the SQL code.
+
+Beause of how SQL databases are designed, this is very common. Yahoo and Sony were victims to SQL injection.
+
+Risks:
+------
+An attacker might:
+- Extract sensitive info.
+- Enumerate the auth details of users, using them in attacks on other sites.
+- Delete data, drop tables, corrupt the DB, or even "DROP ALL DATABASES;"
+- Inject code to be executed when users visit the site.
+
+How to prevent it:
+------------------
+- Use parameterized statements in your code, instead of concatenating input as a string.
+- Use ORM frameworks because they make developers rarely use SQL (but not never), and most of them use parameterized statements under the hood.
+- If you HAVE to use normal statements, Ensure that you escape all special string characters.
+- Attackers usually craft an input that will close the argument string in which the input should go, in order to fill in their code. That's why you will see ' or " in attempted SQL injection attacks. So ESCAPE those or replace ' with " (Which means "treat this quote as part of the string, not its end")
+- Sanitize input: Reject any input that looks suspicious (without punishing the user), for example:
+	- Clean the GET and POST requests' parameters by matching them to expected regexs, ensuring they don't contain symbol characters, and reject whitespace and newline characters when they're not appropriate.
+- Do this validation client-side too, to give the user immediate feedback. (since usually the attacker runs a script that does the attack fast, JS, this doesn't provide additional defense against a serious hacker).
+- Apply the principle of least privilege, don't give anything write-to-database privilege UNLESS they REALLY need it.
+- Very rarely do you need to modify the DB structure at run time (usually happens during release or update), so at runtime, reduce permissions to just editing the data during runtime i.e. no DML statements to be executed at runtime.
+- Hash your passwords: using strong one-way hash AND salted.
+- Or honestly just outsource it to Facebook, Twitter, Google, anyone who provides mature OAuth APIs.
+- When a user authenticates, re-compute the hash and compare it to the stored hash.
+
+Salting:
+--------
+- Combining a random string with the password THEN hashing it, so now even if users use common passwords, the hashes stored inside the DB are unique.
+- The simplest way of combining the salt and the password is simply concatenate them.
+- The salt is stored with the hashed password.
+- Even if the attacker has the DB and wants to get the passwords, he needs to generate the pre-calculated table fore each single salt, a very costly operation.
+
+Pepper:
+-------
+- Another random value combined with the password.
+- But, the pepper is not stored at all.
+- It's usually something in the configuration of the app itself.
+- Even if the attacker has the DB, they don't have access to the app config.
+- This requires the attacker to brute-force the pepper.
+
+Password Stretching:
+--------------------
+- Make the password hash slower to compute.
+- For example: iterate the hashing many times.
+
+2) Cross-Site Scripting (XSS):
+------------------------------
+An attacker tries to execute chunks JS code with the original code whenever a user logs in.
+
+Can spread works on social media sites.
+Session hijacking: send sessio nID to a remote site under the hacker's control, making them able to steal the user's identity, confidential info, credit card number, etc.
+
+DoS attacks, financial fraud on banking sites, theft of data.
+
+How to prevent it:
+------------------
+Sites are HTML code in dynamic files woven together when the page is rendered, stored XSS attacks make use of improper treatment of dynamic content coming from a backend storage.
+- Unless your site is a CMS, it's rare that you want users to write HTML.
+- If it's a CMS, then ESCAPE all dynamic content by replacing significant characters/strings with HTML entity encoding.
+- If a dynamic data item only takes a handful of values, whitelise those and blacklist anything else.
+	- e.g. the Country drop down, don't make it a textbox, make it a drop down.
+- Modern browsers support Content-Security Policies that allow the auther of a page to control where resources (JS, HTML, etc.) can be loaded and executed from.
+- XSS attackers rely on running scripts on a user's web page either by injecting <script> within <html> or by tricking the browser to load the JS from a malicious third-party domain.
+- So using a content security policy in the response header, you can tell the browser to NEVER execute inline JS and lockdown which domains can serve JS.
+- Use an HTML sanitization library to ensure noone injects scripts in their HTML submissions.
+- Rarely you'll need to read and manipulate cookies in client-side JS, so mark cookies as HTTP-only (i.e. they'll be received, stored, and send by the browser, but cannot be accessed by JS).
+
+3) Command Execution:
+---------------------
+An attacker trying to execute code on the backend server. This almost makes the system break down. They can take complete control for the system.
+
+How to prevent it:
+------------------
+- Avoid command-line calls altogether:
+	- Programming languages have interfaces that do stuff with the system, so USE THOSE APIs whenever possible.
+- Escape, sanitize, and validate CLI inputs correctly:
+	- Scrub it for malicious characters.
+	- Restrict input by testing it against a regex of known safe characters.
+- Restrict permitted commands:
+	- Construct all/most of your shell commands using string literals. When user input is required, whitelist permitted values or enumerate through them in a conditional statement.
+- Review your code.
+	- Check system calls for vulnerabilities as part of the code review.
+- Run with restricted permissions:
+	- Run the server with the permissions they require ONLY.
+- If you'll use a programming language and you'll execute CLI commands and the programming language doesn't have interfaces, DO NOT WRITE YOU OWN TOKENIZER, use one tested.
+
+4) Clickjacking:
+----------------
+An attacker tricks a user to perform an action they didn't intend e.g. rendering an invisible page element on top of the action the user thinks they're clicking on e.g. a fake login box.
+
+It won't impact your site, but the user could be impacted, and you can protect them.
+
+Risks:
+- Harvesting login credentials, by rendering a fake login box.
+- Turn on webcam or microphone, by rendering invisible elements over Adobe Flash settings.
+- Spread worms on social media sites.
+- Promote online scams.
+- Spread malware by diverting users to malicious download links.
+
+How to prevent it:
+------------------
+- Use the X-Frame-Options HTTP header to indicate whether or not a browser is allowed to render a page in <frame>, <iframe> or <object>, the values for this header are:
+	- DENY: the page cannot be displayed in a frame.
+	- SAMEORIGIN: the page can be in a frame on the same origin as the page itself ONLY.
+	- ALLOW-FROM *uri*: the page can be in a frame on the specified URIs ONLY.
+- Use the Content-Security-Policy HTTP header (which is part of HTML5), this is broader than X-Frame-Options, it's designed so that users can whitelist resources (JS, css, fonts, etc.) that can be loaded, and domains permitted to embed a page, values:
+	- "none": same as DENY.
+	- "self": same as ORIGIN.
+	- *uri*: same as ALLOW-FROM *uri*
+- In older browsers, include a frame-killing JS snippet in pages to prevent them from being included in foreign iframes.
+
+5) Cross Site Request Forgery CSRF:
+-----------------------------------
+An attacker may trick a user to perform some functions.
+
+Websites consist of client-site and server-side code, the client-side HTML and JS are rendered allowing the user to send requests and stuff, and the server-side code intercepts the data and acts accordingly.
+
+These server-side actions can be triggered by forged HTTP requests, unless you take protective measures.
+
+How to prevent it:
+------------------
+- Make sure your GET requests are sidfe-effect-free.
+- Make sure that your non-GET requests can only be originated from your client-side code.
+- Use RESTfil designs since they insist that GET requesta are used only to view data.
+- Use Anti-forgery tokens.
+- Even when non-GET requests have restricted edit actions, this doesn't protect you because POST requests can still be sent to your site from scripts and pages hosted on other domains. So:
+	- Include a secret and unique token with each HTTP response, and have the server verify it when it's passed back in subsequent non-GET requests.
+- This token should be written in a hidden HTML form field, and must be included with form submissions, AJAX requests, etc.
+- Ensur cookies are sent with the SameSite cookie attribute:
+	- It's an attribute in the Set-Cookie header, it can take values:
+		- Lax: any request from a third-party domain will have their cookies attached (but only to GET requests).
+		- Strict: any request from a third-party domain will have any cookies stripped by the browser.
+- Include Addition Auth for sensitive actions:
+	- A secondary auth step or reconfirmation of login details when a user performs a sensitive action e.g. transfer money.
+	- This protects users who accidently leave themselves logged in on publicly accessed computers, and it protects against CSRF.
+
+7) Directory Traversal:
+-----------------------
+An attacker tries to gain access to the server and be able to traverse directories on the server.
+
+How to prevent it:
+------------------
+- Use a CMS:
+	- If a site handles a lot of documents, the workflow around uploading, indexing, publishing, and replacing documents will be involved and you may have non-tech users acting as admins.
+	- So use a CMS, because these are designed for this type of thing.
+- Use Indirection:
+	- If using a CMS is too heavyweight of a solution, use indirection to label your files:
+		- Each time a file is uploaded, construct a "friendly" name for it on your site.
+		- Then when anyone accesses the file, perform a lookup in your data store to get the actual file path.
+		- This will whitelist valid names and avoids passing around raw file paths, which is dangerous.
+- Seregate your documents:
+	- Host your documents in a separate file-server or file partition or cloud storage.
+	- This prevents mixing public docs with sensitive material.
+- Sanitize filename params:
+	- If you use raw filenames, check filename coming in from HTTP requests, backtrack the path to see if someone is trying to backtrack using "../" in the path.
+- Run with restricted permissions:
+	- Run your server processes with only the permissions that they require.
+	
+8) DOM-based XSS attacks:
+-------------------------
+Any page that uses URI fragments is vulnerable to DOM-based XSS attacks.
+
+A URI fragment is a part of an URL after #. When you change it in the URL, the browser does NOT refresh the page.
+
+If you use html(...) function injQuery, you need to check if untrusted input is passed directly to the function because it may inject malicious code.
+
+This type of XSS attack is impossible to detect server-side.
+
+How to prevent it:
+------------------
+- Try not to use URI fragments at all.
+	- Write unit tests that scans the code for window.location.hash.
+- Check that your JS doesn't interpret URI fragments in an unsafe manner. There are some ways to do this:
+	- Use a framework e.g. React.
+	- Audit your code carefully, spot locations that reference window.location.hash.
+	- Centralize standards on how URI fragments are written and interpreted, and centralize the libraries you use.
+- Parse JSON carefully, don't evaluate JSON to convert it to native JS e.g. using eval(), instead use JSON.parse().
+- Use development tools like Burp Suite that can detect these vulnerabilities.
+- Implement a content security policy.
+
+9) File Upload Risks:
+---------------------
+An attacker may upload malicious code (the most obvious thing, really), then find a way to execute the code.
+
+How to prevent it:
+------------------
+- Segregate your uploads:
+	- Use cloud-based storage.
+	- Use a CMS.
+	- Write uploaded files to your DB if you're REALLY SURE of your ability to scale your backend (because now it will be in the DB servers not the app servers).
+- Ensure that uploaded files are not executables, and that the OS doesn't know how to treat them as executable code.
+- Rename files on upload.
+- Validate the file formate and extensions against a whitelist of permitted file types (do that on server-side since client-side can be circumvented).
+- Validate teh Content-Type header against a whitelist of permitted file types.
+- Use a virus scanner and run up-to-date virus scanning.
+- Check the file sizes.
+- Sanitize the filenames.
+- Be very careful with compressed files.
+
+10) Proper Access Control:
+--------------------------
+
+
+How to prevent it:
+------------------
+- Implement the three processes:
+	- AUthentication: identify the user.
+	- Authorization: what the user can and can't do once authenticated.
+	- Permission checking: evaluate authorization when a user attempts to perform an action.
+	
+---------------------------------------------------------------------
+Session 4:
+----------
+1) Preventing Malicious Redirects:
+----------------------------------
+An attacker sends a mail that contains links, these links "appear" to take the user to YOUR website, but they actually redirect the user to malicious sites that the attacker has set up.
+
+Modern web-mail services are very good at spotting spam mails.
+
+One detection method they use is parsing the outbound links in the HTML and comparing them to a list of banned domains.
+
+If yes, the mail is sent to the junk folder.
+
+So attackers like to use link redirects (and not direct links to malicious sites) BECAUSE redirects are less likely to be marked as spam.
+
+Confused users might even download malware because they trust your site (which appeared on the non-malicious looking link).
+
+How to prevent it:
+------------------
+- Disallow offsite redirects.
+	- Validate a URL before passing it to the redirect function, make sure that ALL redirect URLs are relative paths.
+	- i.e. they start with a single forward slash / (double forward slash // is protocol agnostic i.e. absolute, so you should reject those)
+- If you need to make external redirects, whitelist the individual sites you redirect to.
+- Check WHO is redirecting:
+	- Redirects to URLs passed in query params should ONLY be triggered by pages on your site.
+	- If any other site is triggering a redirect, treat it with extreme suspicion:
+		- Check that the Referrer in the HTTP matches your domain.
+		
+2) Ensuring Correct Encryption:
+-------------------------------
+Any point between the server and client is a potential weak spot, you should ensure that you encrypt the stuff communicated.
+
+How:
+----
+- Buy certificates.
+- In web.xml, set those to ensure that cookies are only transferred over HTTPS:
+``` xml
+<session-config>
+	<cookie-config>
+		<secure>true</secure>
+	</cookie-config>
+</session-config>
+```
+
+3) Avoiding User Enumeration:
+-----------------------------
+Username enumeration can be a vulnerability for brute-force login.
+
+How to prevent it:
+------------------
+- When login fails, return a generic "no such username or password".
+- Make sure that the HTTP response and the time taken to respond are no different when a username doesn't exist or an incorrect password is entered. (i.e. don't give clues in the HTTP response or the time taken to respond).
+- Make sure the forgotten password page doesn't reveal usernames.
+- Have the user enter their email address if they request a password reset, then send a password reset link to that mail IF the account exists.
+- If a user is registering, don't tell them that a supplied username is already taken.
+- If the usernames are email addresses, send a password reset mail if the user tries to sign up with an existing address.
+- If usernames aren't mails, use a CAPTCHA.
+- If users have profile pages, make sure they're visible only to other users who are already logged in.
+- If you hide a profile page, ensure that a hidden profile can't be distinguished from a non-existent profile.
+
+
+4) Information Leakage:
+-----------------------
+Attackers usually find vulnerabilities from any debug or erro info that reveal info about what's happening behind the scenes.
+
+So make sure you scrub those.
+
+How to prevent it:
+------------------
+- In your web server configuration, disable the "Server" HTTP header and similar headers that reveal what server technology, language, and version you're running. 
+- Try to avoid URLs with file suffixes like .php, .aspx, .jsp, etc. Instead implement clean URLs that intuitively represent the underlying resource.
+- Ensure cookie parameters are generic, make sure nothng is sent back that gives a clue about the technology stack e.g. tell-tale parameter names (which should be made as generic as possible)
+- Disable client-side error reporting, don't let the server stack to send verbose error reporting to the HTML.
+- Sanitize the data passed to the client, be sure that AJAX responses only return the data needed.
+- Obfuscate the DB IDs.
+- If you retain user sensitive data, ONLY send it in contexts where it's okay to be shared.
+- Obfuscate your JS:
+	- Makes your page faster to load.
+	- Makes it harder for an attacker to probe for client-side vulnerabilities.
+- Sanitize template files, conduct code reviews and use static analysis tools to make sure sensitive data doesn't go in comments or dead code passed to the client.
+- Ensure correct config of your web root directory.
+	- Separate public directories and config directories, and make sure your team knows the difference.
+
+5) Secure Treatment of Passwords:
+---------------------------------
+If a user account got hacked, the attacker will just remove all other users, you won't have any users to use.
+
+You NEEEEEEEED to ensure strong authentication, which is a mix of:
+- Pushing your users into good habits, and
+- Following those habits yourself.
+
+How to protect passwords:
+-------------------------
+- Use third-party authentication if possible, this is the safest option, just use authentication offered by implementations such as:
+	- Facebook
+	- Google Sign In
+	- Twitter Authentication
+	- Linkedin
+- Ensure password complexity:
+	- Minimum length, special characters, etc.
+- Allow password resets via mail.
+- Confirm old password on reset.
+- Prevent brute-force attacks.
+- Store password with a strong, salted hash.
+- Implement timeout sessions after inactivity on the site.
+- Provide a logout function.
+- Use HTTPS.
+
+6) Privilege Escalation:
+------------------------
+An attacker tries to escalate the hacked user's privilege e.g. by trying to making the user an admin.
+
+This happens when the code makes access decisions because of untrusted inputs.
+
+This not only has technical implications, you breached the user's trust in you, this can have reputational, legal, financial, etc.
+
+- Horizontal escalation: gaining access to another user's data.
+- Vertical escalation: gaining higher privileges.
+
+i.e. you'll go to prison.
+
+How to prevent it:
+------------------
+- Don't transmit sensitive data to the client.
+- ONLY the session ID is passed back and forth, and all session-related data is kept on the server.
+	- This means the server has to do some more work:
+		- Session state has to be persisted and looked up with each HTTP request.
+		- And the session state should be written to a shared memory of a data store IF you're using threading.
+- Use Tamper-proofing cookies:
+	- Digitally sign the data you'll store in the cookie, so that you can make sure it hasn't been tampered with when it returns.
+	- Many web frameworks allow you to encode the session state and accompany it with a digital signature which must be sent back with the data.
+	- Recalculate the digital signature server-site and try to match them.
+	- This guarantees integrity of the data, but doesn't make it opaque to the client, so it's NOT good for storing data about a user that you don't want them to be able to see.
+	- This also affects your response time since the HTTP requests now have to carry the whole session.
+- Encode and Encrypt your data.
+
+7) Session Fixation:
+--------------------
+A session is a stateful conversation between a server and a client so that the client doesn't need to authenticate with every request, a session is established.
+
+An attacker may hijack a session and bypass your authentication system.
+
+This is the worst thing that could happen, you may not know when it happened!
+
+How to prevent it:
+------------------
+- Don't pass Session IDs in GET/POST variables.
+	- Don't do it in the query strings either.
+	- Session IDs can still be leaked through:
+		- If a user follows a redirect, the referrer header will describe where the user browsed from.
+		- Browser history and bookmarks.
+		- Logs on your web server or any proxys
+	- It's better to pass them in HTTP cookies.
+- Regenerate the session ID auth when the user logs in.
+- Accept only server-generated session IDs:
+	- (on its own, this doesn't secure, though, because an attacker can craft a server generated ID)
+- Timeout and replace old sessions.
+- Implement a strong logout, which marks session IDs as obsolete.
+- Require a new session when they're redirected from an external site or mail to YOUR site.
+- For example:
+	- In a java servlet container, modify web.xml to track session IDs using cookies.
+	``` xml
+	<session-config>
+		<tracking-mode>COOKIE</tracking-mode>
+		<session-timeout>15</session-timeout>
+		<cookie-config>
+			<secure>true</secure>
+		</cookie-config>
+	</session-config>
+	``` 
+	- Force your server to track session IDs over HTTPS.
+	- Timeout sessions after a period of inactivity.
+	- Regenerate a session ID after authentication using HttpSession.invalidate(), then create a new session with HttpServletRequest.getSession(true).
+	
+8) Securing Session IDs:
+------------------------
+Attackers may try to probe randomly chosen session IDs till they find a match IF the session ID is picked from a small range of values.
+
+How to prevent it:
+------------------
+- Use a framework, most frameworks implement secure Session id generation algorithms.
+- Check a recent tutorial on how session IDs are generated if you're using a recent version of your web toolkit.
+- Tamper-proof your cookies:
+	- Frameworks like Rails and Django allow you to sign your cookies.
+
+9) XML Bombs:
+-------------
+If your server accepts XML uploads, an attacker can perform a DoS attack.
+
+How to prevent it:
+------------------
+- Disable parsing of inline DTDs:
+	- It's a rarely used feature.
+	- Most XML parsers don't disable it by default, which causes XML bombs to happen.
+- Throttle uploads per client:
+	- Restrict the number of simultaneous parsing jobs per account.
+- Make XML parsing async if possible:
+	- Move the XML files over a queue that has a separate process that pops them off the queue and parses them.
+	- This helps with scalability and stability, because async jobs don't take your server offine.
+	- AJAX requests have to be handled by the web server, so you can't thread that.
+	
+10) XML External Entity Attacks:
+--------------------------------
+An attacker can probe your file system through unsecured XML parsers.
+
+If your site accepts XML, you need to ensure the parser is correctly configured.
+
+XML External Entity Attacks also aren't detected on time unless you deploy an intrusion detection system.
+
+How to prevent it:
+------------------
+- Disable parsing of inline DTDs.
+- Limit the permissions of your web server process.
+	- Like restricting which directories in the file system can be accessed.
+	- Run it in a chroot jail if you're running Unix.
+	 
+11) Denial of Service attacks:
+------------------------------
+Sophisticated attackers will even use distributed apps to ensure malicious traffic floods your site from different IP addresses at once, making it difficult for you to filter out all sources.
+
+How to prevent it:
+------------------
+- There's a lot of commercial tools and services that protect against DoS attacks, use them.
+- Check with your hosting provider to see what options are available, many clouds offer protection and alerting services.
+- If your site is built to scale, it will have a better chance against a DoS from high-traffic scenarios like:
+	- Serving images, stylesheets, or other resources from CDNs.
+	- Caching commonly accessed resources to reduce DB access.
+	- Setting Cache-Control header on rarely-changing resources, so browsers don't request them every time.
+	- Executing long-running processes in an async queue.
+	- Automating web server deployment, so the number of instances can be scaled up.
+	- Splitting complex apps into microservices so each microservice can scale separately.
+	- Implementing web-page analytics to detect high-traffic periods and respond accordingly.
+
+11) Securing Configuration:
+---------------------------
+Improper security config may lead attackers to find vulnerabilities even by just Googling your site.
+
+How to prevent it:
+------------------
+- TO prevent this, you need good "process" management, i.e. to manage the development, testing, and deployment processes in a good way.
+- To do this:
+	- Automate the build process using a scripted, repeatable build process, so you know what software and what versions you're running at any given time.
+	- Review new software component and disable default credentials ASAP.
+	- Each new library introduces security risks, so consider those during your code reviews.
+	- Separate code and configuration CLEARLY, environment-specific and sensitive config should be outside the codebase, ether in config files or dedicated systems e.g. DBs.
+	- Hard-coded credentials open your site to being compromised.
+	- Create dedicated accounts with appropriate privileges.
+	- Access to prod servers and DBs should follow principle of least privilege (POLP).
+	- Users should ONLY have permissions they require to function.
+	- Any escalation of privileges should be temporary and subject to a review process.
+	- Script the deployment process.
+	- Know what version of your code is running on each environment.
+	- After each release, smoke-test to ensure the correct software and config got deployed.
+	- Segregate the environments.
+	- Use different credentials for prod and staging.
+	- Ensure that there's no network access between environments.
+	- Avoid opening admin tools to the internet.
+	- Prescribe a secure password policy for admins.
+	- Ensure your team knows how to take security seriously.
+	- Implement MFA.
+	- Know who has access to which system.
+	- Have a plan for when access has to be revoked e.g. a team member leaves.
+	
+12) Securing Dependencies:
+--------------------------
+How to secure dependencies:
+- Automate your build process and know what code and which version you're running.
+- Deploy known-good versions of software.
+- Dependency management tools (e.g. maven, npm) allow you to just get the latest version, try to avoid this.
+- Upgrade versions deliberately.
+- Use dedicated tools to scan your dependency tree for security risks:
+	- Github security alerts.
+	- Gitlab security scanning
+	- npm audit and retire.js for node.
+	- bundler audit for Ruby.
+	- OWASP dependency-check for Java and .NET
+- Keep on top of security news, announcements, etc. Join mailing lists, forums, follow library developers on social media.
+- Perform code reviews so the whole team knows what libraries are being used and what depends on them.
+- Make pentesting part of your development lifecycle.
+
+13) Logging and Monitoring:
+---------------------------
+Logging correctly:
+- Each entry should contain:
+	- A timestamp
+	- The log messages
+	- The code file
+	- The line number
+	- [optional]:
+		- The server name (if there's more than one server writing to the log file)
+		- The URL, HTTP status code, and incoming IP address (if the code is handling HTTP)
+		- The username (if the code is for logging in)
+		- Timing info (If the code is time-sensitive)
+		- Diagnostic info e.g. if an action had been retried, or a component is responding slowly.
+		- Error messages and stack traces (if an error occurs)
+- Log every HTTP request and the corresponding response, include:
+	- The URL
+	- The response code
+	- The time taken to service the request
+	- Any significant action performed by your app e.g.:
+		- Input validation failures
+		- Authentication success or failures
+		- Authorization success or failure
+		- Session management failures.
+		- App errors and system events
+		- Startup and shutdown events, including timing info
+		- User actions e.g. Signups, password changes, account deletions.
+		- Admin events e.g. permissions are changed by an admin
+		- Calls to third-party services or APIs
+		- Legal and other opt-ins e.g. a user accepts terms of use.
+- DO NOT LOG SENSITIVE INFO:
+	- User/system passwords
+	- encryption keys
+	- DB connection strings
+	- API keyus for third-party services
+	- PII about users
+	- Payment info
+	- Sensitive HTTP headers e.g. Authorization
+	- Session IDs/cookies
+	- Access tokens
+	- Info the user has opted out of collection. (The right to be forgotten)
+	
+Monitoring correctly:
+- Up-time monitoring:
+	- Checking if your site is available.
+- Error reporting.
+- Performance metrics, like:
+	- Responsiveness
+	- Throughput (request per seconds hitting your site)
+	- Memory usage, server load.
+	- DB performance.
+	- Alerting e.g. over mail, instant messagews, text.
+	- Response plans: plans to be executed by your support engineers when an alert happens.
+
+14) Buffer Overflow:
+--------------------
+An attacker will try to write data that is bigger than the fixed length of a block of memory e.g. a buffer.
+
+It can crash the web servers, or access environmental variables.
+
+They can even inject code.
+
+Buffer Overflow attacks happen on web servers, the most famous ones:
+	Apache HTTP server
+	Microsoft IIS
+	Nginx
+OSs have also been attacked by buffer overflow.
+
+How to prevent it:
+------------------
+- Stay up-to-date with the latest security patches.
+- Automate your build process.
+- Keep on top of security news.
+
